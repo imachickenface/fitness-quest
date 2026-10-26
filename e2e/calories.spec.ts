@@ -99,3 +99,31 @@ test('no horizontal scroll at 360 px', async ({ page }) => {
   );
   expect(overflow).toBe(false);
 });
+
+test('custom macro targets replace the automatic ones and set the calorie target', async ({
+  page,
+}) => {
+  await setUpProfile(page);
+  await page.getByRole('button', { name: 'Profile and targets' }).click();
+  const sheet = page.getByRole('dialog');
+  await sheet.getByText('Custom targets').click();
+  await sheet.getByLabel('Protein (g)').fill('150');
+  await sheet.getByLabel('Carbs (g)').fill('200');
+  await sheet.getByLabel('Fat (g)').fill('60');
+  await expect(
+    sheet.getByText(/add up to 1,940 kcal, which becomes your calorie target/),
+  ).toBeVisible();
+  await sheet.getByRole('button', { name: 'Save' }).click();
+
+  await expect(page.getByText('0 eaten of 1,940')).toBeVisible();
+  await expect(page.getByText('0 / 150 g')).toBeVisible();
+  await expect(page.getByText('0 / 200 g')).toBeVisible();
+  await expect(page.getByText('0 / 60 g')).toBeVisible();
+
+  // clearing them goes back to automatic
+  await page.getByRole('button', { name: 'Profile and targets' }).click();
+  for (const label of ['Protein (g)', 'Carbs (g)', 'Fat (g)'])
+    await sheet.getByLabel(label).fill('');
+  await sheet.getByRole('button', { name: 'Save' }).click();
+  await expect(page.getByText('0 eaten of 1,940')).toBeHidden();
+});

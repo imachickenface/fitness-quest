@@ -108,6 +108,26 @@ and batches of 🌙 tasks go to the overnight queue.
 | 6.3 | Quality gates: a11y (focus, contrast, labels), phone widths, Lighthouse PWA, `npm audit`, credits page (OFF, USDA, Kenney, fonts) | Claude | checklist in this file ticked | all |
 | 6.4 | Deploy, README, retrospective in DECISIONS.md | Claude | installed on the phone from Pages | 6.3 |
 
+### Added 2026-10-26 - custom macro targets ✅
+Owner asked before M3. Profile gets optional calorie and macro targets (protein, carbs, fat in g/day); blank
+ones stay automatic, and all three macros with no calorie target set the calories to their sum. Claude (a few
+lines in `core/targets.ts`, tests first). E2E: custom targets show on Today, clearing them goes back to auto.
+
+### M7 (later, not planned in detail) - Accounts: sign up, log in, sync
+Owner wants this "if possible in the future". It is possible, but it changes the architecture decision
+"data only on the phone", so it gets its own research and plan before any code:
+- **Needs a server.** GitHub Pages only serves files. Free options to research: Supabase (Postgres + auth;
+  free projects pause after a week unused), Firebase (Auth + Firestore, free Spark plan), or Strata's PC as
+  the server (only reachable at home unless exposed, which needs care).
+- **What it is for decides the design:** backup and a second device (sync of the same records), or social
+  features (friends, shared quests, leaderboards), which need much more.
+- **Keep offline-first:** IndexedDB stays the source on the phone; sync pushes and pulls records by
+  `updatedAt`. Records are already plain, validated and id-keyed, which makes this feasible later.
+- **Security-sensitive:** auth, passwords and personal health data. Claude builds it (not Qwen), with a
+  `/security-review` before release; prefer the provider's auth (email link or Google sign-in) over storing
+  passwords ourselves. A privacy note in the app says what leaves the phone.
+- Until then, M6's backup file covers losing or changing the phone.
+
 ## Split and usage estimate
 
 - **Qwen:** 17 tasks, all pure `src/core/` modules or scripts with Claude's tests. 16 of them can run overnight.

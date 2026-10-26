@@ -78,6 +78,13 @@ export function Today({ profile }: { profile: Profile }) {
 
   const weightKg = weighIns.at(-1)?.kg;
   const target = weightKg ? calorieTarget(profile, weightKg, today) : null;
+  const defaults = weightKg
+    ? calorieTarget(
+        { ...profile, kcalTargetOverride: undefined, macroTargets: undefined },
+        weightKg,
+        today,
+      )
+    : null;
   const totals = dayTotals(entries);
   const byMeal = totalsByMeal(entries);
   const recents = useMemo(() => recentFoods(recentEntries, 12), [recentEntries]);
@@ -375,11 +382,14 @@ export function Today({ profile }: { profile: Profile }) {
           {target && (
             <p className="muted">
               Maintenance about {kcal(target.tdee)} kcal; target {kcal(target.kcal)} kcal
-              {target.note === 'floor' && ' (raised to a safe minimum)'}.
+              {target.note === 'floor' && ' (raised to a safe minimum)'}
+              {target.note === 'override' && ' (your own)'}
+              {target.note === 'macros' && ' (from your macros)'}.
             </p>
           )}
           <ProfileForm
             initial={profile}
+            defaults={defaults ?? undefined}
             initialWeightKg={weightKg}
             onSaved={close}
             onCancel={close}

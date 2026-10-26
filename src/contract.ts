@@ -184,6 +184,14 @@ export const Profile = z.object({
   units: z.enum(['metric', 'imperial']),
   /** manual override of the daily calorie target */
   kcalTargetOverride: z.number().int().min(800).max(6000).optional(),
+  /** manual macro targets in g/day; a missing one is worked out from the calorie target */
+  macroTargets: z
+    .object({
+      proteinG: z.number().int().min(0).max(500).optional(),
+      carbsG: z.number().int().min(0).max(1000).optional(),
+      fatG: z.number().int().min(0).max(400).optional(),
+    })
+    .optional(),
   updatedAt: Timestamp,
 });
 export type Profile = z.infer<typeof Profile>;

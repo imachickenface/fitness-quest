@@ -42,7 +42,7 @@ export type CalorieTarget = {
   proteinG: number;
   carbsG: number;
   fatG: number;
-  note?: 'floor' | 'override';
+  note?: 'floor' | 'override' | 'macros';
 };
 
 /** Raw goal adjustment applied to the unrounded TDEE. */
@@ -77,7 +77,7 @@ export function calorieTarget(profile: Profile, weightKg: number, today: string)
   const tdee = bmr * ACTIVITY_FACTORS[profile.activity];
 
   let target = goalTarget(profile.goal, tdee);
-  let note: 'floor' | 'override' | undefined;
+  let note: 'floor' | 'override' | 'macros' | undefined;
 
   if (profile.goal === 'lose_weight') {
     const floor = Math.max(bmr, profile.sex === 'male' ? 1500 : 1200);
@@ -92,10 +92,22 @@ export function calorieTarget(profile: Profile, weightKg: number, today: string)
     note = 'override';
   }
 
+  // All three macros set and no calorie override: the macros define the calories.
+  const m = profile.macroTargets ?? {};
+  if (
+    profile.kcalTargetOverride === undefined &&
+    m.proteinG !== undefined &&
+    m.carbsG !== undefined &&
+    m.fatG !== undefined
+  ) {
+    target = m.proteinG * 4 + m.carbsG * 4 + m.fatG * 9;
+    note = 'macros';
+  }
+
   const kcal = Math.round(target / 10) * 10;
-  const proteinG = Math.round(weightKg * proteinFactor(profile.goal));
-  const fatG = Math.round((kcal * 0.25) / 9);
-  const carbsG = Math.max(0, Math.round((kcal - proteinG * 4 - fatG * 9) / 4));
+  const proteinG = m.proteinG ?? Math.round(weightKg * proteinFactor(profile.goal));
+  const fatG = m.fatG ?? Math.round((kcal * 0.25) / 9);
+  const carbsG = m.carbsG ?? Math.max(0, Math.round((kcal - proteinG * 4 - fatG * 9) / 4));
 
   const roundedBmr = Math.round(bmr);
   const roundedTdee = Math.round(tdee);

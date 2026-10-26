@@ -17,3 +17,5 @@
 | 2026-10-26 | Open Food Facts client written by Claude | Qwen stopped twice without writing a file (read the inputs, then ended). Same failure as M1 food search: worth checking the worker before the next big hand-off. |
 | 2026-10-26 | Barcode fallback decoder bundled with the app (`zxing-wasm` 3.1.6 `?url`), cached on first use, not precached | The library's default downloads it from a CDN. Chrome on Android uses its native detector, so most phones never fetch the 946 KB file. |
 | 2026-10-26 | Custom foods from a label are stored per 100 g and saved as favourites; "per serving" input is converted | One stored shape for search and logging; favourites put them in quick log. |
+| 2026-10-26 | Custom calorie and macro targets in the profile; all three macros alone set the calories | Owner's request. One rule keeps calories and macros consistent; the calorie target wins if both are set (the form says so). |
+| 2026-10-26 | Accounts / sync parked as M7, research first | Needs a server and changes "data only on the phone"; security-sensitive, so Claude-only with a security review. |

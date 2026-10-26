@@ -146,6 +146,49 @@ describe('calorieTarget', () => {
     expect(t.carbsG).toBe(289); // (2400 - 640 - 603) / 4 = 289.25
   });
 
+  it('manual macros replace the worked-out ones; the rest fill the calorie target', () => {
+    const t = calorieTarget(
+      { ...male, goal: 'lose_weight', kcalTargetOverride: 2400, macroTargets: { proteinG: 180 } },
+      80,
+      '2026-10-26',
+    );
+    expect(t.kcal).toBe(2400);
+    expect(t.note).toBe('override');
+    expect(t.proteinG).toBe(180);
+    expect(t.fatG).toBe(67);
+    expect(t.carbsG).toBe(269); // (2400 - 720 - 603) / 4 = 269.25
+
+    const fatOnly = calorieTarget(
+      { ...male, goal: 'maintain', macroTargets: { fatG: 50 } },
+      80,
+      '2026-10-26',
+    );
+    expect(fatOnly.fatG).toBe(50);
+    expect(fatOnly.carbsG).toBe(Math.round((fatOnly.kcal - 128 * 4 - 450) / 4));
+  });
+
+  it('all three macros and no calorie override: calories are their sum', () => {
+    const t = calorieTarget(
+      { ...male, goal: 'lose_weight', macroTargets: { proteinG: 150, carbsG: 200, fatG: 60 } },
+      80,
+      '2026-10-26',
+    );
+    expect(t).toMatchObject({ kcal: 1940, proteinG: 150, carbsG: 200, fatG: 60, note: 'macros' });
+  });
+
+  it('a calorie override beats the macro sum', () => {
+    const t = calorieTarget(
+      {
+        ...male,
+        kcalTargetOverride: 2000,
+        macroTargets: { proteinG: 150, carbsG: 200, fatG: 60 },
+      },
+      80,
+      '2026-10-26',
+    );
+    expect(t).toMatchObject({ kcal: 2000, note: 'override', carbsG: 200 });
+  });
+
   it('carbs never go negative', () => {
     // tiny override with high protein need
     const t = calorieTarget(

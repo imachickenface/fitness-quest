@@ -657,3 +657,16 @@ legend {
   padding-inline: 10px;
   white-space: nowrap;
 }
+
+.custom-targets {
+  display: grid;
+  gap: 10px;
+}
+
+.custom-targets summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  color: var(--gold);
+  cursor: pointer;
+}

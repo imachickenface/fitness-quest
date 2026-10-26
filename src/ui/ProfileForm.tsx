@@ -26,14 +26,18 @@ const GOALS: [Goal, string][] = [
   ['marathon', 'Run a marathon'],
 ];
 
+/** The automatic targets, shown as placeholders for the custom ones. */
+export type TargetDefaults = { kcal: number; proteinG: number; carbsG: number; fatG: number };
+
 type Props = {
   initial?: Profile;
+  defaults?: TargetDefaults;
   initialWeightKg?: number;
   onSaved: () => void;
   onCancel?: () => void;
 };
 
-export function ProfileForm({ initial, initialWeightKg, onSaved, onCancel }: Props) {
+export function ProfileForm({ initial, defaults, initialWeightKg, onSaved, onCancel }: Props) {
   const db = useDb();
   const [sex, setSex] = useState<Profile['sex']>(initial?.sex ?? 'male');
   const [birthYear, setBirthYear] = useState(initial ? String(initial.birthYear) : '');
@@ -42,12 +46,37 @@ export function ProfileForm({ initial, initialWeightKg, onSaved, onCancel }: Pro
   const [activity, setActivity] = useState<ActivityLevel>(initial?.activity ?? 'light');
   const [goal, setGoal] = useState<Goal>(initial?.goal ?? 'lose_weight');
   const [error, setError] = useState<string | null>(null);
+  const [kcalT, setKcalT] = useState(asText(initial?.kcalTargetOverride));
+  const [proteinT, setProteinT] = useState(asText(initial?.macroTargets?.proteinG));
+  const [carbsT, setCarbsT] = useState(asText(initial?.macroTargets?.carbsG));
+  const [fatT, setFatT] = useState(asText(initial?.macroTargets?.fatG));
+  const custom = {
+    kcal: whole(kcalT),
+    proteinG: whole(proteinT),
+    carbsG: whole(carbsT),
+    fatG: whole(fatT),
+  };
+  const macroSum =
+    custom.proteinG !== undefined && custom.carbsG !== undefined && custom.fatG !== undefined
+      ? custom.proteinG * 4 + custom.carbsG * 4 + custom.fatG * 9
+      : undefined;
 
   async function submit(e: FormEvent) {
     e.preventDefault();
     const kg = Number(weightKg);
+    const macroTargets = {
+      ...(custom.proteinG !== undefined ? { proteinG: custom.proteinG } : {}),
+      ...(custom.carbsG !== undefined ? { carbsG: custom.carbsG } : {}),
+      ...(custom.fatG !== undefined ? { fatG: custom.fatG } : {}),
+    };
+    // custom targets come from the form only, so clearing a box removes the old value
+    const rest: Partial<Profile> = { ...initial };
+    delete rest.kcalTargetOverride;
+    delete rest.macroTargets;
     const parsed = ProfileSchema.safeParse({
-      ...initial,
+      ...rest,
+      ...(custom.kcal !== undefined ? { kcalTargetOverride: custom.kcal } : {}),
+      ...(Object.keys(macroTargets).length > 0 ? { macroTargets } : {}),
       sex,
       birthYear: Number(birthYear),
       heightCm: Number(heightCm),
@@ -57,7 +86,9 @@ export function ProfileForm({ initial, initialWeightKg, onSaved, onCancel }: Pro
       updatedAt: nowStamp(),
     });
     if (!parsed.success || !(kg >= 20 && kg <= 400)) {
-      setError('Check the numbers: birth year, height in cm (100-250) and weight in kg (20-400).');
+      setError(
+        'Check the numbers: birth year, height in cm (100-250), weight in kg (20-400), and any custom targets (calories 800-6,000; protein up to 500 g, carbs 1,000 g, fat 400 g).',
+      );
       return;
     }
     await saveProfile(db, parsed.data);
@@ -136,6 +167,44 @@ export function ProfileForm({ initial, initialWeightKg, onSaved, onCancel }: Pro
         </select>
       </label>
 
+      {initial && (
+        <details className="custom-targets" open={kcalT + proteinT + carbsT + fatT !== ''}>
+          <summary>Custom targets</summary>
+          <p className="muted">Leave a box blank to keep the automatic value shown in it.</p>
+          <div className="field-row two">
+            <TargetField
+              label="Calories (kcal)"
+              value={kcalT}
+              onChange={setKcalT}
+              auto={defaults?.kcal}
+            />
+            <TargetField
+              label="Protein (g)"
+              value={proteinT}
+              onChange={setProteinT}
+              auto={defaults?.proteinG}
+            />
+            <TargetField
+              label="Carbs (g)"
+              value={carbsT}
+              onChange={setCarbsT}
+              auto={defaults?.carbsG}
+            />
+            <TargetField label="Fat (g)" value={fatT} onChange={setFatT} auto={defaults?.fatG} />
+          </div>
+          {macroSum !== undefined && (
+            <p className="muted" role="status">
+              Your macros add up to {macroSum.toLocaleString('en-GB')} kcal
+              {custom.kcal === undefined
+                ? ', which becomes your calorie target.'
+                : Math.abs(macroSum - custom.kcal) > custom.kcal * 0.05
+                  ? `, not the ${custom.kcal.toLocaleString('en-GB')} kcal you set. The calorie target wins.`
+                  : '.'}
+            </p>
+          )}
+        </details>
+      )}
+
       {error && (
         <p className="form-error" role="alert">
           {error}
@@ -157,5 +226,34 @@ export function ProfileForm({ initial, initialWeightKg, onSaved, onCancel }: Pro
         adults. It is a starting point, not medical advice.
       </p>
     </form>
+  );
+}
+
+function asText(n: number | undefined): string {
+  return n === undefined ? '' : String(n);
+}
+
+/** Blank means automatic (undefined); otherwise the number rounded to a whole value, NaN if not a number. */
+function whole(text: string): number | undefined {
+  if (text.trim() === '') return undefined;
+  return Math.round(Number(text.replace(',', '.')));
+}
+
+function TargetField(props: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  auto?: number;
+}) {
+  return (
+    <label className="field">
+      <span>{props.label}</span>
+      <input
+        inputMode="numeric"
+        placeholder={props.auto === undefined ? 'auto' : `auto: ${props.auto}`}
+        value={props.value}
+        onChange={(e) => props.onChange(e.target.value)}
+      />
+    </label>
   );
 }
