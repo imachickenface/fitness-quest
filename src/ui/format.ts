@@ -20,13 +20,8 @@ export const MEAL_LABELS: Record<MealSlot, string> = {
 export const MEAL_SLOTS: MealSlot[] = ['breakfast', 'lunch', 'dinner', 'snack'];
 
 /** 'YYYY-MM-DD' shifted by whole days, in local time. */
-export function addDays(date: string, days: number): string {
-  const [y, m, d] = date.split('-').map(Number) as [number, number, number];
-  const t = new Date(y, m - 1, d + days);
-  return [t.getFullYear(), t.getMonth() + 1, t.getDate()]
-    .map((v, i) => String(v).padStart(i === 0 ? 4 : 2, '0'))
-    .join('-');
-}
+export { addDays } from '../core/dates.ts';
+import { addDays } from '../core/dates.ts';
 
 export function dayTitle(date: string, today: string): string {
   if (date === today) return 'Today';
