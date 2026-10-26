@@ -61,10 +61,11 @@ test('log a run with a pace', async ({ page }) => {
 test('logging food completes a daily quest and earns XP', async ({ page }) => {
   await setUpProfile(page);
   await page.getByRole('button', { name: /^Quests/ }).click();
-  await expect(page.getByText('Level')).toBeVisible();
+  await expect(page.getByText('Level', { exact: true })).toBeVisible();
   const meals = page.getByRole('listitem', { name: /^Log 2 meals/ });
   await expect(meals).toContainText('0 / 2 meals');
-  await expect(page.getByText('0 / 100 XP to level 2')).toBeVisible();
+  // the profile's weigh-in: 5 XP, and it completes today's "Step on the scale" quest: 10 XP
+  await expect(page.getByText('15 / 100 XP to level 2')).toBeVisible();
 
   await page.getByRole('button', { name: 'Food' }).click();
   for (const kcal of ['400', '600']) {
@@ -76,7 +77,7 @@ test('logging food completes a daily quest and earns XP', async ({ page }) => {
 
   await page.getByRole('button', { name: /^Quests/ }).click();
   await expect(meals).toHaveAccessibleName(/complete/);
-  // 2 entries x 2 XP + 20 quest XP
-  await expect(page.getByText('24 / 100 XP to level 2')).toBeVisible();
+  // + 2 entries x 2 XP + 20 quest XP
+  await expect(page.getByText('39 / 100 XP to level 2')).toBeVisible();
   await expect(page.getByText('1-day streak')).toBeVisible();
 });

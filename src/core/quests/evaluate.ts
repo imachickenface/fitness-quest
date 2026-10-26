@@ -62,12 +62,21 @@ function result(fraction: number, label: string, complete: boolean, completedOn?
 }
 
 /** "N of M" label and the fraction it implies; the caller adds `completedOn`. */
+/** `unit` is plural; a target of 1 reads "0 / 1 meal", "1 / 1 day on target". */
 function counted(n: number, target: number, unit: string): Outcome {
   const fraction = target > 0 ? n / target : 0;
-  return result(fraction, `${Math.min(n, target)} / ${target} ${unit}`, n >= target);
+  const shown = target === 1 ? (SINGULAR[unit] ?? unit) : unit;
+  return result(fraction, `${Math.min(n, target)} / ${target} ${shown}`, n >= target);
 }
 
 /** Attach the outcome to the quest it belongs to. */
+const SINGULAR: Record<string, string> = {
+  meals: 'meal',
+  'days on target': 'day on target',
+  workouts: 'workout',
+  'weigh-ins': 'weigh-in',
+};
+
 function withId(questId: string, outcome: Outcome): QuestProgress {
   return { questId, ...outcome };
 }
@@ -266,9 +275,7 @@ function weighIn(
   window: Window,
   weighIns: WeighIn[],
 ): Outcome {
-  const days = sortedDates(
-    weighIns.filter((w) => inWindow(w.date, window)).map((w) => w.date),
-  );
+  const days = sortedDates(weighIns.filter((w) => inWindow(w.date, window)).map((w) => w.date));
   const reached = days.length >= c.count ? days[c.count - 1] : undefined;
   const progress = counted(days.length, c.count, 'weigh-ins');
   return { ...progress, ...(reached !== undefined ? { completedOn: reached } : {}) };

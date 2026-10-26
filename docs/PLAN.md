@@ -73,13 +73,17 @@ and batches of 🌙 tasks go to the overnight queue.
 ### M3 - The game: quests, XP, the map
 | # | Task | Owner | Done when | Depends |
 |---|---|---|---|---|
-| 3.1 | Workout logging UI (recent exercises one tap, sets stepper, runs by distance/time) | Claude | E2E: log a 3-exercise workout | 1.4 |
-| 3.2 | `core/game.ts`: XP per record, level curve, streak (log anything counts), freezes earned per 7 days, max 2 | Qwen 🌙 | Claude's tests incl. day boundaries, DST, gaps, freezes | 0.2 |
-| 3.3 | `core/quests/evaluate.ts`: progress of every `QuestCondition` from records | Qwen 🌙 | one test group per condition type | 0.2 |
-| 3.4 | `core/quests/daily.ts`: seeded daily/weekly quest picks from profile + recent behaviour | Qwen 🌙 | deterministic-seed tests; never asks for more than the user's range | 3.3 |
+| 3.1 ✅ | Workout logging UI (recent exercises one tap, sets stepper, runs by distance/time) | Claude | E2E: log a 3-exercise workout | 1.4 |
+| 3.2 ✅ | `core/game.ts`: XP per record, level curve, streak (log anything counts), freezes earned per 7 days, max 2 | Qwen 🌙 | Claude's tests incl. day boundaries, DST, gaps, freezes | 0.2 |
+| 3.3 ✅ | `core/quests/evaluate.ts`: progress of every `QuestCondition` from records | Qwen 🌙 | one test group per condition type | 0.2 |
+| 3.4 ✅ | `core/quests/daily.ts`: seeded daily/weekly quest picks from profile + recent behaviour | Qwen 🌙 | deterministic-seed tests; never asks for more than the user's range | 3.3 |
 | 3.5 | Art direction: tiles, palette, pixel font, map layout (Tiled JSON), hero and monsters | Claude | a static mock screenshot the owner likes | - |
 | 3.6 | Canvas map renderer + hero walking between nodes | Claude | 60 fps on the phone; screenshot check | 3.5 |
-| 3.7 | Quest log, XP bar, level-up and quest-complete moments (GSAP), reduced-motion path | Claude | E2E: log food → quest completes → hero moves | 3.2-3.6 |
+| 3.7 (part) ✅ | Quest log, XP bar, level-up and quest-complete moments (GSAP), reduced-motion path | Claude | E2E: log food → quest completes → hero moves | 3.2-3.6 |
+
+Split on 2026-10-26 to spare the owner's usage: **M3a done** = 3.1-3.4 plus the quest log, XP bar, streak,
+tabs and quest-complete / level-up toasts (CSS, no GSAP yet). **M3b left** = 3.5 art mock for the owner to
+approve, 3.6 map renderer, and the GSAP moments where the hero walks to the next node.
 
 ### M4 - Import notes, quests from your own history
 | # | Task | Owner | Done when | Depends |

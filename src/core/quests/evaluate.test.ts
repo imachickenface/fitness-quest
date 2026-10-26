@@ -73,6 +73,15 @@ describe('every condition', () => {
   });
 });
 
+describe('labels', () => {
+  it('use the singular for a target of 1', () => {
+    expect(questProgress(quest({ type: 'weigh_in', count: 1 }), none).label).toBe('0 / 1 weigh-in');
+    expect(
+      questProgress(quest({ type: 'kcal_in_range', days: 1, minKcal: 1, maxKcal: 2 }), none).label,
+    ).toBe('0 / 1 day on target');
+  });
+});
+
 describe('log_meals', () => {
   it('counts entries and completes on the day the count is reached', () => {
     const q = quest({ type: 'log_meals', count: 3 });

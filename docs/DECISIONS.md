@@ -19,3 +19,6 @@
 | 2026-10-26 | Custom foods from a label are stored per 100 g and saved as favourites; "per serving" input is converted | One stored shape for search and logging; favourites put them in quick log. |
 | 2026-10-26 | Custom calorie and macro targets in the profile; all three macros alone set the calories | Owner's request. One rule keeps calories and macros consistent; the calorie target wins if both are set (the form says so). |
 | 2026-10-26 | Accounts / sync parked as M7, research first | Needs a server and changes "data only on the phone"; security-sensitive, so Claude-only with a security review. |
+| 2026-10-26 | Qwen worker: reply limit 4096 -> 12288 tokens, cut-off replies get a "write it now" nudge | M1/M2 failures were replies cut off mid-write after ~3.5k tokens of thinking. After the fix all three M3 core tasks passed on the first attempt. |
+| 2026-10-26 | Game rules: food 2 XP (5/day), workout 20 XP (2/day), weigh-in 5 XP; level L costs 50(L+1); any log keeps the streak; a freeze per 7 active days, max 2 | Rewards showing up, not eating or training more; numbers small enough that quests matter. |
+| 2026-10-26 | Daily quests are generated on first open of the day from the 14 days before, then stored | A day's quests never shift; targets follow the user's own habits. |
