@@ -1,0 +1,5 @@
+"id","fdc_id","seq_num","amount","measure_unit_id","portion_description","modifier","gram_weight","data_points","footnote","min_year_acquired"
+"1","2001","","1.0","1000","","sliced","109.0","1","",""
+"2","2002","","2.0","1001","","","33.9","1","",""
+"3","2004","","2.0","1001","","","35.8","1","",""
+"4","2005","","","9999","","","","1","",""
