@@ -84,7 +84,12 @@ describe('foods', () => {
 });
 
 describe('food entries', () => {
-  const e = (id: string, date: string, loggedAt: string) => ({ ...fx.foodEntry, id, date, loggedAt });
+  const e = (id: string, date: string, loggedAt: string) => ({
+    ...fx.foodEntry,
+    id,
+    date,
+    loggedAt,
+  });
 
   it('lists a day in logging order', async () => {
     await addFoodEntry(db, e('2', '2026-10-26', '2026-10-26T12:00:00+00:00'));
@@ -123,9 +128,9 @@ describe('food entries', () => {
   });
 
   it('rejects an invalid entry', async () => {
-    await expect(addFoodEntry(db, { ...fx.foodEntry, meal: 'brunch' as never })).rejects.toBeInstanceOf(
-      ZodError,
-    );
+    await expect(
+      addFoodEntry(db, { ...fx.foodEntry, meal: 'brunch' as never }),
+    ).rejects.toBeInstanceOf(ZodError);
   });
 });
 
@@ -175,6 +180,14 @@ describe('weigh-ins', () => {
     expect((await listWeighIns(db, '2026-10-21', '2026-10-26')).map((w) => w.date)).toEqual([
       '2026-10-24',
       '2026-10-26',
+    ]);
+    expect((await listWeighIns(db, '2026-10-24')).map((w) => w.date)).toEqual([
+      '2026-10-24',
+      '2026-10-26',
+    ]);
+    expect((await listWeighIns(db, undefined, '2026-10-24')).map((w) => w.date)).toEqual([
+      '2026-10-20',
+      '2026-10-24',
     ]);
   });
 });

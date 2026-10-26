@@ -22,7 +22,12 @@ function entry(id: string, extra: Partial<FoodEntry>): FoodEntry {
 
 describe('nutritionFor', () => {
   it('scales per-100 g values to the portion, rounded to 0.1', () => {
-    expect(nutritionFor(fx.food, 40)).toEqual({ kcal: 151.6, proteinG: 5.3, carbsG: 27.1, fatG: 2.6 });
+    expect(nutritionFor(fx.food, 40)).toEqual({
+      kcal: 151.6,
+      proteinG: 5.3,
+      carbsG: 27.1,
+      fatG: 2.6,
+    });
   });
   it('leaves out macros the food does not have', () => {
     const f: Food = { ...fx.food, per100g: { kcal: 52 } };
@@ -87,9 +92,9 @@ describe('expandSavedMeal', () => {
     });
   });
   it('throws if a food in the meal is missing', () => {
-    expect(() =>
-      expandSavedMeal(fx.savedMeal, new Map(), { ...ctx, newId: () => 'x' }),
-    ).toThrow(/food-oats/);
+    expect(() => expandSavedMeal(fx.savedMeal, new Map(), { ...ctx, newId: () => 'x' })).toThrow(
+      /food-oats/,
+    );
   });
 });
 
@@ -185,7 +190,7 @@ describe('defaultMealSlot', () => {
 });
 
 describe('localDate', () => {
-  it("formats a Date as the local calendar day", () => {
+  it('formats a Date as the local calendar day', () => {
     expect(localDate(new Date(2026, 0, 5, 23, 59))).toBe('2026-01-05');
     expect(localDate(new Date(2026, 11, 31, 0, 0))).toBe('2026-12-31');
   });

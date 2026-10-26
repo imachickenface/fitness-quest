@@ -152,7 +152,7 @@ async function readNutrients(
     const nutrientId = fields[nutrientCol] ?? '';
     if (!wanted.has(nutrientId)) continue;
     const fdcId = fields[fdcCol] ?? '';
-    if (fdcId === '') continue;
+    if (!keepFdcIds.has(fdcId)) continue;
 
     let nutrients = byFood.get(fdcId);
     if (nutrients === undefined) {

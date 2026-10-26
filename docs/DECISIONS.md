@@ -11,3 +11,6 @@
 | 2026-10-26 | Programs generated from rules, not copied plans | Published plans are copyrighted; principles aren't. |
 | 2026-10-26 | Public GitHub repo + GitHub Pages (owner's choice, after first picking private) | Free Pages hosting needs a public repo; nothing personal is in the code. |
 | 2026-10-26 | No taste-skill, no Lenis | Personal app screens with a pixel-art direction set by CC0 packs; short screens don't need smooth scroll. |
+| 2026-10-26 | M1 Qwen results: targets, diary, db, build-foods accepted after review; food search written by Claude | Qwen failed food search twice (changed no files), so the two-attempt rule handed it back. Review fixes: `listWeighIns` ignored a one-sided range; the builder kept nutrients for foods it then dropped. |
+| 2026-10-26 | Self-host Pixelify Sans via `@fontsource-variable/pixelify-sans` | Works offline in the PWA and sends no request to Google Fonts. |
+| 2026-10-26 | `foods.json`: 7,687 foods, 956 KB raw / 197 KB gzipped, precached (Workbox limit raised to 4 MB) | Search works offline from the first launch. |

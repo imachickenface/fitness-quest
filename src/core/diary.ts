@@ -89,7 +89,13 @@ export function expandSavedMeal(
   });
 }
 
-export type Totals = { kcal: number; proteinG: number; carbsG: number; fatG: number; count: number };
+export type Totals = {
+  kcal: number;
+  proteinG: number;
+  carbsG: number;
+  fatG: number;
+  count: number;
+};
 
 const emptyTotals = (): Totals => ({ kcal: 0, proteinG: 0, carbsG: 0, fatG: 0, count: 0 });
 
@@ -145,7 +151,9 @@ export type RecentFood = { foodId: string; label: string; grams?: number; meal: 
 export function recentFoods(entries: FoodEntry[], limit = 10): RecentFood[] {
   // filter() already returns a fresh array, so the input is never reordered.
   const sorted = entries
-    .filter((entry): entry is Omit<FoodEntry, 'foodId'> & { foodId: string } => entry.foodId !== null)
+    .filter(
+      (entry): entry is Omit<FoodEntry, 'foodId'> & { foodId: string } => entry.foodId !== null,
+    )
     .sort((a, b) => Date.parse(b.loggedAt) - Date.parse(a.loggedAt));
 
   const seen = new Set<string>();

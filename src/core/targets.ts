@@ -94,7 +94,7 @@ export function calorieTarget(profile: Profile, weightKg: number, today: string)
 
   const kcal = Math.round(target / 10) * 10;
   const proteinG = Math.round(weightKg * proteinFactor(profile.goal));
-  const fatG = Math.round(kcal * 0.25 / 9);
+  const fatG = Math.round((kcal * 0.25) / 9);
   const carbsG = Math.max(0, Math.round((kcal - proteinG * 4 - fatG * 9) / 4));
 
   const roundedBmr = Math.round(bmr);

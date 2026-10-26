@@ -66,10 +66,7 @@ export async function getFood(db: FitnessDb, id: string): Promise<Food | undefin
   return await db.foods.get(id);
 }
 
-export async function getFoodByBarcode(
-  db: FitnessDb,
-  barcode: string,
-): Promise<Food | undefined> {
+export async function getFoodByBarcode(db: FitnessDb, barcode: string): Promise<Food | undefined> {
   // `barcode` is an index, so this is a lookup rather than a scan.
   return await db.foods.where('barcode').equals(barcode).first();
 }
@@ -99,10 +96,7 @@ export async function addFoodEntry(db: FitnessDb, entry: FoodEntry): Promise<voi
   await db.foodEntries.add(parsed);
 }
 
-export async function addFoodEntries(
-  db: FitnessDb,
-  entries: readonly FoodEntry[],
-): Promise<void> {
+export async function addFoodEntries(db: FitnessDb, entries: readonly FoodEntry[]): Promise<void> {
   // Validate everything first: an invalid entry means nothing at all is written.
   const parsed = entries.map((entry) => FoodEntry.parse(entry));
   await db.transaction('rw', db.foodEntries, async () => {
@@ -119,10 +113,7 @@ export async function listEntriesForDate(db: FitnessDb, date: string): Promise<F
   return entries.sort((a, b) => Date.parse(a.loggedAt) - Date.parse(b.loggedAt));
 }
 
-export async function listRecentEntries(
-  db: FitnessDb,
-  limit: number,
-): Promise<FoodEntry[]> {
+export async function listRecentEntries(db: FitnessDb, limit: number): Promise<FoodEntry[]> {
   if (limit <= 0) return [];
   return await db.foodEntries.orderBy('loggedAt').reverse().limit(limit).toArray();
 }
@@ -155,7 +146,7 @@ export async function getProfile(db: FitnessDb): Promise<Profile | undefined> {
 
 export async function saveProfile(db: FitnessDb, profile: Profile): Promise<void> {
   const parsed = Profile.parse(profile);
-  await db.kv.put({ key: PROFILE_KEY, value: parsed }, PROFILE_KEY);
+  await db.kv.put({ key: PROFILE_KEY, value: parsed });
 }
 
 export async function getSettings(db: FitnessDb): Promise<Settings> {
@@ -163,13 +154,10 @@ export async function getSettings(db: FitnessDb): Promise<Settings> {
   return row === undefined ? {} : (row.value as Settings);
 }
 
-export async function updateSettings(
-  db: FitnessDb,
-  patch: Partial<Settings>,
-): Promise<void> {
+export async function updateSettings(db: FitnessDb, patch: Partial<Settings>): Promise<void> {
   const current = await getSettings(db);
   const parsed = Settings.parse({ ...current, ...patch });
-  await db.kv.put({ key: SETTINGS_KEY, value: parsed }, SETTINGS_KEY);
+  await db.kv.put({ key: SETTINGS_KEY, value: parsed });
 }
 
 // ---------- weigh-ins ----------
@@ -180,14 +168,11 @@ export async function upsertWeighIn(db: FitnessDb, weighIn: WeighIn): Promise<vo
   await db.weighIns.put(parsed);
 }
 
-export async function listWeighIns(
-  db: FitnessDb,
-  from?: string,
-  to?: string,
-): Promise<WeighIn[]> {
-  const rows =
-    from !== undefined && to !== undefined
-      ? await db.weighIns.where('date').between(from, to, true, true).toArray()
-      : await db.weighIns.toArray();
-  return rows.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+export async function listWeighIns(db: FitnessDb, from?: string, to?: string): Promise<WeighIn[]> {
+  // The primary key is the date, so the table already comes back in date order.
+  if (from === undefined && to === undefined) return await db.weighIns.toArray();
+  return await db.weighIns
+    .where('date')
+    .between(from ?? '', to ?? '￿', true, true)
+    .toArray();
 }

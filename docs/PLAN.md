@@ -51,17 +51,17 @@ and batches of 🌙 tasks go to the overnight queue.
 |---|---|---|---|---|
 | 0.1 ✅ | Scaffold Vite/React/TS + vite-plugin-pwa, Vitest, Playwright, ESLint/Prettier, `.gitignore`, project `CLAUDE.md`, README | Claude | `npm test`, `npm run lint`, `npm run build` pass on the empty app | - |
 | 0.2 ✅ | `src/contract.ts` types + zod schemas | Claude | type-checks; schema round-trip tests pass | 0.1 |
-| 0.3 | **Public** GitHub repo + GitHub Pages deploy workflow | Claude (owner OKs creating the repo) | app installs from the Pages URL on the phone | 0.1 |
+| 0.3 ✅ | **Public** GitHub repo + GitHub Pages deploy workflow | Claude (owner OKs creating the repo) | app installs from the Pages URL on the phone | 0.1 |
 
 ### M1 - Calories: log a day's food in seconds
 | # | Task | Owner | Done when | Depends |
 |---|---|---|---|---|
-| 1.1 | `core/targets.ts`: Mifflin-St Jeor, activity factors, goal deltas with safety caps | Qwen (medium) 🌙 | Claude's table tests pass (known values, caps, edge ages) | 0.2 |
-| 1.2 | `scripts/build-foods.ts`: USDA Foundation + SR Legacy → compact `foods.json` | Qwen 🌙 | fixture-CSV test passes; real output < 1 MB gzipped (measured) | 0.2 |
-| 1.3 | `core/foodSearch.ts`: offline ranked search (prefix, tokens, recents boost) | Qwen 🌙 | ranking tests pass; 10k-item search < 20 ms in a benchmark test | 1.2 |
-| 1.4 | `db/`: Dexie schema + repositories for foods, entries, meals, profile | Qwen 🌙 | repository tests pass on fake-indexeddb | 0.2 |
-| 1.5 | `core/diary.ts`: day totals, recents, favourites, saved-meal expansion | Qwen 🌙 | tests pass | 0.2 |
-| 1.6 | UI: profile setup, home "speed log" screen, search sheet, portion picker, quick-add | Claude | E2E: repeat meal ≤ 2 taps, search-and-log ≤ 4 taps, at phone width | 1.1-1.5 |
+| 1.1 ✅ | `core/targets.ts`: Mifflin-St Jeor, activity factors, goal deltas with safety caps | Qwen (medium) 🌙 | Claude's table tests pass (known values, caps, edge ages) | 0.2 |
+| 1.2 ✅ | `scripts/build-foods.ts`: USDA Foundation + SR Legacy → compact `foods.json` | Qwen 🌙 | fixture-CSV test passes; real output < 1 MB gzipped (measured) | 0.2 |
+| 1.3 ✅ | `core/foodSearch.ts`: offline ranked search (prefix, tokens, recents boost) | Qwen 🌙 | ranking tests pass; 10k-item search < 20 ms in a benchmark test | 1.2 |
+| 1.4 ✅ | `db/`: Dexie schema + repositories for foods, entries, meals, profile | Qwen 🌙 | repository tests pass on fake-indexeddb | 0.2 |
+| 1.5 ✅ | `core/diary.ts`: day totals, recents, favourites, saved-meal expansion | Qwen 🌙 | tests pass | 0.2 |
+| 1.6 ✅ | UI: profile setup, home "speed log" screen, search sheet, portion picker, quick-add | Claude | E2E: repeat meal ≤ 2 taps, search-and-log ≤ 4 taps, at phone width | 1.1-1.5 |
 
 ### M2 - Barcode scanning
 | # | Task | Owner | Done when | Depends |

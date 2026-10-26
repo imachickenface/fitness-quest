@@ -104,10 +104,7 @@ describe('searchFoods', () => {
     const words = ['chicken', 'beef', 'rice', 'bread', 'apple', 'milk', 'cheese', 'pasta', 'bean'];
     const big = buildIndex(
       Array.from({ length: 10_000 }, (_, i) =>
-        food(
-          `f${i}`,
-          `${words[i % 9]}, ${words[(i * 7) % 9]} style, cooked variant ${i}`,
-        ),
+        food(`f${i}`, `${words[i % 9]}, ${words[(i * 7) % 9]} style, cooked variant ${i}`),
       ),
     );
     const times: number[] = [];
