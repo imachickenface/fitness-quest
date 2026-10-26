@@ -66,9 +66,9 @@ and batches of 🌙 tasks go to the overnight queue.
 ### M2 - Barcode scanning
 | # | Task | Owner | Done when | Depends |
 |---|---|---|---|---|
-| 2.1 | `core/off.ts`: Open Food Facts client (fields filter, `X-User-Agent`, missing-nutrition handling, ≥ 4 s spacing, local cache) | Qwen 🌙 | tests with mocked fetch pass (found, not found, partial, 503) | 1.4 |
+| 2.1 ✅ | `core/off.ts`: Open Food Facts client (fields filter, `X-User-Agent`, missing-nutrition handling, ≥ 4 s spacing, local cache) | Qwen 🌙 | tests with mocked fetch pass (found, not found, partial, 503) | 1.4 |
 | 2.2 | Scanner screen: camera, native `BarcodeDetector`, lazy polyfill fallback | Claude | Playwright test with a fake camera image; **real phone scans 5 products** | 2.1 |
-| 2.3 | Manual label entry → custom food (becomes a favourite) | Claude | E2E test | 2.2 |
+| 2.3 ✅ | Manual label entry → custom food (becomes a favourite) | Claude | E2E test | 2.2 |
 
 ### M3 - The game: quests, XP, the map
 | # | Task | Owner | Done when | Depends |

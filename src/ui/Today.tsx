@@ -35,10 +35,12 @@ import {
   newId,
   nowStamp,
 } from './format.ts';
+import { LabelSheet } from './LabelSheet.tsx';
 import { PortionSheet } from './PortionSheet.tsx';
 import { ProfileForm } from './ProfileForm.tsx';
 import { QuickAddSheet } from './QuickAddSheet.tsx';
 import { SaveMealSheet } from './SaveMealSheet.tsx';
+import { ScanSheet, type Missing } from './ScanSheet.tsx';
 import { SearchSheet } from './SearchSheet.tsx';
 import { Sheet } from './Sheet.tsx';
 import { Toast, type ToastMessage } from './Toast.tsx';
@@ -49,6 +51,8 @@ type Open =
   | { kind: 'search' }
   | { kind: 'portion'; food: Food; grams?: number }
   | { kind: 'quick' }
+  | { kind: 'scan' }
+  | { kind: 'label'; missing: Partial<Missing> }
   | { kind: 'save-meal'; meal: MealSlot }
   | { kind: 'profile' };
 
@@ -237,6 +241,9 @@ export function Today({ profile }: { profile: Profile }) {
         >
           Search food
         </button>
+        <button type="button" className="btn btn-big" onClick={() => setOpen({ kind: 'scan' })}>
+          Scan
+        </button>
         <button type="button" className="btn btn-big" onClick={() => setOpen({ kind: 'quick' })}>
           + kcal
         </button>
@@ -311,6 +318,21 @@ export function Today({ profile }: { profile: Profile }) {
           recentFoodIds={recentIds}
           onClose={close}
           onPick={(food) => setOpen({ kind: 'portion', food, grams: lastGrams.get(food.id) })}
+          onAddOwn={() => setOpen({ kind: 'label', missing: {} })}
+        />
+      )}
+      {open.kind === 'scan' && (
+        <ScanSheet
+          onClose={close}
+          onFound={(food) => setOpen({ kind: 'portion', food, grams: lastGrams.get(food.id) })}
+          onMissing={(missing) => setOpen({ kind: 'label', missing })}
+        />
+      )}
+      {open.kind === 'label' && (
+        <LabelSheet
+          {...open.missing}
+          onClose={close}
+          onSaved={(food) => setOpen({ kind: 'portion', food })}
         />
       )}
       {open.kind === 'portion' && (

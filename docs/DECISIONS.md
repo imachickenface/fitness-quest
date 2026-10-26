@@ -14,3 +14,6 @@
 | 2026-10-26 | M1 Qwen results: targets, diary, db, build-foods accepted after review; food search written by Claude | Qwen failed food search twice (changed no files), so the two-attempt rule handed it back. Review fixes: `listWeighIns` ignored a one-sided range; the builder kept nutrients for foods it then dropped. |
 | 2026-10-26 | Self-host Pixelify Sans via `@fontsource-variable/pixelify-sans` | Works offline in the PWA and sends no request to Google Fonts. |
 | 2026-10-26 | `foods.json`: 7,687 foods, 956 KB raw / 197 KB gzipped, precached (Workbox limit raised to 4 MB) | Search works offline from the first launch. |
+| 2026-10-26 | Open Food Facts client written by Claude | Qwen stopped twice without writing a file (read the inputs, then ended). Same failure as M1 food search: worth checking the worker before the next big hand-off. |
+| 2026-10-26 | Barcode fallback decoder bundled with the app (`zxing-wasm` 3.1.6 `?url`), cached on first use, not precached | The library's default downloads it from a CDN. Chrome on Android uses its native detector, so most phones never fetch the 946 KB file. |
+| 2026-10-26 | Custom foods from a label are stored per 100 g and saved as favourites; "per serving" input is converted | One stored shape for search and logging; favourites put them in quick log. |

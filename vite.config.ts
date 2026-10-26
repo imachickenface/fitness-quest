@@ -28,6 +28,14 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest,woff2,json}'],
         // the bundled USDA food list (public/foods.json) must be precached for offline search
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        // the barcode polyfill's decoder: only phones without a native BarcodeDetector need it
+        runtimeCaching: [
+          {
+            urlPattern: /\.wasm$/,
+            handler: 'CacheFirst',
+            options: { cacheName: 'wasm' },
+          },
+        ],
       },
     }),
   ],
