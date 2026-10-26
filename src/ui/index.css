@@ -1,0 +1,52 @@
+:root {
+  --bg: #14162b;
+  --surface: #20234a;
+  --text: #f4f1e8;
+  --text-muted: #b9b6c9;
+  --gold: #f2b632;
+
+  color-scheme: dark;
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--bg);
+}
+
+.title-screen {
+  min-height: 100dvh;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 1rem;
+  padding: 1.5rem 1rem;
+  text-align: center;
+}
+
+.title-icon {
+  width: 96px;
+  height: 96px;
+  image-rendering: pixelated;
+}
+
+.title-screen h1 {
+  margin: 0;
+  color: var(--gold);
+  font-size: 2rem;
+  letter-spacing: 0.04em;
+}
+
+.title-screen p {
+  margin: 0;
+  max-width: 28ch;
+  color: var(--text-muted);
+}

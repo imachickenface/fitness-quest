@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges">
+  <rect width="16" height="16" fill="#14162b"/>
+  <!-- bar -->
+  <rect x="4" y="7" width="8" height="2" fill="#c9ccd9"/>
+  <!-- inner plates -->
+  <rect x="3" y="4" width="2" height="8" fill="#f2b632"/>
+  <rect x="11" y="4" width="2" height="8" fill="#f2b632"/>
+  <!-- outer plates -->
+  <rect x="2" y="5" width="1" height="6" fill="#d9822b"/>
+  <rect x="13" y="5" width="1" height="6" fill="#d9822b"/>
+  <!-- highlight -->
+  <rect x="3" y="4" width="1" height="3" fill="#fde39a"/>
+  <rect x="11" y="4" width="1" height="3" fill="#fde39a"/>
+</svg>
