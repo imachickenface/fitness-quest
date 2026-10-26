@@ -82,8 +82,32 @@ and batches of 🌙 tasks go to the overnight queue.
 | 3.7 (part) ✅ | Quest log, XP bar, level-up and quest-complete moments (GSAP), reduced-motion path | Claude | E2E: log food → quest completes → hero moves | 3.2-3.6 |
 
 Split on 2026-10-26 to spare the owner's usage: **M3a done** = 3.1-3.4 plus the quest log, XP bar, streak,
-tabs and quest-complete / level-up toasts (CSS, no GSAP yet). **M3b left** = 3.5 art mock for the owner to
-approve, 3.6 map renderer, and the GSAP moments where the hero walks to the next node.
+tabs and quest-complete / level-up toasts (CSS, no GSAP yet). **M3b left**: see below.
+
+### M3b - The hero and the map (expanded 2026-10-26 with the owner's character ideas)
+The hero is drawn in code from pixel layers (no sprite pack): CC0 packs have no body-shape variants, and LPC
+sprites carry share-alike licences. Body shape is derived from records like the rest of the game, never stored.
+
+| # | Task | Owner | Done when | Depends |
+|---|---|---|---|---|
+| 3.5 | Art mock: a 32x32 hero at 5 muscle levels x 5 builds, 4 customisation sets, one map screen | Claude | the owner approves a screenshot | - |
+| 3.8 | `contract.ts`: `Profile.avatar` (skin, hair style, hair colour, outfit colour, accessory) + unlock list | Claude | schema tests | 3.5 |
+| 3.9 | `core/body.ts`: muscle 0-4 and build -2..+2 from records (rules below) | Qwen | Claude's tests: ramps up, decays, partial-log days ignored, caps | 3.2 |
+| 3.10 | Hero renderer: layered canvas drawing from avatar + body, nearest-neighbour scaling | Claude | screenshot grid of all 25 shapes | 3.5, 3.9 |
+| 3.11 | Customise screen (first run and from Quests), level-locked items shown greyed with their level | Claude | E2E: change hair and outfit, it persists | 3.8, 3.10 |
+| 3.6 | Canvas map + hero walking between nodes | Claude | 60 fps on the phone; screenshot check | 3.10 |
+| 3.7 | GSAP moments: quest complete, level up, body change ("Looking stronger!"), reduced-motion path | Claude | E2E: log food -> quest completes -> hero moves | 3.6 |
+
+Body rules (proposed, owner to confirm):
+- **Muscle 0-4** from the last 28 days: points = workouts (max 1 a day) + completed quests / 2 + streak days / 7.
+  Steps at 4, 10, 18, 28 points. It goes both ways: stop training and it fades over a few weeks.
+- **Build -2..+2** from calorie balance over the last 14 days, counting only finished days (not today) with at
+  least 2 food entries, so a day where only breakfast was logged never reads as starving. Average of
+  (eaten - target) / target: above +10% is +1, above +25% is +2; below -15% is -1, below -30% is -2. Fewer than
+  3 counted days: no change.
+- Changes are gradual by design (2-4 week windows) and capped; under-eating shows as tired (pale, slumped), not
+  as a reward. A setting turns body changes off.
+- Cosmetics unlock by level (e.g. headband at 3, cape at 5, crown at 10), so levels give something to see.
 
 ### M4 - Import notes, quests from your own history
 | # | Task | Owner | Done when | Depends |
