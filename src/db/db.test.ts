@@ -5,8 +5,13 @@ import * as fx from '../test/fixtures.ts';
 import {
   addFoodEntries,
   addFoodEntry,
+  addQuestsIfMissing,
   deleteFoodEntry,
   deleteSavedMeal,
+  deleteWorkout,
+  listQuests,
+  listWorkouts,
+  upsertWorkout,
   getFood,
   getFoodByBarcode,
   getProfile,
@@ -189,5 +194,28 @@ describe('weigh-ins', () => {
       '2026-10-20',
       '2026-10-24',
     ]);
+  });
+});
+
+describe('workouts', () => {
+  it('upserts, lists newest first, deletes and validates', async () => {
+    await upsertWorkout(db, fx.runWorkout);
+    await upsertWorkout(db, fx.strengthWorkout);
+    expect((await listWorkouts(db)).map((w) => w.id)).toEqual(['workout-1', 'workout-2']);
+    await deleteWorkout(db, 'workout-1');
+    expect((await listWorkouts(db)).map((w) => w.id)).toEqual(['workout-2']);
+    await expect(upsertWorkout(db, { ...fx.runWorkout, exercises: [] })).rejects.toBeInstanceOf(
+      ZodError,
+    );
+  });
+});
+
+describe('quests', () => {
+  it('adds only quests that are not stored yet, so stored ones never change', async () => {
+    await addQuestsIfMissing(db, [fx.dailyQuest]);
+    await addQuestsIfMissing(db, [{ ...fx.dailyQuest, xp: 999 }, fx.bossQuest]);
+    const stored = await listQuests(db);
+    expect(stored).toHaveLength(2);
+    expect(stored.find((q) => q.id === fx.dailyQuest.id)?.xp).toBe(30);
   });
 });

@@ -176,3 +176,41 @@ export async function listWeighIns(db: FitnessDb, from?: string, to?: string): P
     .between(from ?? '', to ?? '￿', true, true)
     .toArray();
 }
+
+// ---------- workouts ----------
+
+export async function upsertWorkout(db: FitnessDb, workout: Workout): Promise<void> {
+  await db.workouts.put(Workout.parse(workout));
+}
+
+export async function deleteWorkout(db: FitnessDb, id: string): Promise<void> {
+  await db.workouts.delete(id);
+}
+
+/** Newest first. */
+export async function listWorkouts(db: FitnessDb): Promise<Workout[]> {
+  const rows = await db.workouts.toArray();
+  return rows.sort((a, b) => Date.parse(b.loggedAt) - Date.parse(a.loggedAt));
+}
+
+// ---------- quests ----------
+
+/** Store generated quests, keeping any already stored with the same id so a day's quests never change. */
+export async function addQuestsIfMissing(db: FitnessDb, quests: readonly Quest[]): Promise<void> {
+  const parsed = quests.map((q) => Quest.parse(q));
+  await db.transaction('rw', db.quests, async () => {
+    const existing = await db.quests.bulkGet(parsed.map((q) => q.id));
+    const fresh = parsed.filter((_, i) => existing[i] === undefined);
+    if (fresh.length > 0) await db.quests.bulkAdd(fresh);
+  });
+}
+
+export async function listQuests(db: FitnessDb): Promise<Quest[]> {
+  return await db.quests.toArray();
+}
+
+// ---------- everything the game reads ----------
+
+export async function listAllFoodEntries(db: FitnessDb): Promise<FoodEntry[]> {
+  return await db.foodEntries.toArray();
+}

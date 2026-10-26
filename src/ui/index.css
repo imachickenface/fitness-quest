@@ -576,7 +576,7 @@ legend {
 .toast-slot {
   position: fixed;
   right: 0;
-  bottom: calc(16px + env(safe-area-inset-bottom));
+  bottom: calc(80px + env(safe-area-inset-bottom));
   left: 0;
   z-index: 10;
   display: grid;
@@ -669,4 +669,203 @@ legend {
   align-items: center;
   color: var(--gold);
   cursor: pointer;
+}
+
+/* ---------- shell: tabs and screens ---------- */
+
+.toast-slot.toast-top {
+  top: calc(12px + env(safe-area-inset-top));
+  bottom: auto;
+}
+
+.tabbar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding-bottom: env(safe-area-inset-bottom);
+  border-top: 2px solid var(--line);
+  background: var(--surface);
+}
+
+.tab {
+  position: relative;
+  min-height: 60px;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font-family: var(--pixel);
+  font-size: 1.05rem;
+  cursor: pointer;
+}
+
+.tab[aria-current='page'] {
+  color: var(--gold);
+  box-shadow: inset 0 3px 0 var(--gold);
+}
+
+.tab:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
+}
+
+.tab-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 11px;
+  background: var(--gold);
+  color: var(--line);
+  font-size: 0.8rem;
+  vertical-align: 2px;
+}
+
+.screen-head {
+  display: flex;
+  align-items: center;
+  min-height: 64px;
+}
+
+.actions-two {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* ---------- quests ---------- */
+
+.hero-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.hero-level .pixel {
+  color: var(--gold);
+  font-size: 2.2rem;
+}
+
+.xp-bar {
+  margin-top: 8px;
+}
+
+.xp-bar .bar-fill {
+  background: var(--gold);
+  transition: width 0.6s ease-out;
+}
+
+.hero-xp {
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+}
+
+.quest-section {
+  margin-top: 24px;
+}
+
+.quest-list,
+.workout-list,
+.chip-row {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.quest {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.quest-head,
+.workout-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.quest-title,
+.workout-title {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.quest-xp {
+  color: var(--gold);
+}
+
+.quest.done {
+  border-color: var(--green);
+}
+
+.quest.done .bar-fill {
+  background: var(--green);
+}
+
+.quest-label,
+.workout-detail {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* ---------- workouts ---------- */
+
+.history {
+  margin-top: 24px;
+}
+
+.workout {
+  margin-top: 10px;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.exercise {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 12px;
+}
+
+.exercise-name {
+  float: left;
+  padding: 0;
+  font-family: var(--pixel);
+  font-size: 1.1rem;
+}
+
+.exercise-remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+}
+
+.set-row {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr) auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.set-no {
+  text-align: center;
+}
+
+.add-exercise {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
 }

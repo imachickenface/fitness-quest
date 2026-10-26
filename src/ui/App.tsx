@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { getProfile, openDb, type FitnessDb } from '../db/db.ts';
 import { DbContext, useDb } from './dbContext.ts';
 import { ProfileForm } from './ProfileForm.tsx';
-import { Today } from './Today.tsx';
+import { Shell } from './Shell.tsx';
 
 export function App({ db }: { db?: FitnessDb }) {
   const [database] = useState(() => db ?? openDb());
@@ -20,11 +20,7 @@ function Main() {
 
   if (profile === undefined) return <main className="title-screen" aria-busy="true" />;
   if (profile === null) return <Welcome />;
-  return (
-    <main>
-      <Today profile={profile} />
-    </main>
-  );
+  return <Shell profile={profile} />;
 }
 
 function Welcome() {
