@@ -61,7 +61,8 @@ def load(spec, x):
     name, muscle, build = parts[0], int(parts[1]), int(parts[2])
     hide = set(parts[3].split(",")) if len(parts) > 3 and parts[3] else set()
     before = set(bpy.data.objects)
-    bpy.ops.import_scene.gltf(filepath=os.path.join(KAYKIT, name))
+    path = os.path.join(os.path.dirname(KAYKIT), name) if "/" in name else os.path.join(KAYKIT, name)
+    bpy.ops.import_scene.gltf(filepath=path)
     new = [o for o in bpy.data.objects if o not in before]
     rig = next(o for o in new if o.type == "ARMATURE")
     for o in new:
