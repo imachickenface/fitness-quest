@@ -208,6 +208,14 @@ describe('beat_pr', () => {
   });
 });
 
+describe('exercise names', () => {
+  it('match through the exercise catalogue', () => {
+    const q = quest({ type: 'beat_pr', exercise: 'Bench press', weightKg: 90, reps: 5 });
+    const r = recs({ workouts: [lift('w', '2026-10-27', 'Bench', [{ reps: 5, weightKg: 90 }])] });
+    expect(questProgress(q, r).complete).toBe(true);
+  });
+});
+
 describe('run_distance', () => {
   const r = recs({
     workouts: [

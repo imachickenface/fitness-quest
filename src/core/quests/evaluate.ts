@@ -19,6 +19,7 @@ import type {
   Workout,
 } from '../../contract.ts';
 import { exerciseKey } from '../../contract.ts';
+import { findExercise } from '../exercises.ts';
 import type { Records } from '../records.ts';
 
 type Window = Quest['window'];
@@ -104,9 +105,11 @@ function totalDurationS(workout: Workout): number | undefined {
   return seen ? total : undefined;
 }
 
-/** Sets of the named exercise in one workout, names matched with exerciseKey. */
+/** Sets of `exercise` if it is the quest's exercise: same name, or the same catalogue lift ("Bench" = "Bench press"). */
 function setsOf(exercise: ExerciseLog, key: string): SetEntry[] {
-  return exerciseKey(exercise.name) === key ? exercise.sets : [];
+  if (exerciseKey(exercise.name) === key) return exercise.sets;
+  const a = findExercise(exercise.name);
+  return a !== undefined && a === findExercise(key) ? exercise.sets : [];
 }
 
 /** Workouts inside the window, in order. */
