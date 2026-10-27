@@ -26,3 +26,23 @@ test('the hero shows on the Quests screen, and a new choice persists', async ({ 
     'true',
   );
 });
+
+test('completing quests moves the hero along the map', async ({ page }) => {
+  await page.goto('./');
+  await page.getByLabel('Birth year').fill('1995');
+  await page.getByLabel('Height (cm)').fill('180');
+  await page.getByLabel('Weight (kg)').fill('80');
+  await page.getByRole('button', { name: 'Start the adventure' }).click();
+  await page.getByRole('button', { name: /^Quests/ }).click();
+  // setting up records a weigh-in, which completes today's "Step on the scale"
+  await expect(page.locator('.hero-view')).toHaveAttribute('data-node', '1');
+
+  await page.getByRole('button', { name: 'Food' }).click();
+  for (const kcal of ['400', '500']) {
+    await page.getByRole('button', { name: '+ kcal' }).click();
+    await page.getByLabel('Calories (kcal)').fill(kcal);
+    await page.getByRole('button', { name: 'Log it' }).click();
+  }
+  await page.getByRole('button', { name: /^Quests/ }).click();
+  await expect(page.locator('.hero-view')).toHaveAttribute('data-node', '2');
+});

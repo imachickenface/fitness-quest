@@ -48,7 +48,13 @@ export function HeroCard({ state, hero, body, cheer, onChange }: HeroProps) {
             </div>
           }
         >
-          <HeroView hero={hero} muscle={body.muscle} build={body.build} cheer={cheer} />
+          <HeroView
+            hero={hero}
+            muscle={body.muscle}
+            build={body.build}
+            node={state.mapNode}
+            cheer={cheer}
+          />
         </Suspense>
         <button type="button" className="link-btn hero-change" onClick={onChange}>
           Change hero

@@ -39,8 +39,7 @@ export function Shell({ profile }: { profile: Profile }) {
       say(`Level up! You reached level ${game.state.level}`);
       setCheer((c) => ({ n: (c?.n ?? 0) + 1, clip: 'jump' }));
     } else if (fresh[0]) {
-      say(`Quest complete: ${fresh[0].quest.title} +${fresh[0].quest.xp} XP`);
-      setCheer((c) => ({ n: (c?.n ?? 0) + 1, clip: 'emote-yes' }));
+      say(`Quest complete: ${fresh[0].quest.title} +${fresh[0].quest.xp} XP`); // the hero walks on and cheers
     }
   }, [game, say]);
 

@@ -1222,11 +1222,11 @@ p {
 
 .hero-view {
   position: relative;
-  height: 240px;
+  height: 300px;
 }
 
-/* a soft contact shadow under the feet */
-.hero-view::after {
+/* a soft contact shadow under the still picture (the 3D world has real shadows) */
+.hero-view:not([data-state='ready'])::after {
   content: '';
   position: absolute;
   bottom: 22px;
@@ -1257,9 +1257,13 @@ p {
 
 .hero-change {
   position: absolute;
-  right: 12px;
-  bottom: 4px;
+  right: 10px;
+  bottom: 10px;
   z-index: 2;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 88%);
 }
 
 .hero-grid {

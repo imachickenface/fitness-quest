@@ -78,7 +78,7 @@ and batches of 🌙 tasks go to the overnight queue.
 | 3.3 ✅ | `core/quests/evaluate.ts`: progress of every `QuestCondition` from records | Qwen 🌙 | one test group per condition type | 0.2 |
 | 3.4 ✅ | `core/quests/daily.ts`: seeded daily/weekly quest picks from profile + recent behaviour | Qwen 🌙 | deterministic-seed tests; never asks for more than the user's range | 3.3 |
 | 3.5 ✅ | Art direction: tiles, palette, pixel font, map layout (Tiled JSON), hero and monsters | Claude | a static mock screenshot the owner likes | - |
-| 3.6 | Canvas map renderer + hero walking between nodes | Claude | 60 fps on the phone; screenshot check | 3.5 |
+| 3.6 ✅ | Canvas map renderer + hero walking between nodes | Claude | 60 fps on the phone; screenshot check | 3.5 |
 | 3.7 (part) ✅ | Quest log, XP bar, level-up and quest-complete moments (GSAP), reduced-motion path | Claude | E2E: log food → quest completes → hero moves | 3.2-3.6 |
 
 Split on 2026-10-26 to spare the owner's usage: **M3a done** = 3.1-3.4 plus the quest log, XP bar, streak,
@@ -91,7 +91,8 @@ Changed 2026-10-26 (built): for now the hero uses Kenney's Mini Characters (CC0,
 (`art/kaykit/`, plus a sporty recolour test in `art/sporty.py`) stays available. Body shape comes from morph
 targets added in Blender (`art/body_keys.py`: muscle, fat, thin), because uneven bone scaling skewed the rotated
 arms; three.js blends them with morphTargetInfluences. Preview: `docs/hero-kenney-test.png`. Customisation is the choice of character for now (3.8, 3.11); mixing
-heads and bodies, recolours and level-locked gear come later. Left in M3b: 3.6 the map, 3.7 GSAP moments.
+heads and bodies, recolours and level-locked gear come later. The map (3.6) is the hero's own 3D world: an endless path of stops, one per completed quest
+(`src/ui/hero/world.ts`, `heroScene.ts`). Left in M3b: 3.7 richer moments (GSAP).
 
 | # | Task | Owner | Done when | Depends |
 |---|---|---|---|---|
