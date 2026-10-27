@@ -4,6 +4,7 @@ import type { RecentExercise } from './workoutFormat.ts';
 import { fromUnit, toUnit, type Units } from './format.ts';
 import { ExercisePicker } from './ExercisePicker.tsx';
 import { Sheet } from './Sheet.tsx';
+import { UnitSwitch } from './UnitSwitch.tsx';
 
 type SetDraft = { reps: string; kg: string };
 type ExerciseDraft = { key: number; name: string; sets: SetDraft[] };
@@ -18,11 +19,21 @@ type Props = {
   /** pre-filled exercises and title, e.g. today's split day */
   initial?: { title: string; exercises: { name: string; sets: SetEntry[] }[] };
   units?: Units;
+  /** the kg | lb switch was flipped */
+  onUnitsChange?: (units: Units) => void;
   onSave: (exercises: ExerciseLog[], title: string) => void;
   onClose: () => void;
 };
 
-export function WorkoutSheet({ recent, initial, units = 'metric', onSave, onClose }: Props) {
+export function WorkoutSheet({
+  recent,
+  initial,
+  units: startUnits = 'metric',
+  onUnitsChange,
+  onSave,
+  onClose,
+}: Props) {
+  const [units, setUnits] = useState<Units>(startUnits);
   const unit = units === 'imperial' ? 'lb' : 'kg';
   const [exercises, setExercises] = useState<ExerciseDraft[]>(() =>
     (initial?.exercises ?? []).map((e, i) => ({
@@ -44,6 +55,22 @@ export function WorkoutSheet({ recent, initial, units = 'metric', onSave, onClos
     setNextKey((k) => k + 1);
   }
 
+  /** Flip kg and lb, converting the weights typed so far. */
+  function switchUnits(next: Units) {
+    if (next === units) return;
+    const convert = (text: string) => {
+      const n = Number(text.replace(',', '.'));
+      return text.trim() === '' || !Number.isFinite(n)
+        ? text
+        : String(toUnit(fromUnit(n, units), next));
+    };
+    setExercises((xs) =>
+      xs.map((e) => ({ ...e, sets: e.sets.map((s) => ({ ...s, kg: convert(s.kg) })) })),
+    );
+    setUnits(next);
+    onUnitsChange?.(next);
+  }
+
   function update(key: number, fn: (e: ExerciseDraft) => ExerciseDraft) {
     setExercises((xs) => xs.map((e) => (e.key === key ? fn(e) : e)));
   }
@@ -63,6 +90,19 @@ export function WorkoutSheet({ recent, initial, units = 'metric', onSave, onClos
   return (
     <Sheet title="Log a workout" onClose={onClose}>
       <form className="form" onSubmit={submit}>
+        <div className="sheet-units">
+          <span className="muted">Weights in</span>
+          <UnitSwitch
+            legend="Weights in"
+            name="weight-unit"
+            value={units}
+            options={[
+              ['metric', 'kg'],
+              ['imperial', 'lb'],
+            ]}
+            onChange={switchUnits}
+          />
+        </div>
         {suggestions.length > 0 && (
           <div>
             <p className="muted">Tap to add with last time's sets</p>

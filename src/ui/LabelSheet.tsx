@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from 'react';
-import type { Food, Macros } from '../contract.ts';
+import type { AmountUnit, Food, Macros } from '../contract.ts';
 import { upsertFood } from '../db/db.ts';
 import { useDb } from './dbContext.ts';
 import { newId, nowStamp } from './format.ts';
 import { Sheet } from './Sheet.tsx';
+import { UnitSwitch } from './UnitSwitch.tsx';
 
 type Props = {
   barcode?: string;
@@ -29,6 +30,7 @@ export function LabelSheet({
   const [name, setName] = useState(initialName ?? '');
   const [brand, setBrand] = useState(initialBrand ?? '');
   const [basis, setBasis] = useState<Basis>('100g');
+  const [unit, setUnit] = useState<AmountUnit>('g');
   const [serving, setServing] = useState('');
   const [kcalText, setKcal] = useState('');
   const [protein, setProtein] = useState('');
@@ -55,8 +57,8 @@ export function LabelSheet({
     if (per100g.kcal > 1000) {
       setError(
         basis === '100g'
-          ? 'Over 1,000 kcal per 100 g is not possible. Check the number.'
-          : 'That works out over 1,000 kcal per 100 g. Check the serving size.',
+          ? `Over 1,000 kcal per 100 ${unit} is not possible. Check the number.`
+          : `That works out over 1,000 kcal per 100 ${unit}. Check the serving size.`,
       );
       return;
     }
@@ -73,6 +75,7 @@ export function LabelSheet({
       per100g,
       portions: servingOk ? [{ label: '1 serving', grams: round1(servingG) }] : [],
       favourite: true,
+      ...(unit === 'ml' ? { unit } : {}),
       updatedAt: nowStamp(),
     };
     try {
@@ -95,11 +98,21 @@ export function LabelSheet({
           <span>Brand (optional)</span>
           <input value={brand} maxLength={200} onChange={(e) => setBrand(e.target.value)} />
         </label>
+        <UnitSwitch
+          legend="Is it a food or a drink?"
+          name="label-unit"
+          value={unit}
+          options={[
+            ['g', 'Food (g)'],
+            ['ml', 'Drink (ml)'],
+          ]}
+          onChange={setUnit}
+        />
         <fieldset className="segmented">
           <legend>Values on the label are</legend>
           {(
             [
-              ['100g', 'Per 100 g'],
+              ['100g', `Per 100 ${unit}`],
               ['serving', 'Per serving'],
             ] as const
           ).map(([value, label]) => (
@@ -116,7 +129,9 @@ export function LabelSheet({
           ))}
         </fieldset>
         <label className="field">
-          <span>Serving size (g){basis === '100g' && ' (optional)'}</span>
+          <span>
+            Serving size ({unit}){basis === '100g' && ' (optional)'}
+          </span>
           <input inputMode="decimal" value={serving} onChange={(e) => setServing(e.target.value)} />
         </label>
         <div className="field-row two">

@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useCallback, useMemo, useState } from 'react';
-import type { Food, FoodEntry, MealSlot, Profile, SavedMeal } from '../contract.ts';
+import type { AmountUnit, Food, FoodEntry, MealSlot, Profile, SavedMeal } from '../contract.ts';
 import {
   dayTotals,
   defaultMealSlot,
@@ -33,7 +33,7 @@ import {
   MEAL_SLOTS,
   addDays,
   dayTitle,
-  grams as fmtGrams,
+  amount,
   kcal,
   newId,
   nowStamp,
@@ -130,11 +130,22 @@ export function Today({ profile, streakDays }: { profile: Profile; streakDays?: 
     setToast((prev) => ({ id: (prev?.id ?? 0) + 1, text, undo }));
   }
 
-  async function logFood(food: Food, grams: number, meal: MealSlot, favourite = food.favourite) {
+  async function logFood(
+    food: Food,
+    grams: number,
+    meal: MealSlot,
+    favourite = food.favourite,
+    unit: AmountUnit = food.unit ?? 'g',
+  ) {
     const now = nowStamp();
-    const stored = favourite === food.favourite ? food : { ...food, favourite, updatedAt: now };
+    const sameUnit = unit === (food.unit ?? 'g');
+    const stored =
+      favourite === food.favourite && sameUnit
+        ? food
+        : { ...food, favourite, unit, updatedAt: now };
     await upsertFood(db, stored);
-    const entry = entryFromFood(stored, grams, { date, meal, now, id: newId() });
+    const made = entryFromFood(stored, grams, { date, meal, now, id: newId() });
+    const entry = unit === 'ml' ? { ...made, unit } : made;
     await addFoodEntry(db, entry);
     say(
       `${entry.label}: ${kcal(entry.nutrition.kcal)} kcal`,
@@ -193,7 +204,7 @@ export function Today({ profile, streakDays }: { profile: Profile; streakDays?: 
     quick.push({
       key: `food-${food.id}`,
       label: `${star ? '★ ' : ''}${food.name}`,
-      detail: `${fmtGrams(g)} · ${kcal((food.per100g.kcal * g) / 100)} kcal`,
+      detail: `${amount(g, food.unit)} · ${kcal((food.per100g.kcal * g) / 100)} kcal`,
       log: () => void logFood(food, g, mealNow),
     });
   };
@@ -369,7 +380,7 @@ export function Today({ profile, streakDays }: { profile: Profile; streakDays?: 
                     <span className="entry-name">
                       {e.label}
                       <span className="muted">
-                        {e.grams !== undefined ? fmtGrams(e.grams) : 'Quick add'}
+                        {e.grams === undefined ? 'Quick add' : amount(e.grams, e.unit)}
                       </span>
                     </span>
                     <span className="entry-kcal">{kcal(e.nutrition.kcal)}</span>
@@ -440,9 +451,9 @@ export function Today({ profile, streakDays }: { profile: Profile; streakDays?: 
           defaultGrams={open.grams}
           defaultMeal={forMeal ?? mealNow}
           onClose={close}
-          onLog={(food, g, meal, fav) => {
+          onLog={(food, g, meal, fav, unit) => {
             close();
-            void logFood(food, g, meal, fav);
+            void logFood(food, g, meal, fav, unit);
           }}
         />
       )}

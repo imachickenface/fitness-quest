@@ -259,6 +259,9 @@ export function Train({ profile, say }: Props) {
         <WorkoutSheet
           recent={recent}
           units={profile.units}
+          onUnitsChange={(units) =>
+            void saveProfile(db, { ...profile, units, updatedAt: nowStamp() })
+          }
           initial={{ title: session.title, exercises: sessionExercises(session) }}
           onClose={close}
           onSave={(exercises: ExerciseLog[], title) =>
@@ -291,6 +294,9 @@ export function Train({ profile, say }: Props) {
         <WorkoutSheet
           recent={recent}
           units={profile.units}
+          onUnitsChange={(units) =>
+            void saveProfile(db, { ...profile, units, updatedAt: nowStamp() })
+          }
           initial={open === 'split' ? { title: nextDay.title, exercises: template } : undefined}
           onClose={close}
           onSave={(exercises: ExerciseLog[], title) =>

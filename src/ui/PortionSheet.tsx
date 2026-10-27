@@ -1,20 +1,22 @@
 import { useState } from 'react';
-import type { Food, MealSlot } from '../contract.ts';
+import type { AmountUnit, Food, MealSlot } from '../contract.ts';
 import { nutritionFor } from '../core/diary.ts';
 import { Sheet } from './Sheet.tsx';
 import { MealPicker } from './MealPicker.tsx';
 import { kcal } from './format.ts';
+import { UnitSwitch } from './UnitSwitch.tsx';
 
 type Props = {
   food: Food;
   defaultGrams?: number;
   defaultMeal: MealSlot;
-  onLog: (food: Food, grams: number, meal: MealSlot, favourite: boolean) => void;
+  onLog: (food: Food, grams: number, meal: MealSlot, favourite: boolean, unit: AmountUnit) => void;
   onClose: () => void;
 };
 
 export function PortionSheet({ food, defaultGrams, defaultMeal, onLog, onClose }: Props) {
-  const options = [...food.portions, { label: '100 g', grams: 100 }];
+  const [unit, setUnit] = useState<AmountUnit>(food.unit ?? 'g');
+  const options = [...food.portions, { label: `100 ${unit}`, grams: 100 }];
   const start = defaultGrams ?? food.portions[0]?.grams ?? 100;
   const [gramsText, setGramsText] = useState(String(start));
   const [meal, setMeal] = useState<MealSlot>(defaultMeal);
@@ -42,15 +44,27 @@ export function PortionSheet({ food, defaultGrams, defaultMeal, onLog, onClose }
         ))}
       </div>
 
-      <label className="field">
-        <span>Amount (g)</span>
-        <input
-          inputMode="decimal"
-          value={gramsText}
-          onChange={(e) => setGramsText(e.target.value)}
-          aria-invalid={!valid}
+      <div className="amount-row">
+        <label className="field">
+          <span>Amount ({unit})</span>
+          <input
+            inputMode="decimal"
+            value={gramsText}
+            onChange={(e) => setGramsText(e.target.value)}
+            aria-invalid={!valid}
+          />
+        </label>
+        <UnitSwitch
+          legend="Amount unit"
+          name="amount-unit"
+          value={unit}
+          options={[
+            ['g', 'g'],
+            ['ml', 'ml'],
+          ]}
+          onChange={setUnit}
         />
-      </label>
+      </div>
 
       <MealPicker value={meal} onChange={setMeal} />
 
@@ -63,7 +77,7 @@ export function PortionSheet({ food, defaultGrams, defaultMeal, onLog, onClose }
             {preview.fatG !== undefined && <span> · F {Math.round(preview.fatG)} g</span>}
           </>
         ) : (
-          'Enter an amount in grams'
+          `Enter an amount in ${unit === 'ml' ? 'millilitres' : 'grams'}`
         )}
       </p>
 
@@ -80,7 +94,7 @@ export function PortionSheet({ food, defaultGrams, defaultMeal, onLog, onClose }
           type="button"
           className="btn btn-primary"
           disabled={!valid}
-          onClick={() => onLog(food, grams, meal, favourite)}
+          onClick={() => onLog(food, grams, meal, favourite, unit)}
         >
           Log it
         </button>

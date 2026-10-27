@@ -7,7 +7,12 @@ export function kcal(n: number): string {
 }
 
 export function grams(n: number): string {
-  return `${new Intl.NumberFormat('en-GB', { maximumFractionDigits: 1 }).format(n)} g`;
+  return amount(n, 'g');
+}
+
+/** "250 g" or "250 ml" (a millilitre is stored as a gram). */
+export function amount(n: number, unit: 'g' | 'ml' = 'g'): string {
+  return `${new Intl.NumberFormat('en-GB', { maximumFractionDigits: 1 }).format(n)} ${unit}`;
 }
 
 export const MEAL_LABELS: Record<MealSlot, string> = {

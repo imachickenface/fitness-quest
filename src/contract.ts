@@ -46,6 +46,10 @@ export const Portion = z.object({
 });
 export type Portion = z.infer<typeof Portion>;
 
+/** How amounts are shown: grams, or millilitres for drinks (stored as grams, 1 ml = 1 g). */
+export const AmountUnit = z.enum(['g', 'ml']);
+export type AmountUnit = z.infer<typeof AmountUnit>;
+
 export const Food = z.object({
   id: Id,
   name: z.string().min(1).max(200),
@@ -61,6 +65,8 @@ export const Food = z.object({
   per100g: Macros,
   portions: z.array(Portion),
   favourite: z.boolean(),
+  /** the unit last used for this food; grams when missing */
+  unit: AmountUnit.optional(),
   updatedAt: Timestamp,
 });
 export type Food = z.infer<typeof Food>;
@@ -80,6 +86,8 @@ export const FoodEntry = z.object({
   foodId: Id.nullable(),
   label: z.string().min(1).max(200),
   grams: positive.optional(),
+  /** 'ml' when the amount was entered in millilitres (`grams` holds the same number) */
+  unit: AmountUnit.optional(),
   nutrition: Macros,
   /** set when the entry came from logging a saved meal */
   savedMealId: Id.optional(),
