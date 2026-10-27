@@ -1257,8 +1257,8 @@ p {
 
 .hero-change {
   position: absolute;
-  top: 6px;
   right: 12px;
+  bottom: 4px;
   z-index: 2;
 }
 

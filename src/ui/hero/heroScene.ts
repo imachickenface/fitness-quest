@@ -31,8 +31,8 @@ export function createHeroScene(canvas: HTMLCanvasElement): HeroScene {
   scene.add(key);
 
   const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 50);
-  camera.position.set(0, 1.15, 5.2);
-  camera.lookAt(0, 0.95, 0);
+  camera.position.set(0, 1.2, 5.8);
+  camera.lookAt(0, 1.0, 0);
 
   const clock = new THREE.Clock();
   let model: THREE.Object3D | undefined;

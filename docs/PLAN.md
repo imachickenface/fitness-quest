@@ -77,7 +77,7 @@ and batches of 🌙 tasks go to the overnight queue.
 | 3.2 ✅ | `core/game.ts`: XP per record, level curve, streak (log anything counts), freezes earned per 7 days, max 2 | Qwen 🌙 | Claude's tests incl. day boundaries, DST, gaps, freezes | 0.2 |
 | 3.3 ✅ | `core/quests/evaluate.ts`: progress of every `QuestCondition` from records | Qwen 🌙 | one test group per condition type | 0.2 |
 | 3.4 ✅ | `core/quests/daily.ts`: seeded daily/weekly quest picks from profile + recent behaviour | Qwen 🌙 | deterministic-seed tests; never asks for more than the user's range | 3.3 |
-| 3.5 | Art direction: tiles, palette, pixel font, map layout (Tiled JSON), hero and monsters | Claude | a static mock screenshot the owner likes | - |
+| 3.5 ✅ | Art direction: tiles, palette, pixel font, map layout (Tiled JSON), hero and monsters | Claude | a static mock screenshot the owner likes | - |
 | 3.6 | Canvas map renderer + hero walking between nodes | Claude | 60 fps on the phone; screenshot check | 3.5 |
 | 3.7 (part) ✅ | Quest log, XP bar, level-up and quest-complete moments (GSAP), reduced-motion path | Claude | E2E: log food → quest completes → hero moves | 3.2-3.6 |
 
@@ -85,20 +85,21 @@ Split on 2026-10-26 to spare the owner's usage: **M3a done** = 3.1-3.4 plus the 
 tabs and quest-complete / level-up toasts (CSS, no GSAP yet). **M3b left**: see below.
 
 ### M3b - The hero and the map (expanded 2026-10-26 with the owner's character ideas)
-Changed 2026-10-26: for now the hero uses Kenney's Mini Characters (CC0, `art/kenney/`): 12 modern characters
+Changed 2026-10-26 (built): for now the hero uses Kenney's Mini Characters (CC0, `art/kenney/`): 12 modern characters
 (casual, police, office, lab coat...), separate body and head meshes on a 7-bone rig, one shared colour texture,
 32 animations (idle, walk, sprint, jump, emote yes/no, sit, interact), about 250 KB each. KayKit's fantasy set
 (`art/kaykit/`, plus a sporty recolour test in `art/sporty.py`) stays available. Body shape comes from morph
 targets added in Blender (`art/body_keys.py`: muscle, fat, thin), because uneven bone scaling skewed the rotated
-arms; three.js blends them with morphTargetInfluences. Preview: `docs/hero-kenney-test.png`.
+arms; three.js blends them with morphTargetInfluences. Preview: `docs/hero-kenney-test.png`. Customisation is the choice of character for now (3.8, 3.11); mixing
+heads and bodies, recolours and level-locked gear come later. Left in M3b: 3.6 the map, 3.7 GSAP moments.
 
 | # | Task | Owner | Done when | Depends |
 |---|---|---|---|---|
 | 3.5 | Art mock: the 3D hero at 5 muscle levels, 5 builds and 5 looks (cap + track jacket, knight gear...) | Claude | the owner approves a screenshot | - |
-| 3.8 | `contract.ts`: `Profile.avatar` (skin, hair, hair colour, outfit, outfit colour, headgear) + unlock list | Claude | schema tests | 3.5 |
-| 3.9 | `core/body.ts`: muscle 0-4 and build -2..+2 from records (rules below) | Qwen | Claude's tests: ramps up, decays, partial-log days ignored, caps | 3.2 |
-| 3.10 | 3D hero in the app: lazy-loaded viewer, idle animation, more hair, outfits and gear | Claude | screenshot grid; 60 fps on the phone | 3.5, 3.9 |
-| 3.11 | Customise screen (first run and from Quests), level-locked items shown greyed with their level | Claude | E2E: change hair and outfit, it persists | 3.8, 3.10 |
+| 3.8 ✅ | `contract.ts`: `Profile.avatar` (skin, hair, hair colour, outfit, outfit colour, headgear) + unlock list | Claude | schema tests | 3.5 |
+| 3.9 ✅ | `core/body.ts`: muscle 0-4 and build -2..+2 from records (rules below) | Qwen | Claude's tests: ramps up, decays, partial-log days ignored, caps | 3.2 |
+| 3.10 ✅ | 3D hero in the app: lazy-loaded viewer, idle animation, more hair, outfits and gear | Claude | screenshot grid; 60 fps on the phone | 3.5, 3.9 |
+| 3.11 ✅ | Customise screen (first run and from Quests), level-locked items shown greyed with their level | Claude | E2E: change hair and outfit, it persists | 3.8, 3.10 |
 | 3.6 | Map in the same rounded style + hero walking between nodes | Claude | 60 fps on the phone; screenshot check | 3.10 |
 | 3.7 | GSAP moments: quest complete, level up, body change ("Looking stronger!"), reduced-motion path | Claude | E2E: log food -> quest completes -> hero moves | 3.6 |
 
