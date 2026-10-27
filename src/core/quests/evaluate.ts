@@ -199,15 +199,17 @@ function beatPr(
   for (const w of workoutsIn(workouts, window)) {
     for (const ex of w.exercises) {
       for (const set of setsOf(ex, key)) {
-        if (set.weightKg === undefined || set.reps === undefined) continue;
-        if (set.weightKg >= c.weightKg && set.reps >= c.reps) {
-          return result(1, `Beaten: ${set.weightKg} kg x ${set.reps}`, true, w.date);
+        if (set.reps === undefined) continue;
+        // a bodyweight set (no weight logged) counts as 0 kg, which meets a 0 kg target like "9 pull-ups"
+        const kg = set.weightKg ?? 0;
+        if (kg >= c.weightKg && set.reps >= c.reps) {
+          return result(1, `Beaten: ${kg} kg x ${set.reps}`, true, w.date);
         }
-        const weight = c.weightKg === 0 ? 1 : Math.min(1, set.weightKg / c.weightKg);
+        const weight = c.weightKg === 0 ? 1 : Math.min(1, kg / c.weightKg);
         const score = weight * Math.min(1, set.reps / c.reps);
         if (score > bestScore) {
           bestScore = score;
-          best = { weightKg: set.weightKg, reps: set.reps };
+          best = { weightKg: kg, reps: set.reps };
         }
       }
     }

@@ -30,7 +30,7 @@ export function ImportSheet({ onImport, onClose }: Props) {
         <code>Pull ups 3x8</code>
       </p>
       <label className="field">
-        <span>Notes</span>
+        <span>Workout notes</span>
         <textarea
           className="notes-input"
           rows={8}

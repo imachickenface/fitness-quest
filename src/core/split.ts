@@ -94,8 +94,20 @@ export function nextSplitDay(workouts: Workout[]): string {
 
 /** What each Arnold day defaults to when the user has never trained it. */
 const DEFAULTS: Record<string, string[]> = {
-  'chest-back': ['Bench press', 'Barbell row', 'Incline dumbbell press', 'Lat pulldown', 'Chest fly'],
-  'shoulders-arms': ['Overhead press', 'Lateral raise', 'Barbell curl', 'Tricep pushdown', 'Hammer curl'],
+  'chest-back': [
+    'Bench press',
+    'Barbell row',
+    'Incline dumbbell press',
+    'Lat pulldown',
+    'Chest fly',
+  ],
+  'shoulders-arms': [
+    'Overhead press',
+    'Lateral raise',
+    'Barbell curl',
+    'Tricep pushdown',
+    'Hammer curl',
+  ],
   legs: ['Squat', 'Romanian deadlift', 'Leg press', 'Leg curl', 'Calf raise'],
 };
 
@@ -112,9 +124,7 @@ export function dayTemplate(
   if (!ARNOLD.some((day) => day.id === dayId)) return [];
 
   // `filter` returns a copy, so the caller's array keeps its own order.
-  const history = workouts
-    .filter((workout) => splitDayOf(workout) === dayId)
-    .sort(compareWorkouts);
+  const history = workouts.filter((workout) => splitDayOf(workout) === dayId).sort(compareWorkouts);
 
   const groups = new Map<string, ExerciseGroup>();
   for (const workout of history) {
@@ -124,6 +134,7 @@ export function dayTemplate(
       const group = groups.get(id);
       // History runs oldest first, so the last write is the most recent appearance - its name and sets.
       if (group === undefined) {
+        seen.add(id);
         groups.set(id, { name: ex.name, count: 1, lastDate: workout.date, lastSets: ex.sets });
       } else {
         group.name = ex.name;

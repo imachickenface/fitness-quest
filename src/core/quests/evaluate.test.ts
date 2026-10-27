@@ -208,6 +208,16 @@ describe('beat_pr', () => {
   });
 });
 
+describe('beat_pr with bodyweight', () => {
+  it('a set with no weight meets a 0 kg target by reps', () => {
+    const q = quest({ type: 'beat_pr', exercise: 'Pull-up', weightKg: 0, reps: 9 });
+    const eight = recs({ workouts: [lift('a', '2026-10-27', 'Pull ups', [{ reps: 8 }])] });
+    expect(questProgress(q, eight).complete).toBe(false);
+    const nine = recs({ workouts: [lift('b', '2026-10-28', 'Pull ups', [{ reps: 9 }])] });
+    expect(questProgress(q, nine)).toMatchObject({ complete: true, completedOn: '2026-10-28' });
+  });
+});
+
 describe('exercise names', () => {
   it('match through the exercise catalogue', () => {
     const q = quest({ type: 'beat_pr', exercise: 'Bench press', weightKg: 90, reps: 5 });

@@ -69,7 +69,12 @@ export function tierFor(score: number): TierInfo {
 }
 
 /** How much a lift is worth: e1RM per kilo of bodyweight against the exercise's standard, curved to 0-1000. */
-export function liftScore(exercise: Exercise, e1rmKg: number, bodyweightKg: number, sex: Sex): number {
+export function liftScore(
+  exercise: Exercise,
+  e1rmKg: number,
+  bodyweightKg: number,
+  sex: Sex,
+): number {
   const top = exercise.top;
   if (top === undefined || !(bodyweightKg > 0)) return 0;
   const factor = sex === 'female' ? (exercise.lower ? FEMALE_LOWER : FEMALE_UPPER) : 1;
@@ -81,13 +86,16 @@ export function liftScore(exercise: Exercise, e1rmKg: number, bodyweightKg: numb
 
 /** The best logged set of every known exercise, best score first. */
 export function exerciseRanks(workouts: Workout[], bodyweightKg: number, sex: Sex): ExerciseRank[] {
-  const best = new Map<string, {
-    exercise: Exercise;
-    weightKg: number;
-    reps: number;
-    date: string;
-    e1rmKg: number;
-  }>();
+  const best = new Map<
+    string,
+    {
+      exercise: Exercise;
+      weightKg: number;
+      reps: number;
+      date: string;
+      e1rmKg: number;
+    }
+  >();
 
   for (const workout of workouts) {
     for (const log of workout.exercises) {

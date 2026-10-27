@@ -120,11 +120,17 @@ Body rules (proposed, owner to confirm):
 | # | Task | Owner | Done when | Depends |
 |---|---|---|---|---|
 | 4.1 | Owner shares sample notes → anonymised test fixtures + expected JSON | Claude + owner | fixtures committed | - |
-| 4.2 | `core/import/notesParser.ts`: notes → `Workout[]` + unparsed lines | Qwen 🌙 | every fixture parses to its expected JSON | 4.1 |
+| 4.2 ✅ | `core/import/notesParser.ts`: notes → `Workout[]` + unparsed lines | Qwen 🌙 | every fixture parses to its expected JSON | 4.1 |
 | 4.3 | `core/history.ts`: PRs, exercise frequency, typical weekly volume, run bests | Qwen 🌙 | tests pass | 0.2 |
-| 4.4 | `core/quests/fromHistory.ts`: PR "boss" quests, consistency and volume quests (rules spec by Claude) | Qwen 🌙 | tests: sensible targets (e.g. +2.5 kg or +1 rep, never > +5%) | 4.3 |
-| 4.5 | Import screen: paste or file, preview, fix unparsed lines | Claude | E2E with a fixture | 4.2 |
+| 4.4 ✅ | `core/quests/fromHistory.ts`: PR "boss" quests, consistency and volume quests (rules spec by Claude) | Qwen 🌙 | tests: sensible targets (e.g. +2.5 kg or +1 rep, never > +5%) | 4.3 |
+| 4.5 ✅ | Import screen: paste or file, preview, fix unparsed lines | Claude | E2E with a fixture | 4.2 |
 | 4.6 | *Optional:* `tools/import_notes.py` on the PC, sends leftover lines to Qwen via Strata | Qwen (medium) | test against a mocked Strata | 4.2 |
+
+Done 2026-10-26 (owner away; notes format guessed until real samples arrive, task 4.1 still open):
+notes import (`core/import/notesParser.ts`, written by Claude after Qwen ran out of room twice), strength ranks
+like Liftoff (`core/ranks.ts`, 9 tiers Wood to Olympian, own bodyweight-ratio standards in `core/exercises.ts`),
+the owner's Arnold split (`core/split.ts`: next day and a pre-filled template from history), weekly boss quests
+from the two best lifts (`core/quests/fromHistory.ts`). 4.3 (history stats) folded into ranks and split.
 
 ### M5 - Programs from a goal
 | # | Task | Owner | Done when | Depends |

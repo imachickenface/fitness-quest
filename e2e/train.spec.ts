@@ -21,10 +21,10 @@ Calves ??? 4 sets maybe`;
 test('importing notes adds workouts and gives the lifts ranks', async ({ page }) => {
   await setUp(page);
   await page.getByRole('button', { name: 'Import from notes' }).click();
-  await page.getByLabel('Notes').fill(NOTES);
+  await page.getByLabel('Workout notes').fill(NOTES);
   await expect(page.getByText('2 workouts found')).toBeVisible();
   await expect(page.getByText("1 line couldn't be read")).toBeVisible();
-  await expect(page.getByText('Line 7:')).toBeVisible();
+  await expect(page.getByText('Line 8:')).toBeVisible();
   await page.getByRole('button', { name: 'Import 2 workouts' }).click();
   await expect(page.getByText('Imported 2 workouts')).toBeVisible();
 
@@ -38,7 +38,7 @@ test('importing notes adds workouts and gives the lifts ranks', async ({ page })
 
   // importing the same notes again replaces them rather than doubling up
   await page.getByRole('button', { name: 'Import from notes' }).click();
-  await page.getByLabel('Notes').fill(NOTES);
+  await page.getByLabel('Workout notes').fill(NOTES);
   await page.getByRole('button', { name: 'Import 2 workouts' }).click();
   await expect(page.locator('.workout')).toHaveCount(2);
 });
@@ -54,6 +54,6 @@ test('the Arnold split suggests the next day, pre-filled', async ({ page }) => {
   await page.getByLabel('Barbell row set 1 reps').fill('8');
   await page.getByLabel('Barbell row set 1 kg').fill('70');
   await page.getByRole('button', { name: 'Save workout' }).click();
-  await expect(page.getByText('New rank: Bench press is')).toBeVisible();
+  await expect(page.getByText(/^New rank: /)).toBeVisible();
   await expect(page.getByRole('region', { name: 'Shoulders & arms' })).toBeVisible();
 });

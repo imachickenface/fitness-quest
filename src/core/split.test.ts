@@ -135,6 +135,20 @@ describe('dayTemplate', () => {
     ]);
     expect(dayTemplate('legs', []).every((e) => e.sets.length === 0)).toBe(true);
   });
+  it('counts an exercise once per workout even if it is logged twice that day', () => {
+    const history = [
+      w('2026-10-13', [
+        ['Chest fly', [s(12, 14)]],
+        ['Chest fly', [s(12, 14)]],
+      ]),
+      w('2026-10-16', [['Barbell row', [s(8, 65)]]]),
+    ];
+    expect(dayTemplate('chest-back', history).map((e) => e.name)).toEqual([
+      'Barbell row',
+      'Chest fly',
+    ]);
+  });
+
   it('lists at most 6 exercises', () => {
     const many = w(
       '2026-10-20',
