@@ -28,6 +28,9 @@ jobs:
       - run: npm test
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
+      # deploy a fresh live build, never the e2e test build (dist-test, aimed at the test project)
+      - run: npm run build
+      - run: test -z "$(grep -rl cuaaopuywnkbiuanrpun dist || true)"
       - uses: actions/configure-pages@v6
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
       - uses: actions/upload-pages-artifact@v5

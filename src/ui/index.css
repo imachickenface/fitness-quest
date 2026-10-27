@@ -1823,3 +1823,60 @@ p {
   justify-content: flex-end;
   gap: 10px;
 }
+
+/* ---------- account ---------- */
+
+.account {
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 2px solid var(--line);
+}
+
+.account h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.account p {
+  margin: 0;
+}
+
+.danger-zone summary {
+  color: var(--red-ink);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.danger-zone[open] {
+  display: grid;
+  gap: 10px;
+}
+
+.first-sync {
+  display: grid;
+  gap: 6px;
+}
+
+.first-sync p {
+  margin: 0 0 12px;
+}
+
+.welcome-account {
+  margin-top: 8px;
+}
+
+.welcome-account .account {
+  margin-top: 8px;
+}
+
+.restoring {
+  padding: 16px;
+  border-radius: var(--r);
+  background: var(--soft);
+}
+
+.account a {
+  color: var(--blue-ink);
+}

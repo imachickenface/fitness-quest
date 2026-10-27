@@ -5,6 +5,7 @@ import { readBackup, type TableCounts } from '../core/backup.ts';
 import { localDate } from '../core/diary.ts';
 import { getSettings, restoreTables } from '../db/db.ts';
 import { saveBackup } from './backupActions.ts';
+import { useAccount } from './accountContext.ts';
 import { useDb } from './dbContext.ts';
 import { dayTitle } from './format.ts';
 
@@ -21,6 +22,7 @@ const ERRORS = {
 /** Save everything to a file, or replace everything from one. Data lives only on this phone. */
 export function BackupPanel({ onRestored }: { onRestored: (text: string) => void }) {
   const db = useDb();
+  const account = useAccount();
   const settings = useLiveQuery(() => getSettings(db), [db], NO_SETTINGS);
   const today = localDate(new Date());
   const file = useRef<HTMLInputElement>(null);
@@ -55,7 +57,9 @@ export function BackupPanel({ onRestored }: { onRestored: (text: string) => void
     <section className="backup" aria-labelledby="backup-title">
       <h2 id="backup-title">Your data</h2>
       <p className="muted">
-        Everything is stored only on this phone.{' '}
+        {account.status === 'signed-in'
+          ? 'Stored on this phone and synced to your account.'
+          : 'Everything is stored only on this phone.'}{' '}
         {last
           ? `Last backup: ${/^(Today|Yesterday)$/.test(last) ? last.toLowerCase() : last}.`
           : 'No backup yet.'}

@@ -42,6 +42,7 @@ import { Icon } from './Icon.tsx';
 import { LabelSheet } from './LabelSheet.tsx';
 import { PortionSheet } from './PortionSheet.tsx';
 import { ProfileForm } from './ProfileForm.tsx';
+import { AccountPanel } from './AccountPanel.tsx';
 import { BackupPanel } from './BackupPanel.tsx';
 import { Credits } from './Credits.tsx';
 import { backupDue, saveBackup } from './backupActions.ts';
@@ -498,6 +499,7 @@ export function Today({ profile, streakDays }: { profile: Profile; streakDays?: 
             onSaved={close}
             onCancel={close}
           />
+          <AccountPanel />
           <BackupPanel
             onRestored={(text) => {
               close();

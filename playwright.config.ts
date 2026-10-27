@@ -17,7 +17,10 @@ export default defineConfig({
   // phone first: the owner uses an Android phone
   projects: [{ name: 'pixel-7', use: { ...devices['Pixel 7'] } }],
   webServer: {
-    command: `npm run build && npm run preview -- --port ${port} --strictPort`,
+    // a separate test build against the fitness-quest-test project, in its own folder: the deployed dist/
+    // is always a clean live build (see the workflow)
+    command: `npx tsc -b && npx vite build --outDir dist-test && npx vite preview --outDir dist-test --port ${port} --strictPort`,
+    env: { VITE_SUPABASE_PROJECT: 'test' },
     url: `http://localhost:${port}/fitness-quest/`,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
