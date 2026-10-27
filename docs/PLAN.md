@@ -85,17 +85,19 @@ Split on 2026-10-26 to spare the owner's usage: **M3a done** = 3.1-3.4 plus the 
 tabs and quest-complete / level-up toasts (CSS, no GSAP yet). **M3b left**: see below.
 
 ### M3b - The hero and the map (expanded 2026-10-26 with the owner's character ideas)
-The hero is drawn in code from pixel layers (no sprite pack): CC0 packs have no body-shape variants, and LPC
-sprites carry share-alike licences. Body shape is derived from records like the rest of the game, never stored.
+Changed 2026-10-26: the hero is a rounded, soft-shaded vector character (owner's reference: a chibi 3D-style
+avatar), drawn in code as SVG (`src/ui/avatar/Avatar.tsx`), not pixel art. Owner chose code-drawn vector over
+real 3D: full customisation, smooth body shapes, small and offline; GSAP animations later. Body shape is derived
+from records like the rest of the game, never stored. Mock: `docs/avatar-mock.png` (dev page `/avatar-mock.html`).
 
 | # | Task | Owner | Done when | Depends |
 |---|---|---|---|---|
-| 3.5 | Art mock: a 32x32 hero at 5 muscle levels x 5 builds, 4 customisation sets, one map screen | Claude | the owner approves a screenshot | - |
-| 3.8 | `contract.ts`: `Profile.avatar` (skin, hair style, hair colour, outfit colour, accessory) + unlock list | Claude | schema tests | 3.5 |
+| 3.5 | Art mock: the vector hero at 5 muscle levels x 5 builds, 6 looks (cap + track jacket, knight gear...) | Claude | the owner approves a screenshot | - |
+| 3.8 | `contract.ts`: `Profile.avatar` (skin, hair, hair colour, outfit, outfit colour, headgear) + unlock list | Claude | schema tests | 3.5 |
 | 3.9 | `core/body.ts`: muscle 0-4 and build -2..+2 from records (rules below) | Qwen | Claude's tests: ramps up, decays, partial-log days ignored, caps | 3.2 |
-| 3.10 | Hero renderer: layered canvas drawing from avatar + body, nearest-neighbour scaling | Claude | screenshot grid of all 25 shapes | 3.5, 3.9 |
+| 3.10 | Avatar component finished (more hair, outfits and gear) | Claude | screenshot grid of all 25 shapes | 3.5, 3.9 |
 | 3.11 | Customise screen (first run and from Quests), level-locked items shown greyed with their level | Claude | E2E: change hair and outfit, it persists | 3.8, 3.10 |
-| 3.6 | Canvas map + hero walking between nodes | Claude | 60 fps on the phone; screenshot check | 3.10 |
+| 3.6 | Map in the same rounded style + hero walking between nodes | Claude | 60 fps on the phone; screenshot check | 3.10 |
 | 3.7 | GSAP moments: quest complete, level up, body change ("Looking stronger!"), reduced-motion path | Claude | E2E: log food -> quest completes -> hero moves | 3.6 |
 
 Body rules (proposed, owner to confirm):
@@ -107,7 +109,8 @@ Body rules (proposed, owner to confirm):
   3 counted days: no change.
 - Changes are gradual by design (2-4 week windows) and capped; under-eating shows as tired (pale, slumped), not
   as a reward. A setting turns body changes off.
-- Cosmetics unlock by level (e.g. headband at 3, cape at 5, crown at 10), so levels give something to see.
+- Gear unlocks by level (e.g. cap at 3, track jacket at 5, knight helmet and armour at 10, crown at 15), so levels give
+  something to see.
 
 ### M4 - Import notes, quests from your own history
 | # | Task | Owner | Done when | Depends |
