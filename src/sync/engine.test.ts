@@ -203,4 +203,18 @@ describe('signing out', () => {
     await forgetSync(a, true);
     expect(await listWorkouts(a)).toEqual([]);
   });
+
+  it("asks before another account's records left on this phone go into a new account", async () => {
+    await upsertWorkout(a, fx.strengthWorkout);
+    await firstSyncWith(a, server, USER, NOW);
+    await forgetSync(a, false); // signs out, keeps the data here
+    const other = new FakeServer();
+    expect(await firstSyncWith(a, other, 'user-2', NOW)).toBe('ask');
+    expect(other.rows.size).toBe(0);
+    // the same person signing back in is not asked about their own records
+    await firstSyncWith(a, other, 'user-2', NOW, 'account');
+    await upsertWorkout(a, fx.runWorkout);
+    await forgetSync(a, false);
+    expect(await firstSyncWith(a, other, 'user-2', NOW)).not.toBe('ask');
+  });
 });

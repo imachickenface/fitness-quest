@@ -32,9 +32,12 @@ npm run test:e2e
 
 ## Data and privacy
 
-There is no server and no account. Everything is stored in the browser on your phone (IndexedDB). Save a backup
-file regularly (gear icon on Food, "Your data"); the app reminds you after a week. Clearing the browser's site data
-deletes everything; restoring a backup file brings it back.
+Everything is stored in the browser on your phone (IndexedDB). An account is optional: **Sign in with Google**
+(gear icon on Food, "Account") copies your records to Supabase so they sync between your phones; each account can
+only ever read its own records. Without an account, nothing leaves the phone except barcode lookups. See the
+[privacy page](https://imachickenface.github.io/fitness-quest/privacy.html) and [docs/ACCOUNTS.md](docs/ACCOUNTS.md).
+Save a backup file regularly ("Your data"); the app reminds you after a week. Clearing the browser's site data
+deletes the phone's copy; restoring a backup file or signing in brings it back.
 
 ## Credits
 

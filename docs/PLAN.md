@@ -170,7 +170,7 @@ Owner asked before M3. Profile gets optional calorie and macro targets (protein,
 ones stay automatic, and all three macros with no calorie target set the calories to their sum. Claude (a few
 lines in `core/targets.ts`, tests first). E2E: custom targets show on Today, clearing them goes back to auto.
 
-### M7 - Accounts and sync with Supabase (approved 2026-10-27: Google sign-in only)
+### M7 - Accounts and sync with Supabase (done 2026-10-27: Google sign-in only)
 
 **Goal:** sign in on any phone and see the same data; the app keeps working fully offline and without an
 account. Research: `docs/RESEARCH.md` section 9.
@@ -182,7 +182,9 @@ account. Research: `docs/RESEARCH.md` section 9.
   the app; both are public by design. The service-role key never leaves the Supabase dashboard.
 - **Offline-first sync:** IndexedDB (Dexie) stays the source of truth on the phone. One server table,
   `records (user_id, kind, id, data jsonb, updated_at, deleted)`, primary key `(user_id, kind, id)`:
-  - every local write is recorded in a local `outbox` table (Dexie hooks) and pushed when online;
+  - changes are found by comparing each record's fingerprint with the one it had at the last sync (the
+    `synced` table): changed and new records are pushed, missing ones become deletes - no write log, so
+    nothing can be lost if the app is closed mid-write (decided while building; see DECISIONS);
   - pull = rows with `updated_at` after the last pull; `updated_at` is set by the server (a trigger), so
     phone clocks don't matter;
   - conflicts: the newest server write of a record wins; deletes are kept as tombstones (`deleted`);
@@ -216,12 +218,12 @@ the delegation rules keep away from Qwen)
 
 | # | Task | Done when | Depends |
 |---|---|---|---|
-| 7.1 | `supabase/migrations/001_records.sql`: table, server-time trigger, RLS policies, `delete_my_account()` | applied to the test project; access test: user A cannot read, change or delete user B's rows, signed-out requests see nothing | owner setup |
+| 7.1 | ✅ `supabase/migrations/001_records.sql`: table, server-time trigger, RLS policies, `delete_my_account()` | applied to the test project; access test: user A cannot read, change or delete user B's rows, signed-out requests see nothing | owner setup |
 | 7.2 | ✅ `core/sync.ts`: pure merge of local and remote records (newest wins, tombstones, zod check) | unit tests: conflicts, deletes, bad rows, clock skew | - |
-| 7.3 | `db/outbox.ts` + `sync/client.ts`: record local changes, push, pull, retry when back online | tests with a fake server; e2e against the test project with two test users on two browser contexts | 7.1, 7.2 |
-| 7.4 | Account UI in "Your data": sign in with Google, signed-in-as, last synced, sign out, delete account, first-sign-in choice | e2e (test project, password test users only there); screenshots at 360 px | 7.3 |
-| 7.5 | Privacy note: what is stored, where (Supabase, EU or US region chosen at setup), how to delete | in the app and README | 7.4 |
-| 7.6 | Keep-alive GitHub Action; `/security-review`; `npm audit`; deploy | review findings fixed; deploy green | all |
+| 7.3 | ✅ `sync/engine.ts` + `sync/supabase.ts`: fingerprint diff, pull then push, first sync with combine / account / phone | two-phone tests on an in-memory server; e2e on the test project with two browser contexts; live access test with two test users | 7.1, 7.2 |
+| 7.4 | ✅ Account UI in "Your data": sign in with Google, signed-in-as, last synced, sign out, delete account, first-sign-in choice | e2e (test project, password test users only there); screenshots at 360 px | 7.3 |
+| 7.5 | ✅ Privacy note: what is stored, where (Supabase, EU or US region chosen at setup), how to delete | in the app and README | 7.4 |
+| 7.6 | ✅ Keep-alive GitHub Action; `/security-review`; `npm audit`; deploy | review findings fixed; deploy green | all |
 
 **Usage estimate:** Claude-only, about 3-4 sessions; the access-rule tests and the sync engine are the bulk.
 

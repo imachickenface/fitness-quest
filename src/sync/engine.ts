@@ -39,6 +39,8 @@ export type SyncResult = { pushed: number; pulled: number; skipped: PullPlan['sk
 export type FirstSyncChoice = 'combine' | 'account' | 'phone';
 
 const STATE_KEY = 'syncState';
+/** who last signed out on this phone while keeping their data */
+const PREVIOUS_KEY = 'syncPreviousUser';
 /** pulls start this far before the cursor, so rows committed out of order are never missed */
 const OVERLAP_MS = 5 * 60_000;
 
@@ -64,6 +66,9 @@ async function setSyncState(db: FitnessDb, state: SyncState): Promise<void> {
 /** Forget the account on this phone (after signing out). Records stay unless `clearData`. */
 export async function forgetSync(db: FitnessDb, clearData: boolean): Promise<void> {
   await db.transaction('rw', [db.kv, db.synced, ...TABLES.map((t) => db[t])], async () => {
+    const previous = ((await db.kv.get(STATE_KEY))?.value as SyncState | undefined)?.userId;
+    if (previous && !clearData) await db.kv.put({ key: PREVIOUS_KEY, value: previous });
+    else await db.kv.delete(PREVIOUS_KEY);
     await db.kv.delete(STATE_KEY);
     await db.synced.clear();
     if (clearData) {
@@ -163,8 +168,12 @@ export async function firstSyncWith(
   choice?: FirstSyncChoice,
 ): Promise<SyncResult | 'ask'> {
   const local = await readLocal(db);
-  const mode = firstSync(local.length, await remote.count());
+  let mode = firstSync(local.length, await remote.count());
+  // records another account left on this phone are never uploaded into this one without asking
+  const previous = (await db.kv.get(PREVIOUS_KEY))?.value;
+  if (mode === 'upload' && local.length > 0 && previous && previous !== userId) mode = 'ask';
   if (mode === 'ask' && !choice) return 'ask';
+  await db.kv.delete(PREVIOUS_KEY);
   await db.synced.clear();
 
   if (mode === 'upload' || mode === 'download' || choice === 'account') {
