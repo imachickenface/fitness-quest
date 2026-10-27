@@ -189,3 +189,49 @@ describe('parseLine', () => {
     expect(parseLine('80x8')).toBeUndefined(); // no exercise name
   });
 });
+
+describe("the owner's own notes", () => {
+  // pasted from the owner's phone, unchanged
+  const OWNER = `chest and back day
+3x8 flat barbell bench press 185 pounds 
+3x until failure pullups
+3x8 incline dumbbell press 60 pounds
+3x8 cable rows 165 pounds`;
+
+  it('reads notes without a date as one workout on the chosen day', () => {
+    const r = parseNotes(OWNER, today, '2026-10-25');
+    expect(r.unparsed).toEqual([]);
+    expect(r.workouts).toHaveLength(1);
+    const w = r.workouts[0]!;
+    expect(WorkoutSchema.parse(w)).toEqual(w);
+    expect(w).toMatchObject({ date: '2026-10-25', title: 'chest and back day', kind: 'strength' });
+    expect(w.exercises).toEqual([
+      { name: 'flat barbell bench press', sets: sets(3, { reps: 8, weightKg: 83.9 }) },
+      { name: 'pullups', sets: sets(3, { toFailure: true }) },
+      { name: 'incline dumbbell press', sets: sets(3, { reps: 8, weightKg: 27.2 }) },
+      { name: 'cable rows', sets: sets(3, { reps: 8, weightKg: 74.8 }) },
+    ]);
+  });
+
+  it('without a chosen day, undated lines are reported', () => {
+    expect(parseNotes(OWNER, today).unparsed.map((u) => u.line)).toEqual([2, 3, 4, 5]);
+  });
+
+  it('reads sets-first lines with or without a weight', () => {
+    expect(parseLine('3x10 push ups')).toEqual({
+      kind: 'lift',
+      name: 'push ups',
+      sets: sets(3, { reps: 10 }),
+    });
+    expect(parseLine('4x6 squat 225 lbs')).toEqual({
+      kind: 'lift',
+      name: 'squat',
+      sets: sets(4, { reps: 6, weightKg: 102.1 }),
+    });
+    expect(parseLine('pullups 3x until failure')).toEqual({
+      kind: 'lift',
+      name: 'pullups',
+      sets: sets(3, { toFailure: true }),
+    });
+  });
+});

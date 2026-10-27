@@ -31,7 +31,15 @@ export const EXERCISES: Exercise[] = [
     name: 'Bench press',
     group: 'chest',
     top: 2.0,
-    aliases: ['bench', 'flat bench', 'bb bench', 'barbell bench press', 'flat bench press'],
+    aliases: [
+      'bench',
+      'flat bench',
+      'bb bench',
+      'barbell bench press',
+      'flat bench press',
+      'flat barbell bench press',
+      'flat barbell bench',
+    ],
   },
   {
     id: 'incline-bench-press',

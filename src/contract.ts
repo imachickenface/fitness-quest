@@ -105,14 +105,17 @@ export const SetEntry = z
     distanceM: nonNegative.optional(),
     /** rate of perceived exertion, 1-10 */
     rpe: z.number().min(1).max(10).optional(),
+    /** done "until failure" without counting the reps */
+    toFailure: z.boolean().optional(),
   })
   .refine(
     (s) =>
       s.reps !== undefined ||
       s.weightKg !== undefined ||
       s.durationS !== undefined ||
-      s.distanceM !== undefined,
-    { message: 'a set needs reps, weight, duration or distance' },
+      s.distanceM !== undefined ||
+      s.toFailure === true,
+    { message: 'a set needs reps, weight, duration, distance or to be to failure' },
   );
 export type SetEntry = z.infer<typeof SetEntry>;
 

@@ -85,11 +85,12 @@ export function parseDate(text: string, today: string): { date: string; rest: st
 
 const N = '(\\d+(?:[.,]\\d+)?)';
 const X = '\\s*[x×]\\s*';
-const UNIT = '\\s*(kgs?|lbs?)?';
+const UNITS = 'kgs?|kilos?|lbs?|pounds?';
+const UNIT = `\\s*(${UNITS})?`;
 
 function kg(value: string, unit: string | undefined): number {
   const n = num(value);
-  return unit && unit.startsWith('lb') ? round1(n * LB) : n;
+  return unit && (unit.startsWith('lb') || unit.startsWith('pound')) ? round1(n * LB) : n;
 }
 
 function repeat(sets: number, set: SetEntry): SetEntry[] | undefined {
@@ -115,11 +116,11 @@ function liftSets(rest: string): SetEntry[] | undefined {
     return repeat(Number(m[1]), { weightKg: kg(m[3]!, m[4]), reps: Number(m[2]) });
   }
   // 4. W<unit> S x R
-  if ((m = full(`${N}\\s*(kgs?|lbs?)\\s+(\\d+)${X}(\\d+)`))) {
+  if ((m = full(`${N}\\s*(${UNITS})\\s+(\\d+)${X}(\\d+)`))) {
     return repeat(Number(m[3]), { weightKg: kg(m[1]!, m[2]), reps: Number(m[4]) });
   }
   // 5. W<unit> R, R, R
-  if ((m = full(`${N}\\s*(kgs?|lbs?)\\s+(\\d+(?:\\s*,\\s*\\d+)*)`))) {
+  if ((m = full(`${N}\\s*(${UNITS})\\s+(\\d+(?:\\s*,\\s*\\d+)*)`))) {
     const w = kg(m[1]!, m[2]);
     return m[3]!.split(',').map((reps) => ({ weightKg: w, reps: Number(reps.trim()) }));
   }
@@ -148,6 +149,26 @@ function seconds(text: string): number | undefined {
   return undefined;
 }
 
+/**
+ * Sets x reps written first, then the exercise, then an optional weight:
+ * "3x8 flat barbell bench press 185 pounds", "3x10 push ups", "3x until failure pullups".
+ */
+function leadingSets(t: string): ParsedLine | undefined {
+  const failure = new RegExp(`^(\\d+)${X}(?:until|to)?\\s*failure\\s+(.*\\p{L}.*)$`, 'iu').exec(t);
+  if (failure) {
+    const sets = repeat(Number(failure[1]), { toFailure: true });
+    return sets ? { kind: 'lift', name: failure[2]!.trim(), sets } : undefined;
+  }
+  const m = new RegExp(`^(\\d+)${X}(\\d+)\\s+(.*?\\p{L}.*?)(?:\\s+${N}${UNIT})?$`, 'iu').exec(t);
+  if (!m) return undefined;
+  const set: SetEntry = {
+    reps: Number(m[2]),
+    ...(m[4] ? { weightKg: kg(m[4], m[5]?.toLowerCase()) } : {}),
+  };
+  const sets = repeat(Number(m[1]), set);
+  return sets ? { kind: 'lift', name: m[3]!.trim(), sets } : undefined;
+}
+
 export function parseLine(text: string): ParsedLine | undefined {
   const t = text.trim();
   const lower = t.toLowerCase();
@@ -160,6 +181,17 @@ export function parseLine(text: string): ParsedLine | undefined {
     return durationS === undefined
       ? { kind: 'run', distanceM }
       : { kind: 'run', distanceM, durationS };
+  }
+  const lead = leadingSets(t);
+  if (lead) return lead;
+  // "pullups 3x until failure"
+  const failure = new RegExp(
+    `^(.*?\\p{L}.*?)[\\s:\\-–]+(\\d+)${X}(?:until|to)?\\s*failure$`,
+    'iu',
+  ).exec(t);
+  if (failure) {
+    const sets = repeat(Number(failure[2]), { toFailure: true });
+    return sets ? { kind: 'lift', name: failure[1]!.trim(), sets } : undefined;
   }
   const first = t.search(/\d/);
   if (first <= 0) return undefined;
@@ -181,9 +213,14 @@ type Block = {
   runs: SetEntry[];
 };
 
+/**
+ * `undated`: the date for notes written without any date line (they become one workout on that day). Without
+ * it, lines before the first date are reported as unread.
+ */
 export function parseNotes(
   text: string,
   today: string,
+  undated?: string,
 ): { workouts: Workout[]; unparsed: { line: number; text: string }[] } {
   const blocks: Block[] = [];
   const unparsed: { line: number; text: string }[] = [];
@@ -203,6 +240,9 @@ export function parseNotes(
         runs: [],
       });
       return;
+    }
+    if (blocks.length === 0 && undated) {
+      blocks.push({ date: undated, expectTitle: true, notes: [], exercises: [], runs: [] });
     }
     const block = blocks.at(-1);
     const parsed = parseLine(line);
