@@ -85,17 +85,19 @@ Split on 2026-10-26 to spare the owner's usage: **M3a done** = 3.1-3.4 plus the 
 tabs and quest-complete / level-up toasts (CSS, no GSAP yet). **M3b left**: see below.
 
 ### M3b - The hero and the map (expanded 2026-10-26 with the owner's character ideas)
-Changed 2026-10-26: the hero is a rounded, soft-shaded vector character (owner's reference: a chibi 3D-style
-avatar), drawn in code as SVG (`src/ui/avatar/Avatar.tsx`), not pixel art. Owner chose code-drawn vector over
-real 3D: full customisation, smooth body shapes, small and offline; GSAP animations later. Body shape is derived
-from records like the rest of the game, never stored. Mock: `docs/avatar-mock.png` (dev page `/avatar-mock.html`).
+Changed 2026-10-26 (twice): the hero is a real 3D model built in code with three.js
+(`src/ui/avatar/hero3d.ts`): a lathed torso whose profile follows muscle and build, rounded limbs and head, toy-like
+materials, soft shadows. The owner rejected pixel art, then a flat vector version ("shapes stacked on each other"),
+and asked for a 3D character like their chibi reference. Everything stays a parameter, so looks and gear are fully
+customisable and animations can be added in code. three.js 0.186 adds roughly 150 KB, loaded only where the hero
+shows. Body shape is derived from records, never stored. Mock: `docs/avatar3d-mock.png` (dev page `/avatar3d-mock.html`).
 
 | # | Task | Owner | Done when | Depends |
 |---|---|---|---|---|
-| 3.5 | Art mock: the vector hero at 5 muscle levels x 5 builds, 6 looks (cap + track jacket, knight gear...) | Claude | the owner approves a screenshot | - |
+| 3.5 | Art mock: the 3D hero at 5 muscle levels, 5 builds and 5 looks (cap + track jacket, knight gear...) | Claude | the owner approves a screenshot | - |
 | 3.8 | `contract.ts`: `Profile.avatar` (skin, hair, hair colour, outfit, outfit colour, headgear) + unlock list | Claude | schema tests | 3.5 |
 | 3.9 | `core/body.ts`: muscle 0-4 and build -2..+2 from records (rules below) | Qwen | Claude's tests: ramps up, decays, partial-log days ignored, caps | 3.2 |
-| 3.10 | Avatar component finished (more hair, outfits and gear) | Claude | screenshot grid of all 25 shapes | 3.5, 3.9 |
+| 3.10 | 3D hero in the app: lazy-loaded viewer, idle animation, more hair, outfits and gear | Claude | screenshot grid; 60 fps on the phone | 3.5, 3.9 |
 | 3.11 | Customise screen (first run and from Quests), level-locked items shown greyed with their level | Claude | E2E: change hair and outfit, it persists | 3.8, 3.10 |
 | 3.6 | Map in the same rounded style + hero walking between nodes | Claude | 60 fps on the phone; screenshot check | 3.10 |
 | 3.7 | GSAP moments: quest complete, level up, body change ("Looking stronger!"), reduced-motion path | Claude | E2E: log food -> quest completes -> hero moves | 3.6 |

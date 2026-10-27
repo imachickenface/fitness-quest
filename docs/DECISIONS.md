@@ -25,3 +25,4 @@
 | 2026-10-26 | UI redesign: bright and chunky (Duolingo) with MyFitnessPal's diary structure; Nunito, SVG icons, light + dark | Owner found the dark pixel UI "AI looking". Pixel font now only on game numbers; the hero art waits for the owner's sprite references. |
 | 2026-10-26 | Each meal has its own "Add food" button that preselects that meal | MyFitnessPal's core pattern; logging later in the day no longer lands in the wrong meal. |
 | 2026-10-26 | Hero: code-drawn rounded vector avatar (SVG) instead of pixel art or real 3D | Owner prefers a rounded chibi avatar that fits the new UI. Vector keeps full customisation and smooth body shapes, is small and offline; 3D packs limit gear to what they ship. |
+| 2026-10-26 | Hero: real 3D in three.js, modelled in code, replacing the vector avatar | Owner found the vector version flat. A lathed torso gives smooth body changes; parametric parts keep full customisation. Cost ~150 KB, lazy-loaded. |
