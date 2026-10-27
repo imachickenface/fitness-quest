@@ -217,7 +217,7 @@ the delegation rules keep away from Qwen)
 | # | Task | Done when | Depends |
 |---|---|---|---|
 | 7.1 | `supabase/migrations/001_records.sql`: table, server-time trigger, RLS policies, `delete_my_account()` | applied to the test project; access test: user A cannot read, change or delete user B's rows, signed-out requests see nothing | owner setup |
-| 7.2 | `core/sync.ts`: pure merge of local and remote records (newest wins, tombstones, zod check) | unit tests: conflicts, deletes, bad rows, clock skew | - |
+| 7.2 | ✅ `core/sync.ts`: pure merge of local and remote records (newest wins, tombstones, zod check) | unit tests: conflicts, deletes, bad rows, clock skew | - |
 | 7.3 | `db/outbox.ts` + `sync/client.ts`: record local changes, push, pull, retry when back online | tests with a fake server; e2e against the test project with two test users on two browser contexts | 7.1, 7.2 |
 | 7.4 | Account UI in "Your data": sign in with Google, signed-in-as, last synced, sign out, delete account, first-sign-in choice | e2e (test project, password test users only there); screenshots at 360 px | 7.3 |
 | 7.5 | Privacy note: what is stored, where (Supabase, EU or US region chosen at setup), how to delete | in the app and README | 7.4 |
