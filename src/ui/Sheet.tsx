@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react';
+import { Icon } from './Icon.tsx';
 
 type Props = {
   title: string;
@@ -32,7 +33,7 @@ export function Sheet({ title, onClose, children }: Props) {
         <header className="sheet-head">
           <h2>{title}</h2>
           <button type="button" className="icon-btn" aria-label="Close" onClick={onClose}>
-            ✕
+            <Icon name="close" />
           </button>
         </header>
         {children}

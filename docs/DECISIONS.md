@@ -22,3 +22,5 @@
 | 2026-10-26 | Qwen worker: reply limit 4096 -> 12288 tokens, cut-off replies get a "write it now" nudge | M1/M2 failures were replies cut off mid-write after ~3.5k tokens of thinking. After the fix all three M3 core tasks passed on the first attempt. |
 | 2026-10-26 | Game rules: food 2 XP (5/day), workout 20 XP (2/day), weigh-in 5 XP; level L costs 50(L+1); any log keeps the streak; a freeze per 7 active days, max 2 | Rewards showing up, not eating or training more; numbers small enough that quests matter. |
 | 2026-10-26 | Daily quests are generated on first open of the day from the 14 days before, then stored | A day's quests never shift; targets follow the user's own habits. |
+| 2026-10-26 | UI redesign: bright and chunky (Duolingo) with MyFitnessPal's diary structure; Nunito, SVG icons, light + dark | Owner found the dark pixel UI "AI looking". Pixel font now only on game numbers; the hero art waits for the owner's sprite references. |
+| 2026-10-26 | Each meal has its own "Add food" button that preselects that meal | MyFitnessPal's core pattern; logging later in the day no longer lands in the wrong meal. |

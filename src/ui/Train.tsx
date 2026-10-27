@@ -4,6 +4,7 @@ import type { ExerciseLog, Workout } from '../contract.ts';
 import { localDate } from '../core/diary.ts';
 import { deleteWorkout, listWorkouts, upsertWorkout } from '../db/db.ts';
 import { useDb } from './dbContext.ts';
+import { Icon } from './Icon.tsx';
 import { dayTitle, newId, nowStamp } from './format.ts';
 import { RunSheet } from './RunSheet.tsx';
 import { formatPace, recentExercises } from './workoutFormat.ts';
@@ -46,9 +47,11 @@ export function Train({ say }: Props) {
       </header>
       <div className="actions actions-two">
         <button type="button" className="btn btn-primary btn-big" onClick={() => setOpen('lift')}>
+          <Icon name="dumbbell" size={20} />
           Log workout
         </button>
         <button type="button" className="btn btn-big" onClick={() => setOpen('run')}>
+          <Icon name="run" size={20} />
           Log run
         </button>
       </div>
@@ -60,7 +63,7 @@ export function Train({ say }: Props) {
         ) : (
           <ul className="workout-list">
             {workouts.slice(0, 30).map((w) => (
-              <li key={w.id} className="panel workout">
+              <li key={w.id} className="workout">
                 <div className="workout-head">
                   <span className="workout-title">{workoutTitle(w)}</span>
                   <span className="muted">{dayTitle(w.date, today)}</span>
@@ -70,7 +73,7 @@ export function Train({ say }: Props) {
                     aria-label={`Remove ${workoutTitle(w)}`}
                     onClick={() => void remove(w)}
                   >
-                    ✕
+                    <Icon name="close" size={18} />
                   </button>
                 </div>
                 <p className="muted workout-detail">{workoutDetail(w)}</p>

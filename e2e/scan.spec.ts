@@ -83,7 +83,7 @@ async function setUp(page: Page, code: string) {
   await page.getByLabel('Height (cm)').fill('180');
   await page.getByLabel('Weight (kg)').fill('80');
   await page.getByRole('button', { name: 'Start the adventure' }).click();
-  await expect(page.getByText(/kcal left/)).toBeVisible();
+  await expect(page.getByText('Calories remaining')).toBeVisible();
 }
 
 test('scan a product found in Open Food Facts and log it', async ({ page }) => {

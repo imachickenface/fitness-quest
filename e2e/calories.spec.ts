@@ -23,7 +23,7 @@ async function setUpProfile(page: Page) {
   await page.getByLabel('Height (cm)').fill('180');
   await page.getByLabel('Weight (kg)').fill('80');
   await page.getByRole('button', { name: 'Start the adventure' }).click();
-  await expect(page.getByText(/kcal left/)).toBeVisible();
+  await expect(page.getByText('Calories remaining')).toBeVisible();
 }
 
 function entries(page: Page) {
@@ -58,7 +58,7 @@ test('quick add, remove with undo, and data survives a reload', async ({ page })
   await page.getByLabel('What was it? (optional)').fill('Lunch out');
   await page.getByRole('button', { name: 'Log it' }).click();
   await expect(entries(page)).toHaveCount(1);
-  await expect(page.getByText('650 eaten of')).toBeVisible();
+  await expect(page.locator('.formula')).toContainText('650Food');
 
   await page.getByRole('button', { name: 'Remove Lunch out' }).click();
   await expect(entries(page)).toHaveCount(0);
@@ -115,7 +115,7 @@ test('custom macro targets replace the automatic ones and set the calorie target
   ).toBeVisible();
   await sheet.getByRole('button', { name: 'Save' }).click();
 
-  await expect(page.getByText('0 eaten of 1,940')).toBeVisible();
+  await expect(page.locator('.formula')).toContainText('1,940Goal');
   await expect(page.getByText('0 / 150 g')).toBeVisible();
   await expect(page.getByText('0 / 200 g')).toBeVisible();
   await expect(page.getByText('0 / 60 g')).toBeVisible();
@@ -125,5 +125,15 @@ test('custom macro targets replace the automatic ones and set the calorie target
   for (const label of ['Protein (g)', 'Carbs (g)', 'Fat (g)'])
     await sheet.getByLabel(label).fill('');
   await sheet.getByRole('button', { name: 'Save' }).click();
-  await expect(page.getByText('0 eaten of 1,940')).toBeHidden();
+  await expect(page.locator('.formula')).not.toContainText('1,940Goal');
+});
+
+test("a meal's own Add food button logs into that meal", async ({ page }) => {
+  await setUpProfile(page);
+  await page.getByRole('button', { name: 'Add food to Dinner' }).click();
+  await page.getByLabel('Search foods').fill('egg whole raw');
+  await page.getByRole('button', { name: /^Egg, whole, raw, fresh/ }).click();
+  await expect(page.getByRole('radio', { name: 'Dinner' })).toBeChecked();
+  await page.getByRole('button', { name: 'Log it' }).click();
+  await expect(page.getByRole('region', { name: 'Dinner' }).locator('.entry')).toHaveCount(1);
 });

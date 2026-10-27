@@ -6,7 +6,7 @@ async function setUpProfile(page: Page) {
   await page.getByLabel('Height (cm)').fill('180');
   await page.getByLabel('Weight (kg)').fill('80');
   await page.getByRole('button', { name: 'Start the adventure' }).click();
-  await expect(page.getByText(/kcal left/)).toBeVisible();
+  await expect(page.getByText('Calories remaining')).toBeVisible();
 }
 
 async function addExercise(page: Page, name: string, sets: [string, string][]) {
@@ -79,5 +79,5 @@ test('logging food completes a daily quest and earns XP', async ({ page }) => {
   await expect(meals).toHaveAccessibleName(/complete/);
   // + 2 entries x 2 XP + 20 quest XP
   await expect(page.getByText('39 / 100 XP to level 2')).toBeVisible();
-  await expect(page.getByText('1-day streak')).toBeVisible();
+  await expect(page.getByLabel('1-day streak')).toBeVisible();
 });

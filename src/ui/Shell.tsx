@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Profile } from '../contract.ts';
+import { Icon, type IconName } from './Icon.tsx';
 import { Quests } from './Quests.tsx';
 import { Toast, type ToastMessage } from './Toast.tsx';
 import { Today } from './Today.tsx';
@@ -8,10 +9,10 @@ import { useGame } from './useGame.ts';
 
 type Tab = 'today' | 'train' | 'quests';
 
-const TABS: [Tab, string][] = [
-  ['today', 'Food'],
-  ['train', 'Train'],
-  ['quests', 'Quests'],
+const TABS: [Tab, string, IconName][] = [
+  ['today', 'Food', 'apple'],
+  ['train', 'Train', 'dumbbell'],
+  ['quests', 'Quests', 'shield'],
 ];
 
 export function Shell({ profile }: { profile: Profile }) {
@@ -41,12 +42,12 @@ export function Shell({ profile }: { profile: Profile }) {
   return (
     <>
       <main className="app-main">
-        {tab === 'today' && <Today profile={profile} />}
+        {tab === 'today' && <Today profile={profile} streakDays={game?.state.streakDays} />}
         {tab === 'train' && <Train say={say} />}
         {tab === 'quests' && game && <Quests game={game} />}
       </main>
       <nav className="tabbar" aria-label="Sections">
-        {TABS.map(([value, label]) => (
+        {TABS.map(([value, label, icon]) => (
           <button
             key={value}
             type="button"
@@ -54,6 +55,7 @@ export function Shell({ profile }: { profile: Profile }) {
             aria-current={tab === value ? 'page' : undefined}
             onClick={() => setTab(value)}
           >
+            <Icon name={icon} size={26} />
             {label}
             {value === 'quests' && open > 0 && (
               <span className="tab-badge" aria-label={`${open} open`}>

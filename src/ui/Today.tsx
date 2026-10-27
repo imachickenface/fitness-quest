@@ -35,6 +35,7 @@ import {
   newId,
   nowStamp,
 } from './format.ts';
+import { Icon } from './Icon.tsx';
 import { LabelSheet } from './LabelSheet.tsx';
 import { PortionSheet } from './PortionSheet.tsx';
 import { ProfileForm } from './ProfileForm.tsx';
@@ -61,12 +62,14 @@ const NONE: never[] = [];
 
 type QuickItem = { key: string; label: string; detail: string; log: () => void };
 
-export function Today({ profile }: { profile: Profile }) {
+export function Today({ profile, streakDays }: { profile: Profile; streakDays?: number }) {
   const db = useDb();
   const catalog = useFoodCatalog();
   const today = localDate(new Date());
   const [date, setDate] = useState(today);
   const [open, setOpen] = useState<Open>({ kind: 'none' });
+  /** set by a meal's own "Add food" button; otherwise the meal for the time of day */
+  const [forMeal, setForMeal] = useState<MealSlot | null>(null);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const clearToast = useCallback(() => setToast(null), []);
 
@@ -91,7 +94,10 @@ export function Today({ profile }: { profile: Profile }) {
   const recentIds = useMemo(() => recents.map((r) => r.foodId), [recents]);
   const mealNow = defaultMealSlot(new Date().getHours());
 
-  const close = () => setOpen({ kind: 'none' });
+  const close = () => {
+    setOpen({ kind: 'none' });
+    setForMeal(null);
+  };
 
   function say(text: string, undo?: () => void) {
     setToast((prev) => ({ id: (prev?.id ?? 0) + 1, text, undo }));
@@ -182,7 +188,7 @@ export function Today({ profile }: { profile: Profile }) {
           aria-label="Previous day"
           onClick={() => setDate((d) => addDays(d, -1))}
         >
-          ‹
+          <Icon name="left" />
         </button>
         <h1>{dayTitle(date, today)}</h1>
         <button
@@ -192,25 +198,51 @@ export function Today({ profile }: { profile: Profile }) {
           disabled={date >= today}
           onClick={() => setDate((d) => addDays(d, 1))}
         >
-          ›
+          <Icon name="right" />
         </button>
+        {streakDays !== undefined && (
+          <span
+            className={streakDays > 0 ? 'stat-chip' : 'stat-chip cold'}
+            aria-label={`${streakDays}-day streak`}
+          >
+            <Icon name="flame" size={22} />
+            {streakDays}
+          </span>
+        )}
         <button
           type="button"
           className="icon-btn topbar-end"
           aria-label="Profile and targets"
           onClick={() => setOpen({ kind: 'profile' })}
         >
-          ⚙
+          <Icon name="gear" />
         </button>
       </header>
 
       <section className="panel energy" aria-label="Calories">
+        <h2>Calories remaining</h2>
         {target && remaining !== null ? (
           <>
-            <p className="energy-big">
-              <span className="pixel">{kcal(Math.abs(remaining))}</span>
-              <span> kcal {remaining >= 0 ? 'left' : 'over'}</span>
-            </p>
+            <div className="formula">
+              <p>
+                <b>{kcal(target.kcal)}</b>
+                <span>Goal</span>
+              </p>
+              <span className="op" aria-hidden="true">
+                −
+              </span>
+              <p>
+                <b>{kcal(totals.kcal)}</b>
+                <span>Food</span>
+              </p>
+              <span className="op" aria-hidden="true">
+                =
+              </span>
+              <p className={remaining < 0 ? 'remaining over' : 'remaining'}>
+                <b>{kcal(Math.abs(remaining))}</b>
+                <span>{remaining < 0 ? 'Over' : 'Remaining'}</span>
+              </p>
+            </div>
             <div
               className="bar"
               role="progressbar"
@@ -224,9 +256,6 @@ export function Today({ profile }: { profile: Profile }) {
                 style={{ width: `${filled * 100}%` }}
               />
             </div>
-            <p className="energy-sub muted">
-              {kcal(totals.kcal)} eaten of {kcal(target.kcal)}
-            </p>
             <dl className="macros">
               <Macro name="Protein" eaten={totals.proteinG} goal={target.proteinG} />
               <Macro name="Carbs" eaten={totals.carbsG} goal={target.carbsG} />
@@ -234,8 +263,8 @@ export function Today({ profile }: { profile: Profile }) {
             </dl>
           </>
         ) : (
-          <p>
-            <span className="pixel">{kcal(totals.kcal)}</span> kcal eaten
+          <p className="formula-plain">
+            <b>{kcal(totals.kcal)}</b> kcal eaten
           </p>
         )}
       </section>
@@ -244,11 +273,14 @@ export function Today({ profile }: { profile: Profile }) {
         <button
           type="button"
           className="btn btn-primary btn-big"
+          aria-label="Search food"
           onClick={() => setOpen({ kind: 'search' })}
         >
-          Search food
+          <Icon name="search" size={18} />
+          Search
         </button>
         <button type="button" className="btn btn-big" onClick={() => setOpen({ kind: 'scan' })}>
+          <Icon name="barcode" size={18} />
           Scan
         </button>
         <button type="button" className="btn btn-big" onClick={() => setOpen({ kind: 'quick' })}>
@@ -279,19 +311,17 @@ export function Today({ profile }: { profile: Profile }) {
           <section key={slot} className="panel meal" aria-labelledby={`meal-${slot}`}>
             <header className="meal-head">
               <h2 id={`meal-${slot}`}>{MEAL_LABELS[slot]}</h2>
-              <span className="pixel">{kcal(byMeal[slot].kcal)}</span>
+              <span className="kcal">{kcal(byMeal[slot].kcal)}</span>
             </header>
-            {list.length === 0 ? (
-              <p className="muted meal-empty">Nothing yet</p>
-            ) : (
+            {list.length > 0 && (
               <ul className="entry-list">
                 {list.map((e) => (
                   <li key={e.id} className="entry">
                     <span className="entry-name">
                       {e.label}
-                      {e.grams !== undefined && (
-                        <span className="muted"> · {fmtGrams(e.grams)}</span>
-                      )}
+                      <span className="muted">
+                        {e.grams !== undefined ? fmtGrams(e.grams) : 'Quick add'}
+                      </span>
                     </span>
                     <span className="entry-kcal">{kcal(e.nutrition.kcal)}</span>
                     <button
@@ -300,21 +330,34 @@ export function Today({ profile }: { profile: Profile }) {
                       aria-label={`Remove ${e.label}`}
                       onClick={() => void removeEntry(e)}
                     >
-                      ✕
+                      <Icon name="close" size={18} />
                     </button>
                   </li>
                 ))}
               </ul>
             )}
-            {savable >= 2 && (
+            <footer className="meal-foot">
               <button
                 type="button"
                 className="link-btn"
-                onClick={() => setOpen({ kind: 'save-meal', meal: slot })}
+                aria-label={`Add food to ${MEAL_LABELS[slot]}`}
+                onClick={() => {
+                  setForMeal(slot);
+                  setOpen({ kind: 'search' });
+                }}
               >
-                Save as a meal
+                Add food
               </button>
-            )}
+              {savable >= 2 && (
+                <button
+                  type="button"
+                  className="link-btn"
+                  onClick={() => setOpen({ kind: 'save-meal', meal: slot })}
+                >
+                  Save as a meal
+                </button>
+              )}
+            </footer>
           </section>
         );
       })}
@@ -346,7 +389,7 @@ export function Today({ profile }: { profile: Profile }) {
         <PortionSheet
           food={open.food}
           defaultGrams={open.grams}
-          defaultMeal={mealNow}
+          defaultMeal={forMeal ?? mealNow}
           onClose={close}
           onLog={(food, g, meal, fav) => {
             close();
@@ -356,7 +399,7 @@ export function Today({ profile }: { profile: Profile }) {
       )}
       {open.kind === 'quick' && (
         <QuickAddSheet
-          defaultMeal={mealNow}
+          defaultMeal={forMeal ?? mealNow}
           onClose={close}
           onLog={(value, label, meal) => {
             close();
