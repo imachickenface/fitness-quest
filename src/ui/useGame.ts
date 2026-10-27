@@ -6,6 +6,7 @@ import { bodyShape } from '../core/body.ts';
 import { gameState } from '../core/game.ts';
 import { dailyQuests, weekStart, weeklyQuest } from '../core/quests/daily.ts';
 import { addDays } from '../core/dates.ts';
+import { sessionOn } from '../core/program/generate.ts';
 import { bossQuests } from '../core/quests/fromHistory.ts';
 import { exerciseRanks } from '../core/ranks.ts';
 import { questProgress } from '../core/quests/evaluate.ts';
@@ -13,6 +14,7 @@ import type { Records } from '../core/records.ts';
 import { calorieTarget } from '../core/targets.ts';
 import {
   addQuestsIfMissing,
+  getActiveProgram,
   listAllFoodEntries,
   listQuests,
   listWeighIns,
@@ -40,6 +42,7 @@ export function useGame(profile: Profile): Game | undefined {
   const workouts = useLiveQuery(() => listWorkouts(db), [db]);
   const weighIns = useLiveQuery(() => listWeighIns(db), [db]);
   const quests = useLiveQuery(() => listQuests(db), [db]);
+  const program = useLiveQuery(() => getActiveProgram(db), [db]);
 
   const records: Records | undefined = useMemo(
     () => (foodEntries && workouts && weighIns ? { foodEntries, workouts, weighIns } : undefined),
@@ -84,6 +87,25 @@ export function useGame(profile: Profile): Game | undefined {
       : [];
     void addQuestsIfMissing(db, [...dailyQuests(input), weeklyQuest(input), ...bosses]);
   }, [db, records, quests, haveToday, profile, today]);
+
+  // A program day is a quest of its own, added whenever a program has a session today.
+  const todays = program ? sessionOn(program, today) : undefined;
+  const haveSession = quests?.some((q) => q.id === `program-${today}`) ?? false;
+  useEffect(() => {
+    if (!todays || !quests || haveSession) return;
+    void addQuestsIfMissing(db, [
+      {
+        id: `program-${today}`,
+        kind: 'daily',
+        origin: 'program',
+        title: `Today's session: ${todays.title}`.slice(0, 100),
+        condition: { type: 'program_session', sessionId: todays.id },
+        xp: 60,
+        window: { start: today, end: today },
+        createdAt: nowStamp(),
+      },
+    ]);
+  }, [db, todays, quests, haveSession, today]);
 
   return useMemo(() => {
     if (!records || !quests) return undefined;

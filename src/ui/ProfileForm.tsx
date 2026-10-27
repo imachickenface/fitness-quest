@@ -33,11 +33,20 @@ type Props = {
   initial?: Profile;
   defaults?: TargetDefaults;
   initialWeightKg?: number;
+  /** maintenance measured from the logs, and the target it gives for the goal */
+  fromLogs?: { maintenance: number; kcal: number; kgPerWeek: number };
   onSaved: () => void;
   onCancel?: () => void;
 };
 
-export function ProfileForm({ initial, defaults, initialWeightKg, onSaved, onCancel }: Props) {
+export function ProfileForm({
+  initial,
+  defaults,
+  initialWeightKg,
+  fromLogs,
+  onSaved,
+  onCancel,
+}: Props) {
   const db = useDb();
   const [sex, setSex] = useState<Profile['sex']>(initial?.sex ?? 'male');
   const [birthYear, setBirthYear] = useState(initial ? String(initial.birthYear) : '');
@@ -211,6 +220,24 @@ export function ProfileForm({ initial, defaults, initialWeightKg, onSaved, onCan
         </select>
       </label>
 
+      {initial && fromLogs && (
+        <div className="from-logs">
+          <p>
+            From your last 4 weeks of logs, your maintenance is about{' '}
+            <strong>{fromLogs.maintenance.toLocaleString('en')} kcal</strong> (weight trend{' '}
+            {trendText(fromLogs.kgPerWeek, units)}).
+          </p>
+          <button
+            type="button"
+            className="btn btn-small"
+            disabled={kcalT === String(fromLogs.kcal)}
+            onClick={() => setKcalT(String(fromLogs.kcal))}
+          >
+            Use {fromLogs.kcal.toLocaleString('en')} kcal as my target
+          </button>
+        </div>
+      )}
+
       {initial && (
         <details className="custom-targets" open={kcalT + proteinT + carbsT + fatT !== ''}>
           <summary>Custom targets</summary>
@@ -300,4 +327,13 @@ function TargetField(props: {
       />
     </label>
   );
+}
+
+function trendText(kgPerWeek: number, units: Profile['units']): string {
+  if (kgPerWeek === 0) return 'steady';
+  const amount =
+    units === 'imperial'
+      ? `${Math.abs(kgPerWeek * 2.2046).toFixed(1)} lb`
+      : `${Math.abs(kgPerWeek).toFixed(2)} kg`;
+  return `${kgPerWeek < 0 ? 'down' : 'up'} ${amount} a week`;
 }

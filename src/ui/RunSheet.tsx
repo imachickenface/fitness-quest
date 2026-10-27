@@ -3,11 +3,13 @@ import { Sheet } from './Sheet.tsx';
 import { formatPace, parseDuration } from './workoutFormat.ts';
 
 type Props = {
+  /** a planned session's target, shown above the form */
+  target?: string;
   onSave: (distanceM: number, durationS: number | undefined) => void;
   onClose: () => void;
 };
 
-export function RunSheet({ onSave, onClose }: Props) {
+export function RunSheet({ target, onSave, onClose }: Props) {
   const [km, setKm] = useState('');
   const [time, setTime] = useState('');
   const distanceM = Math.round(Number(km.replace(',', '.')) * 1000);
@@ -23,6 +25,7 @@ export function RunSheet({ onSave, onClose }: Props) {
   return (
     <Sheet title="Log a run" onClose={onClose}>
       <form className="form" onSubmit={submit}>
+        {target && <p className="run-target">Today's plan: {target}</p>}
         <div className="field-row two">
           <label className="field">
             <span>Distance (km)</span>

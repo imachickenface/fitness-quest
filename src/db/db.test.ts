@@ -9,6 +9,9 @@ import {
   deleteFoodEntry,
   deleteSavedMeal,
   deleteWorkout,
+  getActiveProgram,
+  startProgram,
+  stopProgram,
   listQuests,
   listWorkouts,
   upsertWorkout,
@@ -217,5 +220,17 @@ describe('quests', () => {
     const stored = await listQuests(db);
     expect(stored).toHaveLength(2);
     expect(stored.find((q) => q.id === fx.dailyQuest.id)?.xp).toBe(30);
+  });
+});
+
+describe('programs', () => {
+  it('keeps one program active', async () => {
+    expect(await getActiveProgram(db)).toBeNull();
+    await startProgram(db, fx.program);
+    await startProgram(db, { ...fx.program, id: 'program-2' });
+    expect((await getActiveProgram(db))?.id).toBe('program-2');
+    expect((await db.programs.get(fx.program.id))?.active).toBe(false);
+    await stopProgram(db, 'program-2');
+    expect(await getActiveProgram(db)).toBeNull();
   });
 });

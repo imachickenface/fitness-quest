@@ -35,3 +35,8 @@
 | 2026-10-26 | Goal shapes the world and the challenges | Muscle goals: fortress map, two lift bosses, workout-leaning dailies. Running goals: track map, run boss, run-leaning dailies. Weight goals: trail map, calorie boss. |
 | 2026-10-26 | Hero customisation by head swap and palette recolouring | All Kenney characters share a skeleton and one palette texture: heads re-bind to the body's bones; colours move UVs between palette cells, keeping Kenney's shading. |
 | 2026-10-26 | Playwright: 4 local workers | Software-rendered 3D in 8 parallel browsers starved the food-search tests into timeouts. |
+| 2026-10-26 | Programs: running plans from a goal (C25K-style 5K, 10K, half, marathon), lifting plans on the Arnold split | Couch-to-5K's interval ladder and Hal Higdon-style long-run builds with a cut-back every 4th week and a 2-3 week taper. Lifting keeps the owner's split; sets and reps follow the training style, weights come from the existing progression calculator. |
+| 2026-10-26 | Marathon plan needs an 8 km run in the last 8 weeks | Beginner marathon plans assume a base; the sheet points to the half plan instead. |
+| 2026-10-26 | Programs start this Monday when started Mon-Wed, else next Monday | Weeks line up with the calendar and the week strip; no half-empty first week late in the week. |
+| 2026-10-26 | Today's program session is its own 60 XP quest, added whenever there is one | Separate from the once-a-day daily quests, so starting a program mid-day still gives today's quest. |
+| 2026-10-26 | Adaptive calorie target is a suggestion, not automatic | Logs are often incomplete; the owner decides. Needs 14 logged days and a 14-day weigh-in span in the last 4 weeks; capped at ±25% of the formula. |

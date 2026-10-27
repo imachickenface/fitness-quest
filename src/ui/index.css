@@ -1487,3 +1487,76 @@ p {
   width: 34px;
   height: 34px;
 }
+
+/* ---------- programs ---------- */
+
+.week-strip {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin: 4px 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.week-day {
+  display: grid;
+  place-items: center;
+  height: 34px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  color: var(--faint);
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+.week-day.planned {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.week-day.done {
+  border-color: var(--green-edge);
+  background: var(--green);
+  color: #ffffff;
+}
+
+.week-day.missed {
+  border-style: dashed;
+  color: var(--muted);
+}
+
+.week-day.today {
+  box-shadow:
+    0 0 0 2px var(--bg),
+    0 0 0 4px var(--orange);
+}
+
+.done-note {
+  color: var(--green-edge);
+  font-weight: 800;
+}
+
+.start-program {
+  margin-top: 8px;
+}
+
+.run-target {
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  background: var(--blue-soft);
+  color: var(--blue-edge);
+  font-weight: 700;
+}
+
+.from-logs {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 2px solid var(--line);
+  border-radius: var(--r-sm);
+}
+
+.from-logs p {
+  margin: 0;
+}

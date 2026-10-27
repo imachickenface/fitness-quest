@@ -113,6 +113,15 @@ export async function listEntriesForDate(db: FitnessDb, date: string): Promise<F
   return entries.sort((a, b) => Date.parse(a.loggedAt) - Date.parse(b.loggedAt));
 }
 
+/** Food entries dated from..to inclusive, oldest first. */
+export async function listEntriesBetween(
+  db: FitnessDb,
+  from: string,
+  to: string,
+): Promise<FoodEntry[]> {
+  return db.foodEntries.where('date').between(from, to, true, true).sortBy('date');
+}
+
 export async function listRecentEntries(db: FitnessDb, limit: number): Promise<FoodEntry[]> {
   if (limit <= 0) return [];
   return await db.foodEntries.orderBy('loggedAt').reverse().limit(limit).toArray();
@@ -213,4 +222,26 @@ export async function listQuests(db: FitnessDb): Promise<Quest[]> {
 
 export async function listAllFoodEntries(db: FitnessDb): Promise<FoodEntry[]> {
   return await db.foodEntries.toArray();
+}
+
+// ---------- programs ----------
+
+/** Save a program and make it the only active one. */
+export async function startProgram(db: FitnessDb, program: Program): Promise<void> {
+  const parsed = Program.parse(program);
+  await db.transaction('rw', db.programs, async () => {
+    const all = await db.programs.toArray();
+    for (const p of all) if (p.active) await db.programs.put({ ...p, active: false });
+    await db.programs.put(parsed);
+  });
+}
+
+export async function getActiveProgram(db: FitnessDb): Promise<Program | null> {
+  const all = await db.programs.toArray();
+  return all.find((p) => p.active) ?? null;
+}
+
+export async function stopProgram(db: FitnessDb, id: string): Promise<void> {
+  const p = await db.programs.get(id);
+  if (p) await db.programs.put({ ...p, active: false });
 }

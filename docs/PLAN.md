@@ -142,11 +142,11 @@ the profile goal (fortress / track / trail); training style and kg / lb in the p
 ### M5 - Programs from a goal
 | # | Task | Owner | Done when | Depends |
 |---|---|---|---|---|
-| 5.1 | Program rule sets as data: couch-to-5K style, 5K→10K, half, marathon (needs a base), strength (GZCLP-style tiers), fat loss, weight gain | Claude | reviewed against the research; schema-valid | 0.2 |
-| 5.2 | `core/program/generate.ts`: goal + profile + days/week + start date → `Program` | Qwen 🌙 | tests per goal (weeks, cutbacks, taper, rest days) | 5.1 |
-| 5.3 | `core/program/progress.ts`: next weights/stages from logged results | Qwen 🌙 | GZCLP-style stage tests, run progression tests | 5.2 |
-| 5.4 | `core/adaptiveTdee.ts`: weight-trend smoothing + intake → corrected target, with caps | Qwen 🌙 | synthetic-data tests (stable, losing, noisy, gaps) | 1.1 |
-| 5.5 | Goal picker, program calendar, today's session shown as a quest | Claude | E2E: pick marathon → see week 1 → log session → quest done | 5.2-5.3 |
+| 5.1 | ✅ Program rules: couch-to-5K, 10K, half, marathon (needs an 8 km base), steady cardio; lifting on the Arnold split by training style with deload weeks; weight loss adds 2 cardio days | Claude | briefs + tests written from the research | 0.2 |
+| 5.2 | ✅ `core/program/running.ts`, `lifting.ts` (Qwen), `generate.ts` (Claude): goal + style + days/week + start date → `Program` | Qwen + Claude | tests per goal (weeks, cutbacks, taper, rest days, deloads) | 5.1 |
+| 5.3 | ✅ Weights for each session come from the M4b progression calculator (`progression.ts`), no separate `progress.ts` | Claude | session sheet pre-filled; e2e | 5.2 |
+| 5.4 | ✅ `core/adaptiveTdee.ts`: weight trend (EWMA) + 28 days of intake → measured maintenance, capped at ±25% of the formula; suggested in the profile sheet | Qwen + Claude | synthetic-data tests (stable, losing, gaps, caps) | 1.1 |
+| 5.5 | ✅ Program sheet, week strip, next session card, today's session as a 60 XP quest | Claude | E2E: start a program → see the week → log the session → quest done | 5.2-5.3 |
 
 ### M6 - Keep it safe, finish it
 | # | Task | Owner | Done when | Depends |

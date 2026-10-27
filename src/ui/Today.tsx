@@ -11,12 +11,14 @@ import {
   recentFoods,
   totalsByMeal,
 } from '../core/diary.ts';
+import { adaptiveTdee } from '../core/adaptiveTdee.ts';
 import { calorieTarget } from '../core/targets.ts';
 import {
   addFoodEntries,
   addFoodEntry,
   deleteFoodEntry,
   listEntriesForDate,
+  listEntriesBetween,
   listFavouriteFoods,
   listRecentEntries,
   listSavedMeals,
@@ -88,6 +90,22 @@ export function Today({ profile, streakDays }: { profile: Profile; streakDays?: 
         today,
       )
     : null;
+  const monthEntries = useLiveQuery(
+    () => listEntriesBetween(db, addDays(today, -28), addDays(today, -1)),
+    [db, today],
+    NONE,
+  );
+  const measured = defaults
+    ? adaptiveTdee({ foodEntries: monthEntries, weighIns, formulaTdee: defaults.tdee, today })
+    : null;
+  const fromLogs =
+    measured && defaults
+      ? {
+          maintenance: measured.kcal,
+          kcal: measured.kcal + defaults.kcal - defaults.tdee,
+          kgPerWeek: measured.kgPerWeek,
+        }
+      : undefined;
   const totals = dayTotals(entries);
   const byMeal = totalsByMeal(entries);
   const recents = useMemo(() => recentFoods(recentEntries, 12), [recentEntries]);
@@ -434,6 +452,7 @@ export function Today({ profile, streakDays }: { profile: Profile; streakDays?: 
             initial={profile}
             defaults={defaults ?? undefined}
             initialWeightKg={weightKg}
+            {...(fromLogs ? { fromLogs } : {})}
             onSaved={close}
             onCancel={close}
           />
