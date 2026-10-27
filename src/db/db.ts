@@ -35,6 +35,8 @@ export class FitnessDb extends Dexie {
   programs!: Table<Program, PK>;
   quests!: Table<Quest, PK>;
   kv!: Table<{ key: string; value: unknown }, PK>;
+  /** sync: each record's fingerprint at the last sync, by `kind/id` */
+  synced!: Table<{ key: string; hash: string }, PK>;
 
   constructor(name: string) {
     super(name);
@@ -48,6 +50,8 @@ export class FitnessDb extends Dexie {
       quests: 'id, kind',
       kv: 'key',
     });
+    // version 2: accounts and sync (M7) add the table of synced fingerprints
+    this.version(2).stores({ synced: 'key' });
   }
 }
 

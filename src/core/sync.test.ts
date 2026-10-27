@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import * as fx from '../test/fixtures.ts';
 import {
-  compactOutbox,
+  diffLocal,
+  fingerprint,
   firstSync,
   planCombine,
   planPull,
   recordId,
   validateRecord,
-  type OutboxChange,
   type RemoteRow,
 } from './sync.ts';
 
@@ -49,29 +49,58 @@ describe('validateRecord', () => {
   });
 });
 
-describe('compactOutbox', () => {
-  it('keeps only the last change per record, in the order of last change', () => {
-    const changes: OutboxChange[] = [
-      { seq: 1, kind: 'workouts', id: 'w1', data: fx.strengthWorkout, deleted: false },
-      { seq: 2, kind: 'weighIns', id: '2026-10-26', data: fx.weighIn, deleted: false },
-      { seq: 3, kind: 'workouts', id: 'w1', data: null, deleted: true },
-    ];
-    expect(compactOutbox(changes)).toEqual([
-      { kind: 'weighIns', id: '2026-10-26', data: fx.weighIn, deleted: false },
-      { kind: 'workouts', id: 'w1', data: null, deleted: true },
+describe('fingerprint', () => {
+  it("doesn't depend on key order or undefined fields (Postgres reorders jsonb keys)", () => {
+    expect(fingerprint({ a: 1, b: { c: [1, 2], d: 'x' } })).toBe(
+      fingerprint({ b: { d: 'x', c: [1, 2] }, a: 1, e: undefined }),
+    );
+    expect(fingerprint({ a: 1 })).not.toBe(fingerprint({ a: 2 }));
+    expect(fingerprint([1, 2])).not.toBe(fingerprint([2, 1]));
+    expect(fingerprint(fx.strengthWorkout)).toMatch(/^[0-9a-f]{16}$/);
+  });
+});
+
+describe('diffLocal', () => {
+  const k = (kind: RemoteRow['kind'], id: string) => `${kind}/${id}`;
+
+  it('sends new and changed records, not unchanged ones, and marks them pending', () => {
+    const synced = new Map([
+      [k('workouts', fx.strengthWorkout.id), fingerprint(fx.strengthWorkout)],
+      [k('weighIns', fx.weighIn.date), fingerprint(fx.weighIn)],
     ]);
+    const changed = { ...fx.weighIn, kg: 79 };
+    const d = diffLocal(
+      [
+        { kind: 'workouts', id: fx.strengthWorkout.id, data: fx.strengthWorkout },
+        { kind: 'weighIns', id: fx.weighIn.date, data: changed },
+        { kind: 'workouts', id: fx.runWorkout.id, data: fx.runWorkout },
+      ],
+      synced,
+    );
+    expect(d.push).toEqual([
+      { kind: 'weighIns', id: fx.weighIn.date, data: changed, deleted: false },
+      { kind: 'workouts', id: fx.runWorkout.id, data: fx.runWorkout, deleted: false },
+    ]);
+    expect(d.pending).toEqual(
+      new Set([k('weighIns', fx.weighIn.date), k('workouts', fx.runWorkout.id)]),
+    );
   });
 
-  it('sorts by seq even when given out of order, and never changes its input', () => {
-    const changes: OutboxChange[] = [
-      { seq: 5, kind: 'quests', id: 'q', data: fx.dailyQuest, deleted: false },
-      { seq: 4, kind: 'quests', id: 'q', data: null, deleted: true },
-    ];
-    const copy = structuredClone(changes);
-    expect(compactOutbox(changes)).toEqual([
-      { kind: 'quests', id: 'q', data: fx.dailyQuest, deleted: false },
+  it('sends a delete for a synced record that is gone from the phone', () => {
+    const d = diffLocal([], new Map([['foodEntries/e1', 'abc']]));
+    expect(d.push).toEqual([{ kind: 'foodEntries', id: 'e1', data: null, deleted: true }]);
+    expect(d.pending).toEqual(new Set(['foodEntries/e1']));
+  });
+
+  it('never sends a record that fails its schema', () => {
+    const d = diffLocal(
+      [{ kind: 'workouts', id: fx.runWorkout.id, data: { ...fx.runWorkout, date: 'x' } }],
+      new Map(),
+    );
+    expect(d.push).toEqual([]);
+    expect(d.skipped).toEqual([
+      { kind: 'workouts', id: fx.runWorkout.id, reason: expect.stringMatching(/^date: /) },
     ]);
-    expect(changes).toEqual(copy);
   });
 });
 

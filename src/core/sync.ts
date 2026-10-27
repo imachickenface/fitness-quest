@@ -3,7 +3,9 @@
  *
  * The server keeps one row per record (`supabase/migrations/001_records.sql`) and stamps `updated_at` itself,
  * so "newer" never depends on a phone's clock. Day to day:
- * - Push: every local write goes into an outbox; only the last change per record is sent.
+ * - Push: each record's fingerprint is compared with the one it had at the last sync; changed and new
+ *   records are sent, and records that disappeared are sent as deletes. No write log is needed, so a change
+ *   can't be lost if the app is closed mid-write.
  * - Pull: rows changed since the last pull are written locally, except records that still have unsent
  *   local changes; those reach the server later and so become the newest version there.
  * - Every pulled row is checked with its zod schema first; a bad row is skipped and reported, never written.
@@ -58,8 +60,8 @@ export type RemoteRow = {
 /** A row to send; the server adds user_id and updated_at. */
 export type PushRow = { kind: RecordKind; id: string; data: unknown; deleted: boolean };
 
-/** One local write waiting to be sent; `seq` orders them. */
-export type OutboxChange = PushRow & { seq: number };
+/** A record as it is on the phone. */
+export type LocalRecord = { kind: RecordKind; id: string; data: unknown };
 
 export type PullPlan = {
   puts: { kind: RecordKind; id: string; value: unknown }[];
@@ -69,7 +71,32 @@ export type PullPlan = {
   cursor: string | undefined;
 };
 
-const key = (kind: RecordKind, id: string) => `${kind}/${id}`;
+/** The key a record is synced under: `kind/id`. */
+export const recordKey = (kind: RecordKind, id: string) => `${kind}/${id}`;
+const key = recordKey;
+
+/** JSON with object keys sorted, so the same record always gives the same text (Postgres reorders jsonb keys). */
+export function stableJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(',')}]`;
+  if (value && typeof value === 'object') {
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([, v]) => v !== undefined)
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+    return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${stableJson(v)}`).join(',')}}`;
+  }
+  return JSON.stringify(value) ?? 'null';
+}
+
+/** A short fingerprint of a record's content: 64-bit FNV-1a of its stable JSON, as hex. */
+export function fingerprint(value: unknown): string {
+  const text = stableJson(value);
+  let h = 0xcbf29ce484222325n;
+  for (let i = 0; i < text.length; i++) {
+    h ^= BigInt(text.charCodeAt(i));
+    h = (h * 0x100000001b3n) & 0xffffffffffffffffn;
+  }
+  return h.toString(16).padStart(16, '0');
+}
 
 /** The id a record is stored under: its id, the date for weigh-ins, "profile" for the profile. */
 export function recordId(kind: RecordKind, value: unknown): string {
@@ -92,15 +119,40 @@ export function validateRecord(
   return { ok: true, value: parsed.data };
 }
 
-/** The last change per record, ordered by when that last change happened. */
-export function compactOutbox(changes: readonly OutboxChange[]): PushRow[] {
-  const last = new Map<string, OutboxChange>();
-  for (const c of [...changes].sort((a, b) => a.seq - b.seq)) {
-    const k = key(c.kind, c.id);
-    last.delete(k); // re-insert so the map keeps the order of last change
-    last.set(k, c);
+/**
+ * What changed on the phone since the last sync. `synced` maps each record key to its fingerprint at the
+ * last sync. Changed and new records are sent; synced records that are gone are sent as deletes. `pending`
+ * holds every key with an unsent change, so a pull leaves those records alone.
+ */
+export function diffLocal(
+  local: readonly LocalRecord[],
+  synced: ReadonlyMap<string, string>,
+): { push: PushRow[]; pending: Set<string>; skipped: PullPlan['skipped'] } {
+  const push: PushRow[] = [];
+  const pending = new Set<string>();
+  const skipped: PullPlan['skipped'] = [];
+  const seen = new Set<string>();
+  for (const l of local) {
+    const k = key(l.kind, l.id);
+    seen.add(k);
+    if (synced.get(k) === fingerprint(l.data)) continue;
+    const v = validateRecord(l.kind, l.id, l.data);
+    if (!v.ok) {
+      skipped.push({ kind: l.kind, id: l.id, reason: v.reason });
+      continue;
+    }
+    push.push({ kind: l.kind, id: l.id, data: v.value, deleted: false });
+    pending.add(k);
   }
-  return [...last.values()].map(({ kind, id, data, deleted }) => ({ kind, id, data, deleted }));
+  for (const k of synced.keys()) {
+    if (seen.has(k)) continue;
+    const slash = k.indexOf('/');
+    const kind = k.slice(0, slash) as RecordKind;
+    const id = k.slice(slash + 1);
+    push.push({ kind, id, data: null, deleted: true });
+    pending.add(k);
+  }
+  return { push, pending, skipped };
 }
 
 /** Newest copy of each row (pulls overlap on purpose, so a row can come twice). */
