@@ -40,6 +40,7 @@ deletes everything; restoring a backup file brings it back.
 
 - Food data: [Open Food Facts](https://world.openfoodfacts.org) contributors (ODbL) and
   [USDA FoodData Central](https://fdc.nal.usda.gov) (CC0).
+- Exercise library: [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (public domain).
 - Hero models: [Kenney Mini Characters](https://kenney.nl/assets/mini-characters) (CC0).
 - Fonts: Nunito and Pixelify Sans (SIL Open Font License).
 - Libraries: three.js, React, zod, zxing-wasm, barcode-detector (MIT); Dexie (Apache 2.0).

@@ -53,3 +53,10 @@
 - **Review catches:** two M5 modules imported the contract from the wrong folder. The tests passed because type-only imports are erased; `tsc` caught it. Lesson: the queue's check should run the typecheck too, not only the test file.
 - **Took longer than planned:** the hero art (six directions before the owner chose Kenney Mini Characters), and contrast, which should have been checked when the bright palette was chosen in the redesign, not at the end.
 - **Proposed rule change:** add `npx tsc -b` to the `test:` line of Qwen briefs in TypeScript projects.
+
+| Date | Decision | Why |
+|---|---|---|
+| 2026-10-27 | Exercise library from free-exercise-db (Unlicense), names and how-to steps but no photos, bundled and precached | Owner's choice: works offline; 151 KB compressed. wger's data is CC-BY-SA and its code AGPL. |
+| 2026-10-27 | Library entries for the 32 ranked lifts carry the app's names ("Bench press") | Picking from the library must keep ranks, bosses and the progression calculator working. |
+| 2026-10-27 | Run types are a curated list described by feel and race pace, saved in the workout title | No open run-workout database exists; the title needs no schema change, so old data and backups are untouched. |
+| 2026-10-27 | Qwen worker: reads capped at 40,000 characters and 2,000 per line | Qwen opened the one-line 757 KB exercises.json and filled its context (185k tokens) on both attempts; the search module was written by Claude. |

@@ -10,9 +10,11 @@ async function setUpProfile(page: Page) {
 }
 
 async function addExercise(page: Page, name: string, sets: [string, string][]) {
-  const sheet = page.getByRole('dialog');
-  await sheet.getByLabel('Add an exercise').fill(name);
-  await sheet.getByRole('button', { name: 'Add', exact: true }).click();
+  const sheet = page.getByRole('dialog', { name: 'Log a workout' });
+  await sheet.getByRole('button', { name: '+ Add an exercise' }).click();
+  const picker = page.getByRole('dialog', { name: 'Add an exercise' });
+  await picker.getByLabel('Search exercises').fill(name);
+  await picker.getByRole('button', { name: `Add “${name}” as your own exercise` }).click();
   for (const [i, [reps, kg]] of sets.entries()) {
     if (i > 0) {
       await sheet.getByRole('group', { name }).getByRole('button', { name: '+ Set' }).click();

@@ -258,7 +258,7 @@ p {
 .chip[aria-pressed='true'] {
   border-color: var(--blue);
   background: var(--blue-soft);
-  color: var(--blue-edge);
+  color: var(--blue-ink);
 }
 
 /* ---------- cards and bars ---------- */
@@ -847,10 +847,8 @@ p {
 
 .scan-typed,
 .add-exercise {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
-  align-items: end;
+  width: 100%;
+  border-style: dashed;
 }
 
 /* ---------- toast ---------- */
@@ -1641,4 +1639,157 @@ p {
 .hero-change,
 .hero-customise {
   color: var(--blue);
+}
+
+/* ---------- run types and exercise picker ---------- */
+
+.run-types {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.run-types legend {
+  margin-bottom: 4px;
+  padding: 0;
+  color: var(--muted);
+}
+
+.run-group .chip-row {
+  margin-top: 4px;
+}
+
+.run-group-name {
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.chip-choice input {
+  position: absolute;
+  opacity: 0;
+}
+
+.chip-choice span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 2px solid var(--line);
+  border-bottom-width: 4px;
+  border-radius: var(--r-sm);
+  background: var(--card);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chip-choice input:checked + span {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+  color: var(--blue-ink);
+}
+
+.chip-choice input:focus-visible + span {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.run-how {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  background: var(--soft);
+}
+
+.picker {
+  display: grid;
+  gap: 12px;
+}
+
+.picker-parts {
+  margin-top: 0;
+}
+
+.picker-count {
+  margin: 0;
+}
+
+.picker-custom {
+  justify-content: flex-start;
+  text-align: left;
+  text-transform: none;
+}
+
+.picker-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 2px solid var(--line);
+  border-radius: var(--r);
+}
+
+.picker-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-right: 6px;
+}
+
+.picker-item + .picker-item {
+  border-top: 2px solid var(--line);
+}
+
+.picker-pick {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-height: 56px;
+  padding: 8px 14px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.picker-pick:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.picker-name {
+  font-weight: 800;
+}
+
+.picker-meta {
+  font-size: 0.85rem;
+}
+
+.picker-info {
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  font-weight: 800;
+  font-style: italic;
+  font-family: Georgia, serif;
+}
+
+.exercise-detail {
+  display: grid;
+  gap: 10px;
+}
+
+.exercise-detail p {
+  margin: 0;
+}
+
+.steps {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 22px;
+  line-height: 1.5;
 }

@@ -156,6 +156,15 @@ the profile goal (fortress / track / trail); training style and kg / lb in the p
 | 6.3 | ✅ Quality gates: contrast and control names swept on every screen in light and dark (all pass after a palette fix), 3 px focus ring, 360 px screenshots, Lighthouse mobile 96 / 100 / 100 / 100, `npm audit` 0, credits in the app and README | Claude | this row | all |
 | 6.4 | ✅ Deploy, README, retrospective in DECISIONS.md | Claude | Pages deploy green | 6.3 |
 
+
+### M6b - Exercise library and run types (owner's request)
+| # | Task | Owner | Done when | Depends |
+|---|---|---|---|---|
+| 6b.1 | ✅ free-exercise-db (876 exercises, public domain) slimmed to `public/exercises.json`; the 32 ranked lifts mapped by id | Claude | `art/slim_exercises.py` | - |
+| 6b.2 | ✅ `core/exerciseLibrary.ts`: forgiving search, body-part and equipment filters | Claude (Qwen failed twice) | unit tests | 6b.1 |
+| 6b.3 | ✅ Exercise picker with how-to; custom names still allowed | Claude | e2e | 6b.2 |
+| 6b.4 | ✅ 14 run types and a picker on the run sheet; program sessions preselect theirs | Claude | unit + e2e | - |
+
 ### Added 2026-10-26 - custom macro targets ✅
 Owner asked before M3. Profile gets optional calorie and macro targets (protein, carbs, fat in g/day); blank
 ones stay automatic, and all three macros with no calorie target set the calories to their sum. Claude (a few

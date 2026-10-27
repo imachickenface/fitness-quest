@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { exerciseKey, type ExerciseLog, type SetEntry } from '../contract.ts';
 import type { RecentExercise } from './workoutFormat.ts';
 import { fromUnit, toUnit, type Units } from './format.ts';
+import { ExercisePicker } from './ExercisePicker.tsx';
 import { Sheet } from './Sheet.tsx';
 
 type SetDraft = { reps: string; kg: string };
@@ -31,7 +32,7 @@ export function WorkoutSheet({ recent, initial, units = 'metric', onSave, onClos
     })),
   );
   const [nextKey, setNextKey] = useState((initial?.exercises.length ?? 0) + 1);
-  const [newName, setNewName] = useState('');
+  const [picking, setPicking] = useState(false);
   const [title, setTitle] = useState(initial?.title ?? '');
 
   const inWorkout = new Set(exercises.map((e) => exerciseKey(e.name)));
@@ -161,41 +162,9 @@ export function WorkoutSheet({ recent, initial, units = 'metric', onSave, onClos
           </fieldset>
         ))}
 
-        <div className="add-exercise">
-          <label className="field">
-            <span>Add an exercise</span>
-            <input
-              list="exercise-names"
-              placeholder="e.g. Squat"
-              maxLength={100}
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  add(newName);
-                  setNewName('');
-                }
-              }}
-            />
-            <datalist id="exercise-names">
-              {recent.map((r) => (
-                <option key={r.name} value={r.name} />
-              ))}
-            </datalist>
-          </label>
-          <button
-            type="button"
-            className="btn"
-            disabled={newName.trim() === ''}
-            onClick={() => {
-              add(newName);
-              setNewName('');
-            }}
-          >
-            Add
-          </button>
-        </div>
+        <button type="button" className="btn add-exercise" onClick={() => setPicking(true)}>
+          + Add an exercise
+        </button>
 
         <label className="field">
           <span>Name this workout (optional)</span>
@@ -207,6 +176,14 @@ export function WorkoutSheet({ recent, initial, units = 'metric', onSave, onClos
           </button>
         </div>
       </form>
+      {picking && (
+        <ExercisePicker
+          taken={inWorkout}
+          recent={recent.map((x) => x.name)}
+          onPick={(name) => add(name)}
+          onClose={() => setPicking(false)}
+        />
+      )}
     </Sheet>
   );
 }

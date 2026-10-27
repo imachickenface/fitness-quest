@@ -7,6 +7,7 @@ import { findExercise } from '../core/exercises.ts';
 import { generateProgram, isoDay } from '../core/program/generate.ts';
 import { nextTarget } from '../core/progression.ts';
 import { exerciseRanks, TIERS } from '../core/ranks.ts';
+import { runTitle, runTypeFor } from '../core/runTypes.ts';
 import { ARNOLD, dayTemplate, nextSplitDay } from '../core/split.ts';
 import {
   deleteWorkout,
@@ -268,6 +269,9 @@ export function Train({ profile, say }: Props) {
       {open === 'session-run' && session && (
         <RunSheet
           target={session.items.map(describeItem).join(' · ')}
+          {...(session.items[0] && runTypeFor(session.items[0])
+            ? { initialType: runTypeFor(session.items[0]) }
+            : {})}
           onClose={close}
           onSave={(distanceM, durationS) =>
             void save({
@@ -297,9 +301,10 @@ export function Train({ profile, say }: Props) {
       {open === 'run' && (
         <RunSheet
           onClose={close}
-          onSave={(distanceM, durationS) =>
+          onSave={(distanceM, durationS, type) =>
             void save({
               kind: 'run',
+              ...(type ? { title: runTitle(type) } : {}),
               exercises: [
                 { name: 'Run', sets: [{ distanceM, ...(durationS ? { durationS } : {}) }] },
               ],

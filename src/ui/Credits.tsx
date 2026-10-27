@@ -12,6 +12,12 @@ const CREDITS: { name: string; url: string; what: string; licence: string }[] = 
     licence: 'CC0',
   },
   {
+    name: 'free-exercise-db',
+    url: 'https://github.com/yuhonas/free-exercise-db',
+    what: 'the exercise library and how-to steps',
+    licence: 'public domain',
+  },
+  {
     name: 'Kenney Mini Characters',
     url: 'https://kenney.nl/assets/mini-characters',
     what: 'the hero models',
