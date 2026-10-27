@@ -170,19 +170,69 @@ Owner asked before M3. Profile gets optional calorie and macro targets (protein,
 ones stay automatic, and all three macros with no calorie target set the calories to their sum. Claude (a few
 lines in `core/targets.ts`, tests first). E2E: custom targets show on Today, clearing them goes back to auto.
 
-### M7 (later, not planned in detail) - Accounts: sign up, log in, sync
-Owner wants this "if possible in the future". It is possible, but it changes the architecture decision
-"data only on the phone", so it gets its own research and plan before any code:
-- **Needs a server.** GitHub Pages only serves files. Free options to research: Supabase (Postgres + auth;
-  free projects pause after a week unused), Firebase (Auth + Firestore, free Spark plan), or Strata's PC as
-  the server (only reachable at home unless exposed, which needs care).
-- **What it is for decides the design:** backup and a second device (sync of the same records), or social
-  features (friends, shared quests, leaderboards), which need much more.
-- **Keep offline-first:** IndexedDB stays the source on the phone; sync pushes and pulls records by
-  `updatedAt`. Records are already plain, validated and id-keyed, which makes this feasible later.
-- **Security-sensitive:** auth, passwords and personal health data. Claude builds it (not Qwen), with a
-  `/security-review` before release; prefer the provider's auth (email link or Google sign-in) over storing
-  passwords ourselves. A privacy note in the app says what leaves the phone.
+### M7 - Accounts and sync with Supabase (approved 2026-10-27: Google sign-in only)
+
+**Goal:** sign in on any phone and see the same data; the app keeps working fully offline and without an
+account. Research: `docs/RESEARCH.md` section 9.
+
+**Architecture**
+- **Supabase** (free plan: 50,000 monthly users, 500 MB database, 2 projects, paused after 1 week unused).
+  Two projects: `fitness-quest` (live) and `fitness-quest-test` (tests and test accounts only).
+- **Client:** `@supabase/supabase-js` 2.118.0 (MIT). Only the project URL and the *publishable* key ship in
+  the app; both are public by design. The service-role key never leaves the Supabase dashboard.
+- **Offline-first sync:** IndexedDB (Dexie) stays the source of truth on the phone. One server table,
+  `records (user_id, kind, id, data jsonb, updated_at, deleted)`, primary key `(user_id, kind, id)`:
+  - every local write is recorded in a local `outbox` table (Dexie hooks) and pushed when online;
+  - pull = rows with `updated_at` after the last pull; `updated_at` is set by the server (a trigger), so
+    phone clocks don't matter;
+  - conflicts: the newest server write of a record wins; deletes are kept as tombstones (`deleted`);
+  - every pulled row is checked with the zod contract before it touches IndexedDB; bad rows are skipped
+    and reported, never written.
+  - Synced: profile, foods the user made or favourited, food entries, saved meals, workouts, weigh-ins,
+    programs, quests. Not synced: device settings (backup date, storage permission), cached search foods.
+- **Access rules (Row Level Security):** a user can only select, insert, update or delete rows where
+  `user_id = auth.uid()`. No other tables are exposed.
+- **Sign-in:** Google sign-in first (free, no email service needed). Email codes need a sending service
+  (Supabase's built-in one sends 2 emails an hour, only to the project team) - see decision below.
+- **First sign-in on a phone with data:** if the account is empty, the phone's data is uploaded; if both
+  have data, the app asks: "Combine both" (default; newest version of each record wins), "Use the
+  account's" or "Use this phone's". A backup file is saved automatically before anything is replaced.
+- **Sign out:** asks whether to keep the data on this phone. **Delete account:** removes the account and
+  every row (a database function that only deletes the caller's own data), after typing DELETE.
+
+**Decisions for the owner**
+1. Sign-in method: Google only to start (recommended), or also email codes. Email codes need a free
+   Resend account (3,000 emails a month, 100 a day) and, for reliable delivery to anyone, a domain you own
+   (about $10 a year).
+2. While few people use it, a weekly GitHub Action pings the database so the free project is never paused.
+
+**What the owner does (Claude cannot create accounts)**
+- Create a Supabase account and the two projects; send Claude each project's URL and publishable key.
+- Create a Google Cloud OAuth client (Web application) with the redirect URL Claude gives; paste its
+  client id and secret into Supabase's Google provider page. Step-by-step notes: [`docs/ACCOUNTS.md`](ACCOUNTS.md).
+
+**Tasks** (all Claude: authentication, access rules and sync are security-sensitive or tricky logic, which
+the delegation rules keep away from Qwen)
+
+| # | Task | Done when | Depends |
+|---|---|---|---|
+| 7.1 | `supabase/migrations/001_records.sql`: table, server-time trigger, RLS policies, `delete_my_account()` | applied to the test project; access test: user A cannot read, change or delete user B's rows, signed-out requests see nothing | owner setup |
+| 7.2 | `core/sync.ts`: pure merge of local and remote records (newest wins, tombstones, zod check) | unit tests: conflicts, deletes, bad rows, clock skew | - |
+| 7.3 | `db/outbox.ts` + `sync/client.ts`: record local changes, push, pull, retry when back online | tests with a fake server; e2e against the test project with two test users on two browser contexts | 7.1, 7.2 |
+| 7.4 | Account UI in "Your data": sign in with Google, signed-in-as, last synced, sign out, delete account, first-sign-in choice | e2e (test project, password test users only there); screenshots at 360 px | 7.3 |
+| 7.5 | Privacy note: what is stored, where (Supabase, EU or US region chosen at setup), how to delete | in the app and README | 7.4 |
+| 7.6 | Keep-alive GitHub Action; `/security-review`; `npm audit`; deploy | review findings fixed; deploy green | all |
+
+**Usage estimate:** Claude-only, about 3-4 sessions; the access-rule tests and the sync engine are the bulk.
+
+**Risks**
+| Risk | Effect | Handling |
+|---|---|---|
+| A sync bug loses or duplicates data | user loses history | backup file before first sync; tombstones instead of hard deletes; merge unit tests; zod check on every pulled row |
+| Access rules wrong | one user sees another's health data | RLS on the only table, tested with two real test accounts; security review before release |
+| Free project paused or limits reached | sync stops (app still works offline) | weekly keep-alive; 500 MB is roughly 0.5-1 MB per active user a year, so about 500-1,000 active users before paying ($25/month Pro) |
+| Google sign-in setup mistakes | sign-in fails | written steps in `docs/ACCOUNTS.md`; tested on the test project first |
+| Health data privacy | trust, legal | privacy note, delete-account button, export via backup file; no analytics |
 - Until then, M6's backup file covers losing or changing the phone.
 
 ## Split and usage estimate

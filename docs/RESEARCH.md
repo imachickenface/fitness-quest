@@ -180,6 +180,27 @@ backup is over 7 days old, and import that validates the file.
   **HyperFrames:** not needed. **React Bits:** maybe one or two effects if they fit the pixel style.
 - **GitHub:** `gh` is logged in as `imachickenface`, so the app can be deployed to GitHub Pages.
 
+## 9. Accounts and sync (checked 2026-10-27)
+
+- **Supabase free plan** ([pricing](https://supabase.com/pricing)): 50,000 monthly active users, 500 MB
+  database per project, 2 active projects, "Free projects are paused after 1 week of inactivity". Pro is
+  $25/month.
+- **Supabase email** ([SMTP docs](https://supabase.com/docs/guides/auth/auth-smtp)): the built-in sender
+  allows 2 messages an hour, only to the project's team, and "is not meant for production use". Real email
+  sign-in needs a custom SMTP service.
+- **Email codes** ([passwordless docs](https://supabase.com/docs/guides/auth/auth-email-passwordless)):
+  `signInWithOtp` sends a magic link unless the template shows `{{ .Token }}`; `verifyOtp` checks the code;
+  one request per 60 s, codes expire after 1 hour by default.
+- **Resend** ([pricing](https://resend.com/pricing)): free plan 3,000 emails a month, 100 a day, 3 domains.
+- **Google sign-in** ([docs](https://supabase.com/docs/guides/auth/social-login/auth-google)): a Web
+  application OAuth client, the Supabase callback as redirect URI, scopes openid, email and profile. The
+  docs tie Google's app verification to sensitive or restricted scopes, not these basic ones.
+- **Client library:** `@supabase/supabase-js` 2.118.0, MIT, actively maintained (pushed 2026-10-27).
+- **Alternatives checked:** Dexie Cloud (built-in sync for Dexie, but the free plan has 3 production
+  users; €0.12 per user a month after that) and Firebase Spark (50,000 monthly users, Firestore 1 GiB,
+  50,000 reads and 20,000 writes a day; would mean replacing the app's storage). The owner chose Supabase
+  so the app stays free for many users.
+
 ## 8. Risks
 
 | Risk | Impact | Handling |
