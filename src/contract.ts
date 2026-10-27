@@ -215,6 +215,15 @@ export const Profile = z.object({
     .optional(),
   /** the player's chosen character; the body shape on it comes from their records */
   hero: HeroId.optional(),
+  /** customising the chosen character: another character's head, and palette cells swapped for others (0-63) */
+  heroLook: z
+    .object({
+      head: HeroId.optional(),
+      colours: z.record(z.string().regex(/^\d{1,2}$/), z.number().int().min(0).max(63)).optional(),
+    })
+    .optional(),
+  /** how boss quests progress lifts; defaults from the goal when absent */
+  style: z.enum(['powerlifting', 'bodybuilding', 'calisthenics']).optional(),
   updatedAt: Timestamp,
 });
 export type Profile = z.infer<typeof Profile>;

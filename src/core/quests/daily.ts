@@ -89,26 +89,35 @@ function moveOptions(records: Records, goal: Goal, from: string, to: string): Mo
   const runs = workouts.filter((w) => w.kind === 'run');
   const runningGoal = RUNNING_GOALS.includes(goal);
 
+  const muscleGoal = goal === 'build_muscle' || goal === 'gain_weight';
   const options: MoveOption[] = [];
-  if (workouts.length > 0) {
-    options.push({
+  if (workouts.length > 0 || muscleGoal) {
+    const workout: MoveOption = {
       condition: { type: 'workout_count', count: 1 },
       title: 'Get a workout in',
       xp: 40,
-    });
+    };
+    // the goal tilts the odds: muscle goals see the workout quest twice as often
+    options.push(workout, ...(muscleGoal ? [workout] : []));
   }
   if (runs.length > 0 || runningGoal) {
     const meters =
       runs.length === 0
         ? 2000
         : clamp(Math.round(median(runs.map(runDistance)) / 500) * 500, 1000, 21000);
-    options.push({
+    const run: MoveOption = {
       condition: { type: 'run_distance', meters, single: true },
       title: `Run ${meters / 1000} km`,
       xp: 40,
-    });
+    };
+    options.push(run, ...(runningGoal ? [run] : []));
   }
-  options.push({ condition: { type: 'weigh_in', count: 1 }, title: 'Step on the scale', xp: 10 });
+  const weighIn: MoveOption = {
+    condition: { type: 'weigh_in', count: 1 },
+    title: 'Step on the scale',
+    xp: 10,
+  };
+  options.push(weighIn, ...(goal === 'lose_weight' ? [weighIn] : []));
   return options;
 }
 

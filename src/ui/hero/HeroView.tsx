@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { HeroId } from '../../contract.ts';
-import { createHeroScene, type Cheer, type HeroScene } from './heroScene.ts';
+import { createHeroScene, type Cheer, type HeroScene, type Look } from './heroScene.ts';
+import { themeFor } from './world.ts';
 
 type Props = {
   hero: HeroId;
@@ -8,6 +9,12 @@ type Props = {
   build: number;
   /** stop on the quest path: completed quests so far */
   node: number;
+  /** the player's goal picks the look of the world */
+  goal: string;
+  /** another character's head and recoloured palette cells */
+  look?: Look;
+  /** the palette cells this hero uses, once loaded (for the customise sheet) */
+  onCells?: (cells: number[]) => void;
   /** bump `n` to play a one-off animation */
   cheer?: { n: number; clip: Cheer };
 };
@@ -44,10 +51,20 @@ function hasWebGL(): boolean {
 }
 
 /** Default export so the Quests screen can lazy-load three.js with it. */
-export default function HeroView({ hero, muscle, build, node, cheer }: Props) {
+export default function HeroView({ hero, muscle, build, node, goal, look, onCells, cheer }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const sceneRef = useRef<HeroScene | null>(null);
   const [webgl] = useState(hasWebGL);
+  // the world's look is fixed per view; Quests remounts the view when the goal changes
+  const [theme] = useState(() => themeFor(goal));
+  const head = look?.head;
+  const colours = look?.colours;
+  // read by the load effect without reloading when they change
+  const coloursRef = useRef(colours);
+  const onCellsRef = useRef(onCells);
+  useEffect(() => {
+    onCellsRef.current = onCells;
+  }, [onCells]);
   const [loaded, setLoaded] = useState<HeroId | null>(null);
   const [failed, setFailed] = useState<HeroId | null>(null);
   const state = !webgl || failed === hero ? 'failed' : loaded === hero ? 'ready' : 'loading';
@@ -66,11 +83,13 @@ export default function HeroView({ hero, muscle, build, node, cheer }: Props) {
     let cancelled = false;
     Promise.resolve()
       .then(() => {
-        sceneRef.current ??= createHeroScene(el);
-        return sceneRef.current.load(hero);
+        sceneRef.current ??= createHeroScene(el, theme);
+        return sceneRef.current.load(hero, { head, colours: coloursRef.current });
       })
       .then(() => {
-        if (!cancelled) setLoaded(hero);
+        if (cancelled) return;
+        setLoaded(hero);
+        onCellsRef.current?.(sceneRef.current?.cells() ?? []);
       })
       .catch(() => {
         if (!cancelled) setFailed(hero); // the still picture stays
@@ -78,7 +97,13 @@ export default function HeroView({ hero, muscle, build, node, cheer }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [hero, webgl]);
+  }, [hero, head, webgl, theme]);
+
+  // recolour live, without reloading the model
+  useEffect(() => {
+    coloursRef.current = colours;
+    sceneRef.current?.setColours(colours ?? {});
+  }, [colours]);
 
   useEffect(() => {
     sceneRef.current?.setBody(muscle, build);
@@ -105,7 +130,13 @@ export default function HeroView({ hero, muscle, build, node, cheer }: Props) {
   }, [cheer, state]);
 
   return (
-    <div className="hero-view" data-hero={hero} data-state={state} data-node={node}>
+    <div
+      className="hero-view"
+      data-hero={hero}
+      data-head={head ?? hero}
+      data-state={state}
+      data-node={node}
+    >
       {state !== 'ready' && (
         <img className="hero-still" src={`${import.meta.env.BASE_URL}hero/${hero}.png`} alt="" />
       )}

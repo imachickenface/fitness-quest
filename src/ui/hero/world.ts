@@ -67,8 +67,59 @@ const KINDS: Decor['kind'][] = [
   'flowers',
 ];
 
+/** The look of the world, chosen by the player's goal. */
+export type Theme = {
+  id: 'trail' | 'fortress' | 'track';
+  grass: string;
+  path: string;
+  stop: string;
+  decor: Decor['kind'][];
+  landmark: 'castle' | 'tower' | 'arch';
+  landmarkEvery: number;
+};
+
+const THEMES: Record<Theme['id'], Theme> = {
+  // a forest trail: the default, for weight loss and keeping steady
+  trail: {
+    id: 'trail',
+    grass: '#7bc74d',
+    path: '#e9c98f',
+    stop: '#cfd5dd',
+    decor: KINDS,
+    landmark: 'castle',
+    landmarkEvery: 10,
+  },
+  // a climb to a mountain fortress: for building muscle and gaining weight
+  fortress: {
+    id: 'fortress',
+    grass: '#93ad68',
+    path: '#b9b2a6',
+    stop: '#8f96a3',
+    decor: ['rock', 'rock', 'rock', 'pine', 'pine', 'pine', 'tree', 'bush'],
+    landmark: 'tower',
+    landmarkEvery: 5,
+  },
+  // a race course on a running track: for running and cardio goals
+  track: {
+    id: 'track',
+    grass: '#6cc04a',
+    path: '#d9774b',
+    stop: '#f4f6f8',
+    decor: ['tree', 'tree', 'bush', 'bush', 'flowers', 'pine'],
+    landmark: 'arch',
+    landmarkEvery: 10,
+  },
+};
+
+export function themeFor(goal: string): Theme {
+  if (goal === 'build_muscle' || goal === 'gain_weight') return THEMES.fortress;
+  if (['five_k', 'ten_k', 'half_marathon', 'marathon', 'cardio'].includes(goal))
+    return THEMES.track;
+  return THEMES.trail;
+}
+
 /** Scenery for the stretch of land around stop i: 6-9 pieces either side, never on the path. */
-export function decorFor(i: number): Decor[] {
+export function decorFor(i: number, kinds: Decor['kind'][] = KINDS): Decor[] {
   const r = rand(i + 1);
   const out: Decor[] = [];
   const centre = stopAt(i);
@@ -76,7 +127,7 @@ export function decorFor(i: number): Decor[] {
   for (let n = 0; n < count * 3 && out.length < count; n++) {
     const side = r() < 0.5 ? -1 : 1;
     const p = { x: centre.x + side * (1.6 + r() * 5), z: centre.z + (r() - 0.5) * STEP };
-    const kind = KINDS[Math.floor(r() * KINDS.length)]!;
+    const kind = kinds[Math.floor(r() * kinds.length)]!;
     const scale = 0.7 + r() * 0.6;
     const turn = r() * Math.PI * 2;
     if (distanceToPath(p, i) < 1.2) continue; // keep the path clear

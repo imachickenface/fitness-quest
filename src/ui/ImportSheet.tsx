@@ -11,7 +11,8 @@ type Props = { onImport: (workouts: Workout[]) => void; onClose: () => void };
 export function ImportSheet({ onImport, onClose }: Props) {
   const [text, setText] = useState('');
   const today = localDate(new Date());
-  const result = text.trim() ? parseNotes(text, today) : null;
+  const [undated, setUndated] = useState(today);
+  const result = text.trim() ? parseNotes(text, today, undated || today) : null;
 
   async function openFile(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -37,6 +38,15 @@ export function ImportSheet({ onImport, onClose }: Props) {
           value={text}
           onChange={(e) => setText(e.target.value)}
           spellCheck={false}
+        />
+      </label>
+      <label className="field">
+        <span>Date for notes without a date</span>
+        <input
+          type="date"
+          value={undated}
+          max={today}
+          onChange={(e) => setUndated(e.target.value)}
         />
       </label>
       <label className="link-btn file-btn">

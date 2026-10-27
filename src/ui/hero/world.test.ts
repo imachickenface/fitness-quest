@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { along, decorFor, distanceToPath, rand, STEP, stopAt } from './world.ts';
+import { along, decorFor, distanceToPath, rand, STEP, stopAt, themeFor } from './world.ts';
 
 describe('the quest path', () => {
   it('runs away from the camera one step per stop, swaying within the land', () => {
@@ -49,5 +49,21 @@ describe('rand', () => {
       expect(x).toBeGreaterThanOrEqual(0);
       expect(x).toBeLessThan(1);
     }
+  });
+});
+
+describe('themeFor', () => {
+  it('picks the world from the goal', () => {
+    expect(themeFor('build_muscle').id).toBe('fortress');
+    expect(themeFor('gain_weight').id).toBe('fortress');
+    expect(themeFor('marathon').id).toBe('track');
+    expect(themeFor('five_k').id).toBe('track');
+    expect(themeFor('lose_weight').id).toBe('trail');
+    expect(themeFor('maintain').id).toBe('trail');
+  });
+  it("scenery uses the theme's own pieces", () => {
+    const kinds = themeFor('build_muscle').decor;
+    for (let i = 0; i < 20; i++)
+      for (const d of decorFor(i, kinds)) expect(kinds).toContain(d.kind);
   });
 });

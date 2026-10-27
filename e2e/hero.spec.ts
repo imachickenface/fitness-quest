@@ -46,3 +46,24 @@ test('completing quests moves the hero along the map', async ({ page }) => {
   await page.getByRole('button', { name: /^Quests/ }).click();
   await expect(page.locator('.hero-view')).toHaveAttribute('data-node', '2');
 });
+
+test('customising the hero: another head and a colour, kept after a reload', async ({ page }) => {
+  await page.goto('./');
+  await page.getByLabel('Birth year').fill('1995');
+  await page.getByLabel('Height (cm)').fill('180');
+  await page.getByLabel('Weight (kg)').fill('80');
+  await page.getByRole('button', { name: 'Start the adventure' }).click();
+  await page.getByRole('button', { name: /^Quests/ }).click();
+  await expect(page.locator('.hero-view')).toHaveAttribute('data-state', /ready|failed/, {
+    timeout: 20_000,
+  });
+  await page.getByRole('button', { name: 'Customise' }).click();
+  await page.getByRole('button', { name: 'Head: Police officer' }).click();
+  await expect(page.locator('.hero-view')).toHaveAttribute('data-head', 'male-c');
+  await page.getByRole('button', { name: 'Done' }).click();
+
+  await page.reload();
+  await page.getByRole('button', { name: /^Quests/ }).click();
+  await expect(page.locator('.hero-view')).toHaveAttribute('data-head', 'male-c');
+  await expect(page.locator('.hero-view')).toHaveAttribute('data-hero', 'male-a');
+});

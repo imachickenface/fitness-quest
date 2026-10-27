@@ -10,7 +10,7 @@ import { useDb } from './dbContext.ts';
 import { Icon } from './Icon.tsx';
 import { ImportSheet } from './ImportSheet.tsx';
 import { Ranks } from './Ranks.tsx';
-import { dayTitle, newId, nowStamp } from './format.ts';
+import { dayTitle, load, newId, nowStamp, type Units } from './format.ts';
 import { RunSheet } from './RunSheet.tsx';
 import { formatPace, recentExercises } from './workoutFormat.ts';
 import { WorkoutSheet } from './WorkoutSheet.tsx';
@@ -99,7 +99,7 @@ export function Train({ profile, say }: Props) {
         </button>
       </div>
 
-      <Ranks ranks={ranks} />
+      <Ranks ranks={ranks} units={profile.units} />
 
       <section className="history" aria-labelledby="history-title">
         <div className="history-head">
@@ -126,7 +126,7 @@ export function Train({ profile, say }: Props) {
                     <Icon name="close" size={18} />
                   </button>
                 </div>
-                <p className="muted workout-detail">{workoutDetail(w)}</p>
+                <p className="muted workout-detail">{workoutDetail(w, profile.units)}</p>
               </li>
             ))}
           </ul>
@@ -139,6 +139,7 @@ export function Train({ profile, say }: Props) {
       {(open === 'lift' || open === 'split') && (
         <WorkoutSheet
           recent={recent}
+          units={profile.units}
           initial={open === 'split' ? { title: nextDay.title, exercises: template } : undefined}
           onClose={close}
           onSave={(exercises: ExerciseLog[], title) =>
@@ -169,7 +170,7 @@ function workoutTitle(w: Workout): string {
   return w.exercises.map((e) => e.name).join(', ');
 }
 
-function workoutDetail(w: Workout): string {
+function workoutDetail(w: Workout, units: Units): string {
   if (w.kind === 'run') {
     const d = runDistance(w);
     const t = w.exercises.flatMap((e) => e.sets).reduce((s, x) => s + (x.durationS ?? 0), 0);
@@ -178,7 +179,8 @@ function workoutDetail(w: Workout): string {
   return w.exercises
     .map((e) => {
       const best = e.sets.reduce((m, s) => Math.max(m, s.weightKg ?? 0), 0);
-      return `${e.name} ${e.sets.length}×${best > 0 ? ` ${best} kg` : ''}`;
+      const failure = e.sets.every((s) => s.toFailure) ? ' to failure' : '';
+      return `${e.name} ${e.sets.length}×${best > 0 ? ` ${load(best, units)}` : ''}${failure}`;
     })
     .join(' · ');
 }

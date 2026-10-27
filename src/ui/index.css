@@ -1420,3 +1420,70 @@ p {
 .import-list.unparsed code {
   overflow-wrap: anywhere;
 }
+
+.hero-customise {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  z-index: 2;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 88%);
+}
+
+.custom-group {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.custom-group legend {
+  margin-bottom: 6px;
+  padding: 0;
+  font-weight: 800;
+}
+
+.head-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.head-option {
+  padding: 2px;
+}
+
+.swatch-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.swatch {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--line);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.swatch[aria-pressed='true'] {
+  border-color: var(--blue);
+  box-shadow:
+    0 0 0 2px var(--bg),
+    0 0 0 4px var(--blue);
+}
+
+.swatch-row.choices .swatch {
+  width: 34px;
+  height: 34px;
+}

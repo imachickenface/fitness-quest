@@ -41,3 +41,21 @@ export function newId(): string {
 export function nowStamp(): string {
   return new Date().toISOString();
 }
+
+export const LB = 0.45359237;
+export type Units = 'metric' | 'imperial';
+
+/** A weight for display: "83.9 kg" or "185 lb". */
+export function load(kg: number, units: Units): string {
+  return units === 'imperial' ? `${Math.round(kg / LB)} lb` : `${Math.round(kg * 10) / 10} kg`;
+}
+
+/** A weight as the user types it: kilos or pounds. */
+export function toUnit(kg: number, units: Units): number {
+  return units === 'imperial' ? Math.round(kg / LB) : Math.round(kg * 10) / 10;
+}
+
+/** Back to kilos from what the user typed. */
+export function fromUnit(value: number, units: Units): number {
+  return units === 'imperial' ? Math.round(value * LB * 10) / 10 : value;
+}

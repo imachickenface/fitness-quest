@@ -7,12 +7,20 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { HeroId } from '../../contract.ts';
-import { along, CASTLE_EVERY, decorFor, STEP, stopAt, type Decor } from './world.ts';
+import { remapUVs, usedCells } from './palette.ts';
+import { along, decorFor, STEP, stopAt, type Decor, type Theme } from './world.ts';
 
 export type Cheer = 'emote-yes' | 'jump';
 
+export type Look = { head?: HeroId; colours?: Record<string, number> };
+
 export type HeroScene = {
-  load(id: HeroId): Promise<void>;
+  /** Load a character, optionally with another character's head and recoloured cells. */
+  load(id: HeroId, look?: Look): Promise<void>;
+  /** Recolour without reloading. */
+  setColours(colours: Record<string, number>): void;
+  /** Palette cells the loaded hero uses, most used first: the colours a player can change. */
+  cells(): number[];
   setBody(muscle: number, build: number): void;
   /** Move to stop `n`; walks there from the stop shown before when `walk` is true. */
   setNode(n: number, walk: boolean): void;
@@ -26,9 +34,6 @@ const WALK_SECONDS = 1.1; // per stop
 const MAX_WALK = 3; // stops walked in one go; earlier ones are skipped
 
 const COLOURS = {
-  grass: '#7bc74d',
-  path: '#e9c98f',
-  stone: '#cfd5dd',
   gold: '#ffc800',
   trunk: '#8a5a3b',
   leaf: '#4caf50',
@@ -39,7 +44,7 @@ const COLOURS = {
   petals: ['#ff6b8a', '#ffd23f', '#ffffff'],
 };
 
-export function createHeroScene(canvas: HTMLCanvasElement): HeroScene {
+export function createHeroScene(canvas: HTMLCanvasElement, theme: Theme): HeroScene {
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -63,9 +68,11 @@ export function createHeroScene(canvas: HTMLCanvasElement): HeroScene {
   const mat = (color: string) =>
     new THREE.MeshStandardMaterial({ color, roughness: 0.85, flatShading: true });
   const M = {
-    grass: mat(COLOURS.grass),
-    path: mat(COLOURS.path),
-    stone: mat(COLOURS.stone),
+    grass: mat(theme.grass),
+    path: mat(theme.path),
+    stone: mat(theme.stop),
+    banner: mat('#1f8ef1'),
+    white: mat('#ffffff'),
     gold: mat(COLOURS.gold),
     trunk: mat(COLOURS.trunk),
     leaf: mat(COLOURS.leaf),
@@ -88,6 +95,9 @@ export function createHeroScene(canvas: HTMLCanvasElement): HeroScene {
     roof: new THREE.ConeGeometry(0.75, 0.8, 4),
     flag: new THREE.BoxGeometry(0.36, 0.22, 0.03),
     pole: new THREE.CylinderGeometry(0.025, 0.025, 0.7, 5),
+    post: new THREE.BoxGeometry(0.22, 1.8, 0.22),
+    beam: new THREE.BoxGeometry(2.3, 0.32, 0.24),
+    merlon: new THREE.BoxGeometry(0.22, 0.22, 0.22),
   };
 
   const clock = new THREE.Clock();
@@ -140,11 +150,36 @@ export function createHeroScene(canvas: HTMLCanvasElement): HeroScene {
     return g;
   }
 
-  function castle(i: number) {
+  /** A finish arch over the path (track), a stone tower (fortress) or a castle (trail). */
+  function landmark(i: number) {
     const p = stopAt(i);
-    const side = p.x > 0 ? -1 : 1; // on the roomier side of the path
     const g = new THREE.Group();
+    if (theme.landmark === 'arch') {
+      const ahead = stopAt(i + 1);
+      g.position.set(p.x, 0, p.z - 0.6);
+      g.rotation.y = Math.atan2(ahead.x - p.x, ahead.z - p.z);
+      for (const s of [-1, 1]) g.add(place(new THREE.Mesh(G.post, M.white), s * 1.0, 0.9, 0));
+      g.add(place(new THREE.Mesh(G.beam, M.roof), 0, 1.85, 0));
+      return g;
+    }
+    const side = p.x > 0 ? -1 : 1; // on the roomier side of the path
     g.position.set(p.x + side * 1.9, 0, p.z - 0.4);
+    if (theme.landmark === 'tower') {
+      const tower = place(new THREE.Mesh(G.tower, M.rock), 0, 1.1, 0);
+      tower.scale.set(0.9, 1.4, 0.9);
+      g.add(tower);
+      for (const [x, z] of [
+        [-0.3, -0.3],
+        [0.3, -0.3],
+        [-0.3, 0.3],
+        [0.3, 0.3],
+      ] as const) {
+        g.add(place(new THREE.Mesh(G.merlon, M.rock), x, 2.35, z));
+      }
+      g.add(place(new THREE.Mesh(G.pole, M.trunk), 0, 2.75, 0));
+      g.add(place(new THREE.Mesh(G.flag, M.banner), 0.18, 2.95, 0));
+      return g;
+    }
     g.add(place(new THREE.Mesh(G.tower, M.wall), 0, 0.8, 0));
     const roof = place(new THREE.Mesh(G.roof, M.roof), 0, 2.0, 0);
     roof.rotation.y = Math.PI / 4;
@@ -176,8 +211,8 @@ export function createHeroScene(canvas: HTMLCanvasElement): HeroScene {
       }
       const p = stopAt(i);
       world.add(place(new THREE.Mesh(G.stop, i < gold ? M.gold : M.stone), p.x, 0.08, p.z));
-      if (i > 0 && i % CASTLE_EVERY === 0) world.add(castle(i));
-      for (const d of decorFor(i)) world.add(decor(d));
+      if (i > 0 && i % theme.landmarkEvery === 0) world.add(landmark(i));
+      for (const d of decorFor(i, theme.decor)) world.add(decor(d));
     }
   }
 
@@ -265,6 +300,40 @@ export function createHeroScene(canvas: HTMLCanvasElement): HeroScene {
     frame = requestAnimationFrame(tick);
   }
 
+  let skinned: THREE.Mesh[] = [];
+
+  /** Swap the body's head mesh for another character's, bound to this body's skeleton (same bone names). */
+  function swapHead(body: THREE.Object3D, other: THREE.Object3D) {
+    let mine: THREE.SkinnedMesh | undefined;
+    let theirs: THREE.SkinnedMesh | undefined;
+    body.traverse((o) => {
+      if ((o as THREE.SkinnedMesh).isSkinnedMesh && o.name.startsWith('head'))
+        mine = o as THREE.SkinnedMesh;
+    });
+    other.traverse((o) => {
+      if ((o as THREE.SkinnedMesh).isSkinnedMesh && o.name.startsWith('head'))
+        theirs = o as THREE.SkinnedMesh;
+    });
+    if (!mine || !theirs) return;
+    const byName = new Map(mine.skeleton.bones.map((b) => [b.name, b]));
+    const bones = theirs.skeleton.bones.map((b) => byName.get(b.name) ?? b);
+    const head = new THREE.SkinnedMesh(theirs.geometry, theirs.material);
+    head.name = theirs.name;
+    head.bind(new THREE.Skeleton(bones, theirs.skeleton.boneInverses), mine.bindMatrix);
+    mine.parent?.add(head);
+    mine.parent?.remove(mine);
+  }
+
+  function applyColours(colours: Record<string, number>) {
+    const map: Record<number, number> = {};
+    for (const [from, to] of Object.entries(colours)) map[Number(from)] = to;
+    for (const mesh of skinned) {
+      const uv = mesh.geometry.getAttribute('uv') as THREE.BufferAttribute;
+      remapUVs(mesh.userData.uv0 as Float32Array, uv.array as Float32Array, map);
+      uv.needsUpdate = true;
+    }
+  }
+
   function applyBody() {
     hero?.traverse((o) => {
       const mesh = o as THREE.Mesh;
@@ -293,10 +362,28 @@ export function createHeroScene(canvas: HTMLCanvasElement): HeroScene {
   build(0, 0);
 
   return {
-    async load(id) {
-      const gltf = await new GLTFLoader().loadAsync(`${import.meta.env.BASE_URL}hero/${id}.glb`);
+    async load(id, look = {}) {
+      const loader = new GLTFLoader();
+      const url = (h: HeroId) => `${import.meta.env.BASE_URL}hero/${h}.glb`;
+      const [gltf, headGltf] = await Promise.all([
+        loader.loadAsync(url(id)),
+        look.head && look.head !== id
+          ? loader.loadAsync(url(look.head))
+          : Promise.resolve(undefined),
+      ]);
       if (hero) scene.remove(hero);
       const model = gltf.scene;
+      if (headGltf) swapHead(model, headGltf.scene);
+      skinned = [];
+      model.traverse((o) => {
+        const mesh = o as THREE.SkinnedMesh;
+        const uv = mesh.isMesh ? mesh.geometry.getAttribute('uv') : undefined;
+        if (uv) {
+          mesh.userData.uv0 = Float32Array.from(uv.array as ArrayLike<number>);
+          skinned.push(mesh);
+        }
+      });
+      applyColours(look.colours ?? {});
       const box = new THREE.Box3().setFromObject(model);
       const height = box.max.y - box.min.y || 1;
       model.scale.setScalar(1.7 / height);
@@ -337,6 +424,13 @@ export function createHeroScene(canvas: HTMLCanvasElement): HeroScene {
         focus.copy(heroAt());
       }
       loop();
+    },
+    setColours(colours) {
+      applyColours(colours);
+      if (reducedMotion() || document.hidden) draw();
+    },
+    cells() {
+      return usedCells(skinned.map((m) => m.userData.uv0 as Float32Array));
     },
     play: cheer,
     dispose() {

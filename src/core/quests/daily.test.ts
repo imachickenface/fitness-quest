@@ -151,6 +151,18 @@ describe('dailyQuests', () => {
     expect(runQ?.condition).toEqual({ type: 'run_distance', meters: 2000, single: true });
   });
 
+  it('the goal tilts the move quest: muscle goals train, running goals run', () => {
+    const count = (goal: QuestInput['goal'], type: string) =>
+      Array.from({ length: 90 }, (_, i) =>
+        byId(dailyQuests({ ...base, goal, date: addDays('2026-10-26', i) }), 'move'),
+      ).filter((q) => q?.condition.type === type).length;
+    // no history: a muscle goal still gets workout quests, about two days in three
+    expect(count('build_muscle', 'workout_count')).toBeGreaterThan(45);
+    expect(count('maintain', 'workout_count')).toBe(0);
+    // a running goal with no runs yet: run quests about two days in three
+    expect(count('ten_k', 'run_distance')).toBeGreaterThan(45);
+  });
+
   it('does not mutate the records', () => {
     const records: Records = {
       ...none,

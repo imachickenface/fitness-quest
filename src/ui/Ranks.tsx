@@ -1,4 +1,5 @@
 import { overallRank, TIER_FLOORS, TIERS, type ExerciseRank, type Tier } from '../core/ranks.ts';
+import { load, type Units } from './format.ts';
 
 const TIER_COLOURS: Record<Tier, string> = {
   Wood: '#a0754b',
@@ -20,9 +21,7 @@ export function TierBadge({ tier, size = 'small' }: { tier: Tier; size?: 'small'
   );
 }
 
-const fmt = (n: number) => String(Math.round(n * 10) / 10);
-
-export function Ranks({ ranks }: { ranks: ExerciseRank[] }) {
+export function Ranks({ ranks, units }: { ranks: ExerciseRank[]; units: Units }) {
   if (ranks.length === 0) {
     return (
       <section className="ranks" aria-labelledby="ranks-title">
@@ -66,7 +65,7 @@ export function Ranks({ ranks }: { ranks: ExerciseRank[] }) {
               <p className="muted rank-detail">
                 Best{' '}
                 {r.best.weightKg > 0
-                  ? `${fmt(r.best.weightKg)} kg × ${r.best.reps}`
+                  ? `${load(r.best.weightKg, units)} × ${r.best.reps}`
                   : `${r.best.reps} reps`}
                 {' · '}
                 {r.score} / 1000{next && ` · ${next.at - r.score} to ${next.tier}`}

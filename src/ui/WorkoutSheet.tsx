@@ -1,30 +1,33 @@
 import { useState, type FormEvent } from 'react';
 import { exerciseKey, type ExerciseLog, type SetEntry } from '../contract.ts';
 import type { RecentExercise } from './workoutFormat.ts';
+import { fromUnit, toUnit, type Units } from './format.ts';
 import { Sheet } from './Sheet.tsx';
 
 type SetDraft = { reps: string; kg: string };
 type ExerciseDraft = { key: number; name: string; sets: SetDraft[] };
 
-const toDraft = (s: SetEntry): SetDraft => ({
+const toDraft = (s: SetEntry, units: Units): SetDraft => ({
   reps: s.reps === undefined ? '' : String(s.reps),
-  kg: s.weightKg === undefined ? '' : String(s.weightKg),
+  kg: s.weightKg === undefined ? '' : String(toUnit(s.weightKg, units)),
 });
 
 type Props = {
   recent: RecentExercise[];
   /** pre-filled exercises and title, e.g. today's split day */
   initial?: { title: string; exercises: { name: string; sets: SetEntry[] }[] };
+  units?: Units;
   onSave: (exercises: ExerciseLog[], title: string) => void;
   onClose: () => void;
 };
 
-export function WorkoutSheet({ recent, initial, onSave, onClose }: Props) {
+export function WorkoutSheet({ recent, initial, units = 'metric', onSave, onClose }: Props) {
+  const unit = units === 'imperial' ? 'lb' : 'kg';
   const [exercises, setExercises] = useState<ExerciseDraft[]>(() =>
     (initial?.exercises ?? []).map((e, i) => ({
       key: i + 1,
       name: e.name,
-      sets: e.sets.length > 0 ? e.sets.map(toDraft) : [{ reps: '', kg: '' }],
+      sets: e.sets.length > 0 ? e.sets.map((s) => toDraft(s, units)) : [{ reps: '', kg: '' }],
     })),
   );
   const [nextKey, setNextKey] = useState((initial?.exercises.length ?? 0) + 1);
@@ -45,7 +48,10 @@ export function WorkoutSheet({ recent, initial, onSave, onClose }: Props) {
   }
 
   const logs: ExerciseLog[] = exercises
-    .map((e) => ({ name: e.name, sets: e.sets.map(parseSet).filter((s) => s !== null) }))
+    .map((e) => ({
+      name: e.name,
+      sets: e.sets.map((s) => parseSet(s, units)).filter((s) => s !== null),
+    }))
     .filter((e) => e.sets.length > 0);
 
   function submit(ev: FormEvent) {
@@ -65,7 +71,12 @@ export function WorkoutSheet({ recent, initial, onSave, onClose }: Props) {
                   <button
                     type="button"
                     className="chip"
-                    onClick={() => add(r.name, r.sets.map(toDraft))}
+                    onClick={() =>
+                      add(
+                        r.name,
+                        r.sets.map((s) => toDraft(s, units)),
+                      )
+                    }
                   >
                     + {r.name}
                   </button>
@@ -108,11 +119,11 @@ export function WorkoutSheet({ recent, initial, onSave, onClose }: Props) {
                 <span aria-hidden="true">×</span>
                 <label className="field">
                   <span className="visually-hidden">
-                    {e.name} set {i + 1} kg
+                    {e.name} set {i + 1} {unit}
                   </span>
                   <input
                     inputMode="decimal"
-                    placeholder="kg"
+                    placeholder={unit}
                     value={s.kg}
                     onChange={(ev) =>
                       update(e.key, (x) => ({
@@ -205,11 +216,14 @@ function setAt(sets: SetDraft[], i: number, value: SetDraft): SetDraft[] {
 }
 
 /** Reps must be a whole number and kg a number >= 0; a set needs at least one of them. */
-function parseSet(s: SetDraft): SetEntry | null {
+function parseSet(s: SetDraft, units: Units): SetEntry | null {
   const reps = s.reps.trim() === '' ? undefined : Number(s.reps);
   const kg = s.kg.trim() === '' ? undefined : Number(s.kg.replace(',', '.'));
   const repsOk = reps === undefined || (Number.isInteger(reps) && reps >= 0 && reps <= 1000);
   const kgOk = kg === undefined || (Number.isFinite(kg) && kg >= 0 && kg <= 1000);
   if (!repsOk || !kgOk || (reps === undefined && kg === undefined)) return null;
-  return { ...(reps !== undefined ? { reps } : {}), ...(kg !== undefined ? { weightKg: kg } : {}) };
+  return {
+    ...(reps !== undefined ? { reps } : {}),
+    ...(kg !== undefined ? { weightKg: fromUnit(kg, units) } : {}),
+  };
 }

@@ -4,7 +4,7 @@ import { Profile as ProfileSchema } from '../contract.ts';
 import { localDate } from '../core/diary.ts';
 import { saveProfile, upsertWeighIn } from '../db/db.ts';
 import { useDb } from './dbContext.ts';
-import { nowStamp } from './format.ts';
+import { fromUnit, nowStamp, toUnit } from './format.ts';
 
 const ACTIVITY: [ActivityLevel, string][] = [
   ['sedentary', 'Mostly sitting, little exercise'],
@@ -42,7 +42,13 @@ export function ProfileForm({ initial, defaults, initialWeightKg, onSaved, onCan
   const [sex, setSex] = useState<Profile['sex']>(initial?.sex ?? 'male');
   const [birthYear, setBirthYear] = useState(initial ? String(initial.birthYear) : '');
   const [heightCm, setHeightCm] = useState(initial ? String(initial.heightCm) : '');
-  const [weightKg, setWeightKg] = useState(initialWeightKg ? String(initialWeightKg) : '');
+  const [units, setUnits] = useState<Profile['units']>(initial?.units ?? 'metric');
+  const [weight, setWeight] = useState(
+    initialWeightKg ? String(toUnit(initialWeightKg, initial?.units ?? 'metric')) : '',
+  );
+  const [style, setStyle] = useState<NonNullable<Profile['style']>>(
+    initial?.style ?? 'bodybuilding',
+  );
   const [activity, setActivity] = useState<ActivityLevel>(initial?.activity ?? 'light');
   const [goal, setGoal] = useState<Goal>(initial?.goal ?? 'lose_weight');
   const [error, setError] = useState<string | null>(null);
@@ -63,7 +69,7 @@ export function ProfileForm({ initial, defaults, initialWeightKg, onSaved, onCan
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    const kg = Number(weightKg);
+    const kg = fromUnit(Number(weight.replace(',', '.')), units);
     const macroTargets = {
       ...(custom.proteinG !== undefined ? { proteinG: custom.proteinG } : {}),
       ...(custom.carbsG !== undefined ? { carbsG: custom.carbsG } : {}),
@@ -82,7 +88,8 @@ export function ProfileForm({ initial, defaults, initialWeightKg, onSaved, onCan
       heightCm: Number(heightCm),
       activity,
       goal,
-      units: 'metric',
+      units,
+      style,
       updatedAt: nowStamp(),
     });
     if (!parsed.success || !(kg >= 20 && kg <= 400)) {
@@ -92,7 +99,8 @@ export function ProfileForm({ initial, defaults, initialWeightKg, onSaved, onCan
       return;
     }
     await saveProfile(db, parsed.data);
-    if (kg !== initialWeightKg) await upsertWeighIn(db, { date: localDate(new Date()), kg });
+    if (initialWeightKg === undefined || Math.abs(kg - initialWeightKg) >= 0.05)
+      await upsertWeighIn(db, { date: localDate(new Date()), kg });
     onSaved();
   }
 
@@ -135,15 +143,42 @@ export function ProfileForm({ initial, defaults, initialWeightKg, onSaved, onCan
           />
         </label>
         <label className="field">
-          <span>Weight (kg)</span>
+          <span>Weight ({units === 'imperial' ? 'lb' : 'kg'})</span>
           <input
             inputMode="decimal"
-            value={weightKg}
-            onChange={(e) => setWeightKg(e.target.value)}
+            value={weight}
+            onChange={(e) => setWeight(e.target.value)}
             required
           />
         </label>
       </div>
+
+      <fieldset className="segmented">
+        <legend>Weights in</legend>
+        {(
+          [
+            ['metric', 'Kilograms'],
+            ['imperial', 'Pounds'],
+          ] as const
+        ).map(([value, label]) => (
+          <label key={value}>
+            <input
+              type="radio"
+              name="units"
+              value={value}
+              checked={units === value}
+              onChange={() => {
+                // keep the typed weight meaning the same thing
+                const n = Number(weight.replace(',', '.'));
+                if (weight.trim() && Number.isFinite(n))
+                  setWeight(String(toUnit(fromUnit(n, units), value)));
+                setUnits(value);
+              }}
+            />
+            <span>{label}</span>
+          </label>
+        ))}
+      </fieldset>
 
       <label className="field">
         <span>How active are you?</span>
@@ -164,6 +199,15 @@ export function ProfileForm({ initial, defaults, initialWeightKg, onSaved, onCan
               {label}
             </option>
           ))}
+        </select>
+      </label>
+
+      <label className="field">
+        <span>Training style (sets how your boss quests progress)</span>
+        <select value={style} onChange={(e) => setStyle(e.target.value as typeof style)}>
+          <option value="bodybuilding">Bodybuilding: add reps, then weight</option>
+          <option value="powerlifting">Powerlifting: heavier sets of 5 or fewer</option>
+          <option value="calisthenics">Calisthenics: bodyweight reps, then added weight</option>
         </select>
       </label>
 

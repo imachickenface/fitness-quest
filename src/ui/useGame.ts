@@ -5,6 +5,7 @@ import { localDate } from '../core/diary.ts';
 import { bodyShape } from '../core/body.ts';
 import { gameState } from '../core/game.ts';
 import { dailyQuests, weekStart, weeklyQuest } from '../core/quests/daily.ts';
+import { addDays } from '../core/dates.ts';
 import { bossQuests } from '../core/quests/fromHistory.ts';
 import { exerciseRanks } from '../core/ranks.ts';
 import { questProgress } from '../core/quests/evaluate.ts';
@@ -58,13 +59,28 @@ export function useGame(profile: Profile): Game | undefined {
       now: nowStamp(),
       ...(target ? { target: { kcal: target.kcal } } : {}),
     };
-    // boss quests: beat your two best lifts this week (stored once per week, like the weekly quest)
+    // boss quests: progressive-overload targets for this week, tailored to the goal (stored once per week)
+    const monday = weekStart(today);
     const bosses = weightKg
-      ? bossQuests(
-          exerciseRanks(records.workouts, weightKg, profile.sex),
-          weekStart(today),
-          input.now,
-        )
+      ? bossQuests({
+          ranks: exerciseRanks(records.workouts, weightKg, profile.sex),
+          style: profile.style ?? 'bodybuilding',
+          units: profile.units,
+          goal: profile.goal,
+          weekIndex: weeksSince(records, monday),
+          stalled: stalledLifts(quests, records, monday),
+          runs: records.workouts
+            .filter((w) => w.kind === 'run' && w.date >= addDays(today, -28))
+            .flatMap((w) => w.exercises.flatMap((e) => e.sets))
+            .filter((x) => (x.distanceM ?? 0) > 0)
+            .map((x) => ({
+              distanceM: x.distanceM!,
+              ...(x.durationS ? { durationS: x.durationS } : {}),
+            })),
+          ...(target ? { targetKcal: target.kcal } : {}),
+          monday,
+          now: input.now,
+        })
       : [];
     void addQuestsIfMissing(db, [...dailyQuests(input), weeklyQuest(input), ...bosses]);
   }, [db, records, quests, haveToday, profile, today]);
@@ -91,4 +107,29 @@ export function useGame(profile: Profile): Game | undefined {
     });
     return { today, state, active, body };
   }, [records, quests, today, profile]);
+}
+
+/** Whole weeks between the week of the first workout and this week (0 in the first week). */
+function weeksSince(records: Records, monday: string): number {
+  const first = records.workouts.reduce<string | undefined>(
+    (m, w) => (!m || w.date < m ? w.date : m),
+    undefined,
+  );
+  if (!first) return 0;
+  const days = (Date.parse(monday) - Date.parse(weekStart(first))) / 86_400_000;
+  return Math.max(0, Math.round(days / 7));
+}
+
+/** Lifts whose (non-deload) boss was missed in each of the last two weeks. */
+function stalledLifts(quests: Quest[], records: Records, monday: string): string[] {
+  const missed = (week: string) =>
+    new Set(
+      quests
+        .filter((q) => q.id.startsWith(`boss-${week}-`) && !q.title.startsWith('Deload'))
+        .filter((q) => !questProgress(q, records).complete)
+        .map((q) => q.id.slice(`boss-${week}-`.length)),
+    );
+  const last = missed(addDays(monday, -7));
+  const before = missed(addDays(monday, -14));
+  return [...last].filter((id) => before.has(id) && id !== 'run' && id !== 'kcal');
 }
