@@ -174,6 +174,24 @@ export type Goal = z.infer<typeof Goal>;
 export const ActivityLevel = z.enum(['sedentary', 'light', 'moderate', 'active', 'very_active']);
 export type ActivityLevel = z.infer<typeof ActivityLevel>;
 
+/** The 12 Kenney Mini Characters (public/hero/<id>.glb). */
+export const HERO_IDS = [
+  'male-a',
+  'male-b',
+  'male-c',
+  'male-d',
+  'male-e',
+  'male-f',
+  'female-a',
+  'female-b',
+  'female-c',
+  'female-d',
+  'female-e',
+  'female-f',
+] as const;
+export const HeroId = z.enum(HERO_IDS);
+export type HeroId = z.infer<typeof HeroId>;
+
 export const Profile = z.object({
   /** used only by the Mifflin-St Jeor equation */
   sex: z.enum(['male', 'female']),
@@ -192,6 +210,8 @@ export const Profile = z.object({
       fatG: z.number().int().min(0).max(400).optional(),
     })
     .optional(),
+  /** the player's chosen character; the body shape on it comes from their records */
+  hero: HeroId.optional(),
   updatedAt: Timestamp,
 });
 export type Profile = z.infer<typeof Profile>;

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { Cheer } from './hero/heroScene.ts';
 import type { Profile } from '../contract.ts';
 import { Icon, type IconName } from './Icon.tsx';
 import { Quests } from './Quests.tsx';
@@ -26,6 +27,7 @@ export function Shell({ profile }: { profile: Profile }) {
 
   // Celebrate quests completed and levels reached while the app is open (not ones from before).
   const seen = useRef<{ done: Set<string>; level: number } | null>(null);
+  const [cheer, setCheer] = useState<{ n: number; clip: Cheer } | undefined>(undefined);
   useEffect(() => {
     if (!game) return;
     const done = new Set(game.state.completedQuestIds);
@@ -33,8 +35,13 @@ export function Shell({ profile }: { profile: Profile }) {
     seen.current = { done, level: game.state.level };
     if (!before) return;
     const fresh = game.active.filter((v) => v.progress.complete && !before.done.has(v.quest.id));
-    if (game.state.level > before.level) say(`Level up! You reached level ${game.state.level}`);
-    else if (fresh[0]) say(`Quest complete: ${fresh[0].quest.title} +${fresh[0].quest.xp} XP`);
+    if (game.state.level > before.level) {
+      say(`Level up! You reached level ${game.state.level}`);
+      setCheer((c) => ({ n: (c?.n ?? 0) + 1, clip: 'jump' }));
+    } else if (fresh[0]) {
+      say(`Quest complete: ${fresh[0].quest.title} +${fresh[0].quest.xp} XP`);
+      setCheer((c) => ({ n: (c?.n ?? 0) + 1, clip: 'emote-yes' }));
+    }
   }, [game, say]);
 
   const open = game?.active.filter((v) => !v.progress.complete).length ?? 0;
@@ -44,7 +51,7 @@ export function Shell({ profile }: { profile: Profile }) {
       <main className="app-main">
         {tab === 'today' && <Today profile={profile} streakDays={game?.state.streakDays} />}
         {tab === 'train' && <Train say={say} />}
-        {tab === 'quests' && game && <Quests game={game} />}
+        {tab === 'quests' && game && <Quests game={game} profile={profile} cheer={cheer} />}
       </main>
       <nav className="tabbar" aria-label="Sections">
         {TABS.map(([value, label, icon]) => (

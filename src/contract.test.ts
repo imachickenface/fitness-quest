@@ -3,6 +3,7 @@ import {
   Backup,
   Food,
   FoodEntry,
+  HERO_IDS,
   Profile,
   Program,
   Quest,
@@ -110,5 +111,16 @@ describe('exerciseKey', () => {
   it('matches names regardless of case and spacing', () => {
     expect(exerciseKey('  Bench   Press ')).toBe('bench press');
     expect(exerciseKey('bench press')).toBe(exerciseKey('BENCH PRESS'));
+  });
+});
+
+describe('Profile.hero', () => {
+  it('accepts one of the 12 characters and stays optional', () => {
+    expect(Profile.parse({ ...fx.profile, hero: 'female-c' }).hero).toBe('female-c');
+    expect(Profile.parse(fx.profile).hero).toBeUndefined();
+    expect(HERO_IDS).toHaveLength(12);
+  });
+  it('rejects an unknown character', () => {
+    expect(Profile.safeParse({ ...fx.profile, hero: 'wizard' }).success).toBe(false);
   });
 });

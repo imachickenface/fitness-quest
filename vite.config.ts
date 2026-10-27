@@ -35,6 +35,12 @@ export default defineConfig({
             handler: 'CacheFirst',
             options: { cacheName: 'wasm' },
           },
+          // hero models: only the chosen one is ever fetched, then it works offline
+          {
+            urlPattern: /\/hero\/[\w-]+\.glb$/,
+            handler: 'CacheFirst',
+            options: { cacheName: 'hero' },
+          },
         ],
       },
     }),

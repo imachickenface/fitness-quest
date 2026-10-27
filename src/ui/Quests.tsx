@@ -1,6 +1,16 @@
-import type { GameState, QuestCondition } from '../contract.ts';
+import { lazy, Suspense, useState } from 'react';
+import type { GameState, HeroId, Profile, QuestCondition } from '../contract.ts';
+import { saveProfile } from '../db/db.ts';
+import { useDb } from './dbContext.ts';
+import { nowStamp } from './format.ts';
+import type { Cheer } from './hero/heroScene.ts';
+import { DEFAULT_HERO, HERO_NAMES } from './hero/heroNames.ts';
+import { HeroPicker } from './hero/HeroPicker.tsx';
 import { Icon, type IconName } from './Icon.tsx';
 import type { Game, QuestView } from './useGame.ts';
+
+// three.js only loads when the Quests screen does
+const HeroView = lazy(() => import('./hero/HeroView.tsx'));
 
 const QUEST_ICON: Record<QuestCondition['type'], IconName> = {
   log_meals: 'apple',
@@ -14,11 +24,37 @@ const QUEST_ICON: Record<QuestCondition['type'], IconName> = {
   weigh_in: 'scale',
 };
 
-export function HeroCard({ state }: { state: GameState }) {
+type HeroProps = {
+  state: GameState;
+  hero: HeroId;
+  body: Game['body'];
+  cheer?: { n: number; clip: Cheer };
+  onChange: () => void;
+};
+
+export function HeroCard({ state, hero, body, cheer, onChange }: HeroProps) {
   const pct = Math.min(100, (state.xpIntoLevel / state.xpForLevel) * 100);
   return (
     <>
-      <section className="panel hero-card" aria-label="Your hero">
+      <section className="panel hero-stage" aria-label={`Your hero: ${HERO_NAMES[hero]}`}>
+        <Suspense
+          fallback={
+            <div className="hero-view" data-hero={hero} data-state="loading">
+              <img
+                className="hero-still"
+                src={`${import.meta.env.BASE_URL}hero/${hero}.png`}
+                alt=""
+              />
+            </div>
+          }
+        >
+          <HeroView hero={hero} muscle={body.muscle} build={body.build} cheer={cheer} />
+        </Suspense>
+        <button type="button" className="link-btn hero-change" onClick={onChange}>
+          Change hero
+        </button>
+      </section>
+      <section className="panel hero-card" aria-label="Level">
         <span className="level-badge pixel" aria-hidden="true">
           {state.level}
         </span>
@@ -63,7 +99,12 @@ export function HeroCard({ state }: { state: GameState }) {
   );
 }
 
-export function Quests({ game }: { game: Game }) {
+type Props = { game: Game; profile: Profile; cheer?: { n: number; clip: Cheer } };
+
+export function Quests({ game, profile, cheer }: Props) {
+  const db = useDb();
+  const [picking, setPicking] = useState(false);
+  const hero = profile.hero ?? DEFAULT_HERO;
   const daily = game.active.filter((v) => v.quest.kind === 'daily');
   const other = game.active.filter((v) => v.quest.kind !== 'daily');
   return (
@@ -71,13 +112,29 @@ export function Quests({ game }: { game: Game }) {
       <header className="screen-head">
         <h1>Quests</h1>
       </header>
-      <HeroCard state={game.state} />
+      <HeroCard
+        state={game.state}
+        hero={hero}
+        body={game.body}
+        cheer={cheer}
+        onChange={() => setPicking(true)}
+      />
       <QuestList title="Daily quests" views={daily} />
       {other.length > 0 && <QuestList title="This week" views={other} />}
       <p className="fine-print">
         Logging anything keeps your streak. Seven days in a row earns a freeze, which covers one
         missed day. New daily quests arrive each morning, sized to what you usually do.
       </p>
+      {picking && (
+        <HeroPicker
+          current={hero}
+          onClose={() => setPicking(false)}
+          onPick={(id) => {
+            setPicking(false);
+            void saveProfile(db, { ...profile, hero: id, updatedAt: nowStamp() });
+          }}
+        />
+      )}
     </div>
   );
 }
