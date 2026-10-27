@@ -6,6 +6,7 @@ test('the hero shows on the Quests screen, and a new choice persists', async ({ 
   await page.getByLabel('Height (cm)').fill('180');
   await page.getByLabel('Weight (kg)').fill('80');
   await page.getByRole('button', { name: 'Start the adventure' }).click();
+  await page.getByRole('button', { name: 'Food', exact: true }).click(); // the app opens on Quests
   await page.getByRole('button', { name: /^Quests/ }).click();
 
   const view = page.locator('.hero-view');
@@ -33,6 +34,7 @@ test('completing quests moves the hero along the map', async ({ page }) => {
   await page.getByLabel('Height (cm)').fill('180');
   await page.getByLabel('Weight (kg)').fill('80');
   await page.getByRole('button', { name: 'Start the adventure' }).click();
+  await page.getByRole('button', { name: 'Food', exact: true }).click(); // the app opens on Quests
   await page.getByRole('button', { name: /^Quests/ }).click();
   // setting up records a weigh-in, which completes today's "Step on the scale"
   await expect(page.locator('.hero-view')).toHaveAttribute('data-node', '1');
@@ -53,6 +55,7 @@ test('customising the hero: another head and a colour, kept after a reload', asy
   await page.getByLabel('Height (cm)').fill('180');
   await page.getByLabel('Weight (kg)').fill('80');
   await page.getByRole('button', { name: 'Start the adventure' }).click();
+  await page.getByRole('button', { name: 'Food', exact: true }).click(); // the app opens on Quests
   await page.getByRole('button', { name: /^Quests/ }).click();
   await expect(page.locator('.hero-view')).toHaveAttribute('data-state', /ready|failed/, {
     timeout: 20_000,

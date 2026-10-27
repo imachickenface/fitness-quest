@@ -19,7 +19,8 @@ const TABS: [Tab, string, IconName][] = [
 ];
 
 export function Shell({ profile }: { profile: Profile }) {
-  const [tab, setTab] = useState<Tab>('today');
+  // the app opens on the hero and today's quests
+  const [tab, setTab] = useState<Tab>('quests');
   const game = useGame(profile);
   const db = useDb();
 

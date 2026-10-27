@@ -83,6 +83,7 @@ async function setUp(page: Page, code: string) {
   await page.getByLabel('Height (cm)').fill('180');
   await page.getByLabel('Weight (kg)').fill('80');
   await page.getByRole('button', { name: 'Start the adventure' }).click();
+  await page.getByRole('button', { name: 'Food', exact: true }).click(); // the app opens on Quests
   await expect(page.getByText('Calories remaining')).toBeVisible();
 }
 
@@ -165,6 +166,7 @@ test('a barcode can be typed when the camera is refused', async ({ page }) => {
   await page.getByLabel('Height (cm)').fill('180');
   await page.getByLabel('Weight (kg)').fill('80');
   await page.getByRole('button', { name: 'Start the adventure' }).click();
+  await page.getByRole('button', { name: 'Food', exact: true }).click(); // the app opens on Quests
 
   await page.getByRole('button', { name: 'Scan', exact: true }).click();
   await expect(page.getByText(/Camera access was refused/)).toBeVisible();

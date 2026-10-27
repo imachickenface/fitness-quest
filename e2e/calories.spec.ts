@@ -23,6 +23,7 @@ async function setUpProfile(page: Page) {
   await page.getByLabel('Height (cm)').fill('180');
   await page.getByLabel('Weight (kg)').fill('80');
   await page.getByRole('button', { name: 'Start the adventure' }).click();
+  await page.getByRole('button', { name: 'Food', exact: true }).click(); // the app opens on Quests
   await expect(page.getByText('Calories remaining')).toBeVisible();
 }
 
@@ -66,6 +67,12 @@ test('quick add, remove with undo, and data survives a reload', async ({ page })
   await expect(entries(page)).toHaveCount(1);
 
   await page.reload();
+  // the app always opens on Quests
+  await expect(page.getByRole('button', { name: /^Quests/ })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+  await page.getByRole('button', { name: 'Food', exact: true }).click();
   await expect(entries(page)).toHaveCount(1);
   await expect(entries(page).first()).toContainText('Lunch out');
 });

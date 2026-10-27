@@ -7,6 +7,7 @@ async function setUp(page: Page, day: string) {
   await page.getByLabel('Height (cm)').fill('180');
   await page.getByLabel('Weight (kg)').fill('80');
   await page.getByRole('button', { name: 'Start the adventure' }).click();
+  await page.getByRole('button', { name: 'Food', exact: true }).click(); // the app opens on Quests
   await page.getByRole('button', { name: 'Train' }).click();
 }
 

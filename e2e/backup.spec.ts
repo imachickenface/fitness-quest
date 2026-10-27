@@ -7,6 +7,7 @@ async function setUp(page: Page) {
   await page.getByLabel('Height (cm)').fill('180');
   await page.getByLabel('Weight (kg)').fill('80');
   await page.getByRole('button', { name: 'Start the adventure' }).click();
+  await page.getByRole('button', { name: 'Food', exact: true }).click(); // the app opens on Quests
 }
 
 async function quickAdd(page: Page, kcal: string) {
@@ -65,6 +66,7 @@ test('after a week without a backup, Food reminds you', async ({ page }) => {
 
   await page.clock.setFixedTime(new Date('2026-11-09T09:00:00'));
   await page.reload();
+  await page.getByRole('button', { name: 'Food', exact: true }).click();
   const reminder = page.getByRole('region', { name: 'Backup reminder' });
   await expect(reminder).toContainText('Your data is only on this phone.');
   await reminder.getByRole('button', { name: 'Save a backup' }).click();
