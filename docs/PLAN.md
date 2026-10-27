@@ -85,12 +85,13 @@ Split on 2026-10-26 to spare the owner's usage: **M3a done** = 3.1-3.4 plus the 
 tabs and quest-complete / level-up toasts (CSS, no GSAP yet). **M3b left**: see below.
 
 ### M3b - The hero and the map (expanded 2026-10-26 with the owner's character ideas)
-Changed 2026-10-26 (twice): the hero is a real 3D model built in code with three.js
-(`src/ui/avatar/hero3d.ts`): a lathed torso whose profile follows muscle and build, rounded limbs and head, toy-like
-materials, soft shadows. The owner rejected pixel art, then a flat vector version ("shapes stacked on each other"),
-and asked for a 3D character like their chibi reference. Everything stays a parameter, so looks and gear are fully
-customisable and animations can be added in code. three.js 0.186 adds roughly 150 KB, loaded only where the hero
-shows. Body shape is derived from records, never stored. Mock: `docs/avatar3d-mock.png` (dev page `/avatar3d-mock.html`).
+Changed 2026-10-26: the hero uses KayKit's free Adventurers characters (CC0, `art/kaykit/`, from the official
+GitHub repo). The owner rejected pixel art, a flat vector avatar, a code-built three.js model and a script-built
+Blender model as too simple. The KayKit models share one 41-bone rig, are split into head / body / arms / legs with
+gear on bones, and ship 76 animations (Idle, Walking, Running, Cheer, Jump, Sit...). Body shape comes from bone
+scaling (thicker chest and arms for muscle, a wider belly for over-eating, slimmer and a lowered head for
+under-eating), which also works live in three.js. Preview: `docs/hero-kaykit-test.png`; render script
+`art/render_kaykit.py`.
 
 | # | Task | Owner | Done when | Depends |
 |---|---|---|---|---|

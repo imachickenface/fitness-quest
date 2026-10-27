@@ -26,3 +26,4 @@
 | 2026-10-26 | Each meal has its own "Add food" button that preselects that meal | MyFitnessPal's core pattern; logging later in the day no longer lands in the wrong meal. |
 | 2026-10-26 | Hero: code-drawn rounded vector avatar (SVG) instead of pixel art or real 3D | Owner prefers a rounded chibi avatar that fits the new UI. Vector keeps full customisation and smooth body shapes, is small and offline; 3D packs limit gear to what they ship. |
 | 2026-10-26 | Hero: real 3D in three.js, modelled in code, replacing the vector avatar | Owner found the vector version flat. A lathed torso gives smooth body changes; parametric parts keep full customisation. Cost ~150 KB, lazy-loaded. |
+| 2026-10-26 | Hero built on KayKit Adventurers (CC0) instead of self-made models | Four self-made attempts read as too simple; KayKit gives artist-level detail, a shared rig and 76 animations, and its CC0 licence allows the public repo. Body shapes by bone scaling. |
