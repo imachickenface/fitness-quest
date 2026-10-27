@@ -100,10 +100,20 @@ export function nextTarget(
 
   if (deload === 'week') {
     const weight = w > 0 ? roundLoad(w * 0.6, units, perHand) : 0;
-    return lift(weight, w > 0 ? r : Math.ceil(r * 0.6), true, 'Deload week: about 60% so you recover.');
+    return lift(
+      weight,
+      w > 0 ? r : Math.ceil(r * 0.6),
+      true,
+      'Deload week: about 60% so you recover.',
+    );
   }
   if (deload === 'stall') {
-    return lift(roundLoad(w * 0.9, units, perHand), r, true, 'Two misses in a row: drop 10% and build back.');
+    return lift(
+      roundLoad(w * 0.9, units, perHand),
+      r,
+      true,
+      'Two misses in a row: drop 10% and build back.',
+    );
   }
 
   if (ex.bodyweight === true) return calisthenics(w, r, s, units);

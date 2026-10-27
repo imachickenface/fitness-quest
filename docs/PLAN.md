@@ -132,6 +132,13 @@ like Liftoff (`core/ranks.ts`, 9 tiers Wood to Olympian, own bodyweight-ratio st
 the owner's Arnold split (`core/split.ts`: next day and a pre-filled template from history), weekly boss quests
 from the two best lifts (`core/quests/fromHistory.ts`). 4.3 (history stats) folded into ranks and split.
 
+Added 2026-10-26 (owner's requests): the owner's real notes format imports (sets first, pounds, "until failure",
+no dates); a progressive-overload calculator for bosses (`core/progression.ts`: powerlifting linear, bodybuilding
+double progression, calisthenics reps then weight, running distance / speed / cut-back via Riegel) with deload
+weeks (every 4th / 6th / 5th week by style) and stall resets; bosses, daily quests and the map's look tailored to
+the profile goal (fortress / track / trail); training style and kg / lb in the profile; hero customisation
+(another character's head, palette recolours).
+
 ### M5 - Programs from a goal
 | # | Task | Owner | Done when | Depends |
 |---|---|---|---|---|
