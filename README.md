@@ -32,11 +32,14 @@ npm run test:e2e
 
 ## Data and privacy
 
-There is no server and no account. Everything is stored in the browser on your phone (IndexedDB). Export a backup
-file from the app regularly: clearing the browser's site data deletes everything.
+There is no server and no account. Everything is stored in the browser on your phone (IndexedDB). Save a backup
+file regularly (gear icon on Food, "Your data"); the app reminds you after a week. Clearing the browser's site data
+deletes everything; restoring a backup file brings it back.
 
 ## Credits
 
-- Food data: [Open Food Facts](https://world.openfoodfacts.org) (ODbL) and
-  [USDA FoodData Central](https://fdc.nal.usda.gov) (CC0) - added in milestones 1 and 2.
-- Pixel art: [Kenney](https://kenney.nl) and Tiny Creatures by Clint Bellanger (CC0) - added in milestone 3.
+- Food data: [Open Food Facts](https://world.openfoodfacts.org) contributors (ODbL) and
+  [USDA FoodData Central](https://fdc.nal.usda.gov) (CC0).
+- Hero models: [Kenney Mini Characters](https://kenney.nl/assets/mini-characters) (CC0).
+- Fonts: Nunito and Pixelify Sans (SIL Open Font License).
+- Libraries: three.js, React, zod, zxing-wasm, barcode-detector (MIT); Dexie (Apache 2.0).

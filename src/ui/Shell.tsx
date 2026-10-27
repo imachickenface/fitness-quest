@@ -6,6 +6,8 @@ import { Quests } from './Quests.tsx';
 import { Toast, type ToastMessage } from './Toast.tsx';
 import { Today } from './Today.tsx';
 import { Train } from './Train.tsx';
+import { updateSettings } from '../db/db.ts';
+import { useDb } from './dbContext.ts';
 import { useGame } from './useGame.ts';
 
 type Tab = 'today' | 'train' | 'quests';
@@ -19,6 +21,18 @@ const TABS: [Tab, string, IconName][] = [
 export function Shell({ profile }: { profile: Profile }) {
   const [tab, setTab] = useState<Tab>('today');
   const game = useGame(profile);
+  const db = useDb();
+
+  // Ask the browser not to clear our storage when space runs low (Chrome decides without a prompt).
+  useEffect(() => {
+    const storage = navigator.storage as StorageManager | undefined;
+    if (!storage?.persist) return;
+    void storage
+      .persisted()
+      .then((already) => already || storage.persist())
+      .then((storagePersisted) => updateSettings(db, { storagePersisted }))
+      .catch(() => undefined);
+  }, [db]);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const clearToast = useCallback(() => setToast(null), []);
   const say = useCallback((text: string, undo?: () => void) => {

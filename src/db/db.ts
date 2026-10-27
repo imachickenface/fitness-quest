@@ -20,6 +20,7 @@ import {
   Workout,
   Quest,
   Program,
+  BackupTables,
 } from '../contract.ts';
 
 /** IndexedDB key type for the string primary keys used by every table here. */
@@ -244,4 +245,73 @@ export async function getActiveProgram(db: FitnessDb): Promise<Program | null> {
 export async function stopProgram(db: FitnessDb, id: string): Promise<void> {
   const p = await db.programs.get(id);
   if (p) await db.programs.put({ ...p, active: false });
+}
+
+// ---------- backup ----------
+
+/** Every stored record, for a backup file. */
+export async function exportTables(db: FitnessDb): Promise<BackupTables> {
+  return db.transaction(
+    'r',
+    [
+      db.kv,
+      db.foods,
+      db.foodEntries,
+      db.savedMeals,
+      db.workouts,
+      db.weighIns,
+      db.programs,
+      db.quests,
+    ],
+    async () => ({
+      profile: (await getProfile(db)) ?? null,
+      settings: await getSettings(db),
+      foods: await db.foods.toArray(),
+      foodEntries: await db.foodEntries.toArray(),
+      savedMeals: await db.savedMeals.toArray(),
+      workouts: await db.workouts.toArray(),
+      weighIns: await db.weighIns.toArray(),
+      programs: await db.programs.toArray(),
+      quests: await db.quests.toArray(),
+    }),
+  );
+}
+
+/** Replace everything stored with a backup's records, all or nothing. */
+export async function restoreTables(db: FitnessDb, input: BackupTables): Promise<void> {
+  const t = BackupTables.parse(input);
+  await db.transaction(
+    'rw',
+    [
+      db.kv,
+      db.foods,
+      db.foodEntries,
+      db.savedMeals,
+      db.workouts,
+      db.weighIns,
+      db.programs,
+      db.quests,
+    ],
+    async () => {
+      await Promise.all([
+        db.kv.clear(),
+        db.foods.clear(),
+        db.foodEntries.clear(),
+        db.savedMeals.clear(),
+        db.workouts.clear(),
+        db.weighIns.clear(),
+        db.programs.clear(),
+        db.quests.clear(),
+      ]);
+      if (t.profile) await db.kv.put({ key: PROFILE_KEY, value: t.profile });
+      await db.kv.put({ key: SETTINGS_KEY, value: t.settings });
+      await db.foods.bulkPut(t.foods);
+      await db.foodEntries.bulkPut(t.foodEntries);
+      await db.savedMeals.bulkPut(t.savedMeals);
+      await db.workouts.bulkPut(t.workouts);
+      await db.weighIns.bulkPut(t.weighIns);
+      await db.programs.bulkPut(t.programs);
+      await db.quests.bulkPut(t.quests);
+    },
+  );
 }

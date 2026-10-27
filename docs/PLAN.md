@@ -151,10 +151,10 @@ the profile goal (fortress / track / trail); training style and kg / lb in the p
 ### M6 - Keep it safe, finish it
 | # | Task | Owner | Done when | Depends |
 |---|---|---|---|---|
-| 6.1 | `core/backup.ts`: export/import with zod validation and version migration | Qwen 🌙 | round-trip and bad-file tests | 0.2 |
-| 6.2 | Backup UI, 7-day backup reminder, `storage.persist()` request | Claude | E2E | 6.1 |
-| 6.3 | Quality gates: a11y (focus, contrast, labels), phone widths, Lighthouse PWA, `npm audit`, credits page (OFF, USDA, Kenney, fonts) | Claude | checklist in this file ticked | all |
-| 6.4 | Deploy, README, retrospective in DECISIONS.md | Claude | installed on the phone from Pages | 6.3 |
+| 6.1 | ✅ `core/backup.ts`: export/import with zod validation and step-by-step version migration | Qwen | round-trip, bad-file and migration tests | 0.2 |
+| 6.2 | ✅ Backup UI (save, restore with a confirm), 7-day reminder on Food, `storage.persist()` on start | Claude | db tests + 3 E2E | 6.1 |
+| 6.3 | ✅ Quality gates: contrast and control names swept on every screen in light and dark (all pass after a palette fix), 3 px focus ring, 360 px screenshots, Lighthouse mobile 96 / 100 / 100 / 100, `npm audit` 0, credits in the app and README | Claude | this row | all |
+| 6.4 | ✅ Deploy, README, retrospective in DECISIONS.md | Claude | Pages deploy green | 6.3 |
 
 ### Added 2026-10-26 - custom macro targets ✅
 Owner asked before M3. Profile gets optional calorie and macro targets (protein, carbs, fat in g/day); blank

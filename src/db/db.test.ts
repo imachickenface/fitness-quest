@@ -9,6 +9,8 @@ import {
   deleteFoodEntry,
   deleteSavedMeal,
   deleteWorkout,
+  exportTables,
+  restoreTables,
   getActiveProgram,
   startProgram,
   stopProgram,
@@ -232,5 +234,47 @@ describe('programs', () => {
     expect((await db.programs.get(fx.program.id))?.active).toBe(false);
     await stopProgram(db, 'program-2');
     expect(await getActiveProgram(db)).toBeNull();
+  });
+});
+
+describe('backup', () => {
+  const byKey = <T extends { id?: string; date?: string }>(xs: T[]) =>
+    [...xs].sort((a, b) => (a.id ?? a.date ?? '').localeCompare(b.id ?? b.date ?? ''));
+  const sorted = (t: typeof fx.backup.tables) => ({
+    ...t,
+    foods: byKey(t.foods),
+    foodEntries: byKey(t.foodEntries),
+    savedMeals: byKey(t.savedMeals),
+    workouts: byKey(t.workouts),
+    weighIns: byKey(t.weighIns),
+    programs: byKey(t.programs),
+    quests: byKey(t.quests),
+  });
+
+  it('exports an empty store', async () => {
+    const t = await exportTables(db);
+    expect(t.profile).toBeNull();
+    expect(t.settings).toEqual({});
+    expect(t.foods).toEqual([]);
+  });
+
+  it('restores a backup and exports the same records', async () => {
+    await restoreTables(db, fx.backup.tables);
+    expect(sorted(await exportTables(db))).toEqual(sorted(fx.backup.tables));
+  });
+
+  it('replaces what was stored before', async () => {
+    await upsertWorkout(db, { ...fx.runWorkout, id: 'only-here' });
+    await saveProfile(db, { ...fx.profile, heightCm: 150 });
+    await restoreTables(db, fx.backup.tables);
+    expect(await db.workouts.get('only-here')).toBeUndefined();
+    expect((await getProfile(db))?.heightCm).toBe(fx.profile.heightCm);
+  });
+
+  it('leaves the store untouched when the backup is bad', async () => {
+    await upsertWorkout(db, fx.runWorkout);
+    const bad = { ...fx.backup.tables, weighIns: [{ date: 'nope', kg: 80 }] };
+    await expect(restoreTables(db, bad)).rejects.toBeInstanceOf(ZodError);
+    expect(await listWorkouts(db)).toHaveLength(1);
   });
 });

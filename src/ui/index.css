@@ -12,22 +12,29 @@
   --card: #ffffff;
   --line: #e5e7eb;
   --ink: #3c3c3c;
-  --muted: #7d8590;
-  --faint: #afb6bf;
+  --muted: #56606a;
+  --faint: #6b747e;
 
-  --green: #46c21b;
-  --green-edge: #36990f;
+  --green: #2f8411;
+  --green-edge: #225f0b;
   --green-soft: #e9f8e1;
-  --blue: #1f8ef1;
-  --blue-edge: #1670c2;
+  --blue: #0a68c4;
+  --blue-edge: #084f96;
   --blue-soft: #e6f2fe;
   --orange: #ff9600;
   --orange-edge: #d97f00;
   --gold: #ffc800;
   --gold-edge: #d9a900;
-  --red: #ff4b4b;
-  --red-edge: #d63a3a;
-  --focus: #1f8ef1;
+  --red: #d93030;
+  --red-edge: #a82222;
+  --focus: #0a68c4;
+
+  /* accents as text: dark enough on white (4.5:1), lighter in dark mode */
+  --blue-ink: #0a68c4;
+  --green-ink: #2a780f;
+  --red-ink: #c62828;
+  --orange-ink: #b35900;
+  --gold-ink: #8a6500;
 
   --sans: 'Nunito Variable', system-ui, sans-serif;
   --pixel: 'Pixelify Sans Variable', var(--sans);
@@ -51,7 +58,13 @@
     --line: #37464f;
     --ink: #f1f7fb;
     --muted: #a3b2bb;
-    --faint: #52656d;
+    --faint: #8a9ca5;
+    --blue-ink: #5cb1ff;
+    --green-ink: #6fdc45;
+    --red-ink: #ff7b7b;
+    --orange-ink: #ffad42;
+    --gold-ink: #ffd54a;
+    --focus: #5cb1ff;
     --green-soft: #1d3320;
     --blue-soft: #15304a;
     color-scheme: dark;
@@ -134,7 +147,7 @@ p {
 .btn {
   --c: var(--card);
   --edge: var(--line);
-  --text: var(--blue);
+  --text: var(--blue-ink);
   display: inline-flex;
   gap: 8px;
   align-items: center;
@@ -183,7 +196,7 @@ p {
 }
 
 .btn-ghost[aria-pressed='true'] {
-  --text: var(--gold-edge);
+  --text: var(--gold-ink);
   --edge: var(--gold);
 }
 
@@ -223,7 +236,7 @@ p {
   padding: 0;
   border: 0;
   background: none;
-  color: var(--blue);
+  color: var(--blue-ink);
   font: 800 0.85rem/1 var(--sans);
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -322,7 +335,7 @@ p {
 
 .welcome h1 {
   font-size: 2rem;
-  color: var(--green);
+  color: var(--green-ink);
 }
 
 /* ---------- forms ---------- */
@@ -413,7 +426,7 @@ p {
 .segmented input:checked + span {
   border-color: var(--blue);
   background: var(--blue-soft);
-  color: var(--blue-edge);
+  color: var(--blue-ink);
 }
 
 .segmented input:focus-visible + span {
@@ -446,7 +459,7 @@ p {
   display: flex;
   align-items: center;
   min-height: 44px;
-  color: var(--blue);
+  color: var(--blue-ink);
   font-weight: 800;
   cursor: pointer;
 }
@@ -488,7 +501,7 @@ p {
   align-items: center;
   padding: 0 6px;
   font: 800 1rem/1 var(--sans);
-  color: var(--orange);
+  color: var(--orange-ink);
 }
 
 .stat-chip.cold {
@@ -532,11 +545,11 @@ p {
 }
 
 .formula .remaining b {
-  color: var(--green);
+  color: var(--green-ink);
 }
 
 .formula .remaining.over b {
-  color: var(--red);
+  color: var(--red-ink);
 }
 
 .macros {
@@ -938,7 +951,7 @@ p {
 .tab[aria-current='page'] {
   border-color: var(--blue);
   background: var(--blue-soft);
-  color: var(--blue);
+  color: var(--blue-ink);
 }
 
 .tab-badge {
@@ -976,9 +989,9 @@ p {
   border-radius: 20px;
   background: var(--gold);
   box-shadow: inset 0 -6px 0 var(--gold-edge);
-  color: #ffffff;
+  color: #5c3d00;
   font-size: 2.2rem;
-  text-shadow: 0 2px 0 var(--gold-edge);
+  text-shadow: 0 2px 0 rgb(255 255 255 / 40%);
 }
 
 .hero-level {
@@ -1024,11 +1037,11 @@ p {
 }
 
 .streak-row .flame {
-  color: var(--orange);
+  color: var(--orange-ink);
 }
 
 .streak-row .snow {
-  color: var(--blue);
+  color: var(--blue-ink);
 }
 
 .quest-section {
@@ -1063,7 +1076,7 @@ p {
   height: 44px;
   border-radius: 50%;
   background: var(--blue-soft);
-  color: var(--blue);
+  color: var(--blue-ink);
 }
 
 .quest.done .quest-icon {
@@ -1082,7 +1095,7 @@ p {
   justify-items: center;
   font-size: 0.75rem;
   font-weight: 800;
-  color: var(--gold-edge);
+  color: var(--gold-ink);
 }
 
 .quest-xp .icon {
@@ -1512,7 +1525,7 @@ p {
 
 .week-day.planned {
   border-color: var(--blue);
-  color: var(--blue);
+  color: var(--blue-ink);
 }
 
 .week-day.done {
@@ -1559,4 +1572,73 @@ p {
 
 .from-logs p {
   margin: 0;
+}
+
+/* ---------- backup ---------- */
+
+.backup {
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 2px solid var(--line);
+}
+
+.backup h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.backup p {
+  margin: 0;
+}
+
+.backup-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.restore-confirm {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 2px solid var(--red);
+  border-radius: var(--r-sm);
+}
+
+.restore-confirm p {
+  margin: 0;
+}
+
+.btn-danger {
+  --c: var(--red);
+  --edge: var(--red-edge);
+  --text: #ffffff;
+}
+
+.backup-due p {
+  margin: 0 0 10px;
+  font-weight: 700;
+}
+
+.credits {
+  margin-top: 20px;
+  color: var(--muted);
+}
+
+.credits summary {
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.credits ul {
+  padding-left: 20px;
+  line-height: 1.5;
+}
+
+/* links over the 3D scene sit on a white chip in both themes */
+.hero-change,
+.hero-customise {
+  color: var(--blue);
 }

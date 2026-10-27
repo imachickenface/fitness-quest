@@ -113,7 +113,7 @@ test('custom macro targets replace the automatic ones and set the calorie target
   await expect(
     sheet.getByText(/add up to 1,940 kcal, which becomes your calorie target/),
   ).toBeVisible();
-  await sheet.getByRole('button', { name: 'Save' }).click();
+  await sheet.getByRole('button', { name: 'Save', exact: true }).click();
 
   await expect(page.locator('.formula')).toContainText('1,940Goal');
   await expect(page.getByText('0 / 150 g')).toBeVisible();
@@ -124,7 +124,7 @@ test('custom macro targets replace the automatic ones and set the calorie target
   await page.getByRole('button', { name: 'Profile and targets' }).click();
   for (const label of ['Protein (g)', 'Carbs (g)', 'Fat (g)'])
     await sheet.getByLabel(label).fill('');
-  await sheet.getByRole('button', { name: 'Save' }).click();
+  await sheet.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(page.locator('.formula')).not.toContainText('1,940Goal');
 });
 

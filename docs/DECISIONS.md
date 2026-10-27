@@ -40,3 +40,16 @@
 | 2026-10-26 | Programs start this Monday when started Mon-Wed, else next Monday | Weeks line up with the calendar and the week strip; no half-empty first week late in the week. |
 | 2026-10-26 | Today's program session is its own 60 XP quest, added whenever there is one | Separate from the once-a-day daily quests, so starting a program mid-day still gives today's quest. |
 | 2026-10-26 | Adaptive calorie target is a suggestion, not automatic | Logs are often incomplete; the owner decides. Needs 14 logged days and a 14-day weigh-in span in the last 4 weeks; capped at ±25% of the formula. |
+| 2026-10-26 | Backup is a JSON file download; restore replaces everything after a confirm that shows what the file holds | No server, so a file is the only way off the phone. Merging two histories would need conflict rules for quests and programs; replace is predictable. |
+| 2026-10-26 | Backup files carry a version and run step-by-step migrations on import; files from a newer app are refused | An old backup always restores after a schema change; a newer file can't be read safely by an older app. |
+| 2026-10-26 | Backup reminder on Food after 7 days (or 7 days of use with no backup), "Later" hides it until the app is reopened | Data lives only in the browser; a nag that can be put off is kinder than none. |
+| 2026-10-26 | `navigator.storage.persist()` asked on every start, result kept in settings | Chrome grants it without a prompt for installed or engaged apps; asking again costs nothing and covers a restore onto a new phone. |
+| 2026-10-26 | Palette deepened for WCAG AA: green #46c21b -> #2f8411, blue #1f8ef1 -> #0a68c4, red #ff4b4b -> #d93030, darker greys; accents used as text get "-ink" tokens (lighter in dark mode); level badge number dark on gold | White text on the bright Duolingo green was 2.3:1, grey text 3.7:1. The sweep found 60+ failures; all screens now pass 4.5:1 in both themes. |
+
+## Retrospective (M0-M6)
+
+- **Qwen did well** on pure modules with a precise brief and tests: 15 of 19 tasks passed on the first attempt (game rules, quests, ranks, split, progression, running and lifting plans, adaptive TDEE, backup). Briefs that spelled out exact formulas, ids and edge cases came back right.
+- **Qwen did badly** on large single-file tasks (food search, OFF client, notes parser): the replies ran past the token limit. Raising the limit to 12,288 tokens and splitting tasks fixed most of it; the notes parser was still written by Claude.
+- **Review catches:** two M5 modules imported the contract from the wrong folder. The tests passed because type-only imports are erased; `tsc` caught it. Lesson: the queue's check should run the typecheck too, not only the test file.
+- **Took longer than planned:** the hero art (six directions before the owner chose Kenney Mini Characters), and contrast, which should have been checked when the bright palette was chosen in the redesign, not at the end.
+- **Proposed rule change:** add `npx tsc -b` to the `test:` line of Qwen briefs in TypeScript projects.

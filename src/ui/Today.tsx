@@ -17,6 +17,7 @@ import {
   addFoodEntries,
   addFoodEntry,
   deleteFoodEntry,
+  getSettings,
   listEntriesForDate,
   listEntriesBetween,
   listFavouriteFoods,
@@ -41,6 +42,9 @@ import { Icon } from './Icon.tsx';
 import { LabelSheet } from './LabelSheet.tsx';
 import { PortionSheet } from './PortionSheet.tsx';
 import { ProfileForm } from './ProfileForm.tsx';
+import { BackupPanel } from './BackupPanel.tsx';
+import { Credits } from './Credits.tsx';
+import { backupDue, saveBackup } from './backupActions.ts';
 import { QuickAddSheet } from './QuickAddSheet.tsx';
 import { SaveMealSheet } from './SaveMealSheet.tsx';
 import { ScanSheet, type Missing } from './ScanSheet.tsx';
@@ -111,6 +115,11 @@ export function Today({ profile, streakDays }: { profile: Profile; streakDays?: 
   const recents = useMemo(() => recentFoods(recentEntries, 12), [recentEntries]);
   const recentIds = useMemo(() => recents.map((r) => r.foodId), [recents]);
   const mealNow = defaultMealSlot(new Date().getHours());
+
+  const settings = useLiveQuery(() => getSettings(db), [db], undefined);
+  const [laterBackup, setLaterBackup] = useState(false);
+  const due =
+    settings && !laterBackup ? backupDue(settings.lastBackupAt, weighIns[0]?.date, today) : null;
 
   const close = () => {
     setOpen({ kind: 'none' });
@@ -236,6 +245,28 @@ export function Today({ profile, streakDays }: { profile: Profile; streakDays?: 
           <Icon name="gear" />
         </button>
       </header>
+
+      {due !== null && (
+        <section className="panel backup-due" aria-label="Backup reminder">
+          <p>
+            {settings?.lastBackupAt
+              ? `Your last backup was ${due} days ago.`
+              : 'Your data is only on this phone. Save a backup in case it gets lost.'}
+          </p>
+          <div className="form-actions">
+            <button type="button" className="btn" onClick={() => setLaterBackup(true)}>
+              Later
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => void saveBackup(db).then(() => say('Backup saved'))}
+            >
+              Save a backup
+            </button>
+          </div>
+        </section>
+      )}
 
       <section className="panel energy" aria-label="Calories">
         <h2>Calories remaining</h2>
@@ -456,6 +487,13 @@ export function Today({ profile, streakDays }: { profile: Profile; streakDays?: 
             onSaved={close}
             onCancel={close}
           />
+          <BackupPanel
+            onRestored={(text) => {
+              close();
+              say(text);
+            }}
+          />
+          <Credits />
         </Sheet>
       )}
 
