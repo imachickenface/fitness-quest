@@ -13,15 +13,23 @@ const toDraft = (s: SetEntry): SetDraft => ({
 
 type Props = {
   recent: RecentExercise[];
+  /** pre-filled exercises and title, e.g. today's split day */
+  initial?: { title: string; exercises: { name: string; sets: SetEntry[] }[] };
   onSave: (exercises: ExerciseLog[], title: string) => void;
   onClose: () => void;
 };
 
-export function WorkoutSheet({ recent, onSave, onClose }: Props) {
-  const [exercises, setExercises] = useState<ExerciseDraft[]>([]);
-  const [nextKey, setNextKey] = useState(1);
+export function WorkoutSheet({ recent, initial, onSave, onClose }: Props) {
+  const [exercises, setExercises] = useState<ExerciseDraft[]>(() =>
+    (initial?.exercises ?? []).map((e, i) => ({
+      key: i + 1,
+      name: e.name,
+      sets: e.sets.length > 0 ? e.sets.map(toDraft) : [{ reps: '', kg: '' }],
+    })),
+  );
+  const [nextKey, setNextKey] = useState((initial?.exercises.length ?? 0) + 1);
   const [newName, setNewName] = useState('');
-  const [title, setTitle] = useState('');
+  const [title, setTitle] = useState(initial?.title ?? '');
 
   const inWorkout = new Set(exercises.map((e) => exerciseKey(e.name)));
   const suggestions = recent.filter((r) => !inWorkout.has(exerciseKey(r.name)));

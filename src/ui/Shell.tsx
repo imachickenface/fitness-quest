@@ -49,7 +49,7 @@ export function Shell({ profile }: { profile: Profile }) {
     <>
       <main className="app-main">
         {tab === 'today' && <Today profile={profile} streakDays={game?.state.streakDays} />}
-        {tab === 'train' && <Train say={say} />}
+        {tab === 'train' && <Train profile={profile} say={say} />}
         {tab === 'quests' && game && <Quests game={game} profile={profile} cheer={cheer} />}
       </main>
       <nav className="tabbar" aria-label="Sections">

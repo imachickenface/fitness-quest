@@ -4,7 +4,9 @@ import type { GameState, Profile, Quest, QuestProgress } from '../contract.ts';
 import { localDate } from '../core/diary.ts';
 import { bodyShape } from '../core/body.ts';
 import { gameState } from '../core/game.ts';
-import { dailyQuests, weeklyQuest } from '../core/quests/daily.ts';
+import { dailyQuests, weekStart, weeklyQuest } from '../core/quests/daily.ts';
+import { bossQuests } from '../core/quests/fromHistory.ts';
+import { exerciseRanks } from '../core/ranks.ts';
 import { questProgress } from '../core/quests/evaluate.ts';
 import type { Records } from '../core/records.ts';
 import { calorieTarget } from '../core/targets.ts';
@@ -56,7 +58,15 @@ export function useGame(profile: Profile): Game | undefined {
       now: nowStamp(),
       ...(target ? { target: { kcal: target.kcal } } : {}),
     };
-    void addQuestsIfMissing(db, [...dailyQuests(input), weeklyQuest(input)]);
+    // boss quests: beat your two best lifts this week (stored once per week, like the weekly quest)
+    const bosses = weightKg
+      ? bossQuests(
+          exerciseRanks(records.workouts, weightKg, profile.sex),
+          weekStart(today),
+          input.now,
+        )
+      : [];
+    void addQuestsIfMissing(db, [...dailyQuests(input), weeklyQuest(input), ...bosses]);
   }, [db, records, quests, haveToday, profile, today]);
 
   return useMemo(() => {
