@@ -85,13 +85,12 @@ Split on 2026-10-26 to spare the owner's usage: **M3a done** = 3.1-3.4 plus the 
 tabs and quest-complete / level-up toasts (CSS, no GSAP yet). **M3b left**: see below.
 
 ### M3b - The hero and the map (expanded 2026-10-26 with the owner's character ideas)
-Changed 2026-10-26: the hero uses KayKit's free Adventurers characters (CC0, `art/kaykit/`, from the official
-GitHub repo). The owner rejected pixel art, a flat vector avatar, a code-built three.js model and a script-built
-Blender model as too simple. The KayKit models share one 41-bone rig, are split into head / body / arms / legs with
-gear on bones, and ship 76 animations (Idle, Walking, Running, Cheer, Jump, Sit...). Body shape comes from bone
-scaling (thicker chest and arms for muscle, a wider belly for over-eating, slimmer and a lowered head for
-under-eating), which also works live in three.js. Preview: `docs/hero-kaykit-test.png`; render script
-`art/render_kaykit.py`.
+Changed 2026-10-26: for now the hero uses Kenney's Mini Characters (CC0, `art/kenney/`): 12 modern characters
+(casual, police, office, lab coat...), separate body and head meshes on a 7-bone rig, one shared colour texture,
+32 animations (idle, walk, sprint, jump, emote yes/no, sit, interact), about 250 KB each. KayKit's fantasy set
+(`art/kaykit/`, plus a sporty recolour test in `art/sporty.py`) stays available. Body shape comes from morph
+targets added in Blender (`art/body_keys.py`: muscle, fat, thin), because uneven bone scaling skewed the rotated
+arms; three.js blends them with morphTargetInfluences. Preview: `docs/hero-kenney-test.png`.
 
 | # | Task | Owner | Done when | Depends |
 |---|---|---|---|---|

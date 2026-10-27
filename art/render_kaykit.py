@@ -14,6 +14,9 @@ import sys
 import bpy
 from mathutils import Euler, Vector
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from body_keys import add_body_keys, set_body  # noqa: E402
+
 args = sys.argv[sys.argv.index("--") + 1 :]
 OUT, SPECS = args[0], args[1:]
 KAYKIT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "kaykit")
@@ -35,8 +38,37 @@ def body_scales(muscle, build):
     }
 
 
+def long_axis(rig, bone):
+    """0, 1 or 2: the bone-local axis along which the vertices it mostly moves spread furthest."""
+    rest = rig.data.bones[bone].matrix_local.inverted()
+    lo, hi = [9e9] * 3, [-9e9] * 3
+    for o in rig.children:
+        if o.type != "MESH" or bone not in o.vertex_groups:
+            continue
+        gi = o.vertex_groups[bone].index
+        for v in o.data.vertices:
+            if any(g.group == gi and g.weight > 0.5 for g in v.groups):
+                p = rest @ v.co
+                for i in range(3):
+                    lo[i], hi[i] = min(lo[i], p[i]), max(hi[i], p[i])
+    spans = [hi[i] - lo[i] for i in range(3)]
+    return spans.index(max(spans))
+
+
+def up_axis(rig, bone):
+    """The bone-local axis that points most nearly up in the rest pose (torso and stubby legs keep their height)."""
+    m = rig.data.bones[bone].matrix_local
+    return max(range(3), key=lambda i: abs(m.col[i].z))
+
+
 def apply_body(rig, muscle, build):
     want = body_scales(muscle, build)
+    if "torso" in rig.pose.bones:  # Kenney: morph targets, since uneven bone scaling skews rotated arms
+        for o in rig.children:
+            if o.type == "MESH" and o.name.startswith("body"):
+                add_body_keys(o, rig)
+                set_body(o, muscle, build)
+        return
     for side in ("l", "r"):
         for k in ("upperarm", "upperleg", "hand"):
             want[f"{k}.{side}"] = want[f"{k}.l"]
@@ -68,7 +100,8 @@ def load(spec, x):
     for o in new:
         if o.type == "MESH" and (o.name.split(".")[0] in hide or any(w in o.name for w in WEAPONS)):
             o.hide_render = True
-    action = next(a for a in bpy.data.actions if a.name == POSE)
+    names = {b.name for b in rig.data.bones}
+    action = next(a for a in bpy.data.actions if a.name == POSE or (a.name.startswith("idle_") and a.name.endswith(rig.name)))
     rig.animation_data_create()
     rig.animation_data.action = action
     bpy.context.scene.frame_set(1)
@@ -78,6 +111,9 @@ def load(spec, x):
     for pb in rig.pose.bones:
         pb.location, pb.rotation_quaternion, pb.scale = pose[pb.name]
     apply_body(rig, muscle, build)
+    bpy.context.view_layer.update()
+    zs = [(o.matrix_world @ Vector(c)).z for o in new if o.type == "MESH" and not o.hide_render for c in o.bound_box]
+    rig.scale *= 2.45 / (max(zs) - min(zs))  # same on-screen height whatever the pack's units
     rig.location.x = x
     rig.rotation_euler.z += math.radians(-15)  # a slight turn reads better than dead-on
     return rig
@@ -86,7 +122,7 @@ def load(spec, x):
 def stage(count):
     scene = bpy.context.scene
     scene.render.engine = "BLENDER_EEVEE_NEXT"
-    scene.render.resolution_x = 420 * count
+    scene.render.resolution_x = 520 * count
     scene.render.resolution_y = 760
     scene.view_settings.view_transform = "Standard"
     scene.view_settings.exposure = -0.2
@@ -113,11 +149,11 @@ def stage(count):
     floor.data.materials.append(m)
     cam_d = bpy.data.cameras.new("Cam")
     cam_d.type = "ORTHO"
-    cam_d.ortho_scale = 2.0 * count * 1.12
+    cam_d.ortho_scale = 2.7 * count * 1.05
     cam = bpy.data.objects.new("Cam", cam_d)
     scene.collection.objects.link(cam)
     scene.camera = cam
-    spread = 2.0
+    spread = 2.7
     center = (count - 1) * spread / 2
     cam.location = (center, -12, 1.75)
     cam.rotation_euler = Euler((math.radians(86), 0, 0))
