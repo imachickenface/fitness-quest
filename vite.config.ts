@@ -46,8 +46,26 @@ export default defineConfig({
     }),
   ],
   test: {
-    environment: 'jsdom',
-    setupFiles: ['./src/test/setup.ts'],
-    include: ['src/**/*.test.{ts,tsx}', 'scripts/**/*.test.ts'],
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'unit',
+          environment: 'jsdom',
+          setupFiles: ['./src/test/setup.ts'],
+          include: ['src/**/*.test.{ts,tsx}'],
+        },
+      },
+      {
+        // the live tests share two test accounts on the test project, so they run one file at a time
+        extends: true,
+        test: {
+          name: 'live',
+          environment: 'node',
+          include: ['scripts/**/*.test.ts'],
+          fileParallelism: false,
+        },
+      },
+    ],
   },
 });
