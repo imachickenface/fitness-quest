@@ -201,6 +201,43 @@ backup is over 7 days old, and import that validates the file.
   50,000 reads and 20,000 writes a day; would mean replacing the app's storage). The owner chose Supabase
   so the app stays free for many users.
 
+## 10. Friends and profiles (checked 2026-10-27)
+
+**How other fitness apps do it**
+- **Hevy** ([social guide](https://help.hevyapp.com/hc/en-us/articles/35688036014231-Hevy-App-Social-Guide-Connect-Follow-and-Share-Your-Workouts),
+  [social features](https://www.hevyapp.com/features/social-features/)): public by default, with a private
+  profile where followers must be approved; each workout can be public, followers-only or private;
+  leaderboards rank your best lift on 38 exercises against your friends. *Borrow:* lift leaderboards among
+  friends, per-item privacy. *Avoid:* public by default.
+- **Strava** ([Tom's Guide](https://tomsguide.com/wellness/fitness/how-to-adjust-your-strava-privacy-settings),
+  [Kaspersky](https://www.kaspersky.co.za/blog/running-apps-privacy-settings-part2-strava/33876)): follower
+  approval, hidden start and end points and hidden maps, because public run maps have exposed people's
+  homes. *Borrow:* nothing location-based leaves the phone. Fitness Quest stores no GPS, so there is none
+  to leak.
+- **Duolingo** ([friends](https://blog.duolingo.com/friends-social-features/),
+  [Friends Quests](https://blog.duolingo.com/friends-quests/),
+  [Friend Streak](https://blog.duolingo.com/friend-streak/)): Friends Quests pair two mutual friends on a
+  shared weekly goal; a Friend Streak needs both people to keep it alive and has to be accepted first; up to
+  5 at once; you can opt out. *Borrow:* shared quests that the friend accepts first, a limit on how many run
+  at once, and an opt-out.
+
+**What this means for Fitness Quest:** friends only, never public; adding someone needs their yes (a
+request or an invite they open); everything shared is a summary the app publishes, never the raw records;
+no body weight, calories or food leave the account.
+
+**Tech**
+- **Access rules for friendships** ([Supabase discussion](https://github.com/orgs/supabase/discussions/4509),
+  [MakerKit RLS guide](https://makerkit.dev/blog/tutorials/supabase-rls-best-practices)): a policy that
+  reads the friendships table from another policy is usually done with a `security definer` helper. It
+  must pin `search_path`, check `auth.uid()` inside, and have `execute` revoked from `public`/`anon`,
+  because Postgres grants `execute` to everyone by default.
+- **QR codes:** `uqr` 0.1.3 ([unjs/uqr](https://github.com/unjs/uqr)): MIT, no dependencies, no install
+  scripts, 79 KB unpacked, 782 stars, last push 2026-04-03, 0 open issues; it renders an SVG. `qrcode`
+  1.5.4 is MIT too but pulls in `pngjs` and `yargs`. A phone's own camera app opens a QR link, so the app
+  needs no QR scanner.
+- **Avatars:** the hero is a 3D model (Kenney Mini Characters, CC0). Twelve heads give twelve portraits, so
+  friend lists can use small pre-rendered images and only a friend's profile page loads the 3D hero.
+
 ## 8. Risks
 
 | Risk | Impact | Handling |

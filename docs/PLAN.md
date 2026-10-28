@@ -240,6 +240,82 @@ the delegation rules keep away from Qwen)
 | Health data privacy | trust, legal | privacy note, delete-account button, export via backup file; no analytics |
 - Until then, M6's backup file covers losing or changing the phone.
 
+### M8 - Friends and profiles (planned 2026-10-27, waiting for the owner's yes)
+
+**Goal:** add friends, show off a custom profile, and compete and train together, without any health data
+going public. Research: `docs/RESEARCH.md` section 10.
+
+**The owner's choices (2026-10-27)**
+- Friends see: profile and level, workouts and quests, lift ranks and PRs. *Not* weight, calories or food.
+- Adding: by exact username with a request, **and** by invite link or QR code.
+- Profile: the hero as avatar, a short bio and an unlocked title, a showcase.
+- Together: a friends leaderboard, cheers, shared quests.
+
+**Architecture**
+- **Friends only, never public.** No search or list of users. Adding someone always needs their yes (they
+  accept the request, or they made the invite).
+- **What friends see is a summary the phone publishes, never the records.** `records` stays readable only
+  by its owner. After each sync the phone works out a small summary and uploads it, only when it changed:
+  - **profile:** hero head and colours, bio (max 150 characters), title, showcase (max 3 badges, 3 lifts,
+    current program name), level, total XP, this week's XP, overall lift rank and the top lift ranks;
+  - **activity:** the last 30 days of workouts (name, date, sets, duration; no notes), finished quests and
+    new PRs.
+- **Server (migration `003_social.sql`), all behind access rules:**
+  - `profiles`, `activity`: written only by the owner; read by the owner and accepted friends.
+  - `friendships`: one row per pair; status pending, accepted or blocked. It is changed only through
+    functions that act for the signed-in user: send a request by username, accept, decline, remove, block.
+    A blocked person can't send another request.
+  - `invites`: a random token, valid 7 days, shared as `.../fitness-quest/#invite=<token>`. The `#` part
+    never reaches a server log. Opening it and tapping "Add friend" makes you friends: the invite was the
+    owner's yes.
+  - `cheers`: one per friend per activity; friends add them, the owner sees who cheered.
+  - `challenges` and `challenge_progress`: a friend accepts first; at most 3 running per person; each side
+    writes only its own progress.
+  - `usernames`: friends can now read each other's names. Strangers still can't.
+  - Limits in the database: at most 20 open requests sent, 5 live invites and 100 friends.
+- **Phone:**
+  - pure modules in `src/core/social/` work out what to publish (profile summary, weekly XP, titles,
+    activity, challenge progress, leaderboard order);
+  - a publish step runs after each sync;
+  - a new **Friends** tab is added at the end of the tab bar (Food, Train and Quests keep their order). It
+    holds the leaderboard, friends, requests and Add friend (username, invite link, QR code). Your profile
+    opens from there and from the hero.
+- **Avatars:** 12 small pre-rendered portraits, one per hero head, with the hero's main colour as the
+  background ring. Only a friend's profile page loads the 3D hero.
+- **What could be faked:** XP and lifts are counted on each phone, so someone determined could fake their
+  numbers. That's acceptable among friends, since nothing is ranked publicly.
+- **New dependency:** `uqr` 0.1.3 (MIT, no dependencies, no install scripts) for the QR code.
+
+**Tasks** (Q = Qwen with Claude's tests, can run overnight; C = Claude)
+
+| # | Task | Owner | Done when | Needs |
+|---|---|---|---|---|
+| 8.1 | Contract types for the published summary; `003_social.sql` (profiles, friendships, usernames for friends, request functions, block, limits); applied to the test project | C | live access tests with test users A and B: strangers see nothing, requests need a yes, blocks hold, limits hold | - |
+| 8.2 | `core/social/summary.ts`: profile summary, weekly XP and top lifts from records | Q | Claude's unit tests | 8.1 |
+| 8.3 | `core/social/titles.ts`: which titles are unlocked (levels, streaks, lift ranks) | Q | unit tests | 8.1 |
+| 8.4 | Publish after sync (only on change); profile editor (avatar, bio, title, showcase); 12 portraits | C | e2e: edit profile, friend sees it | 8.2, 8.3 |
+| 8.5 | Friends tab: add by username, requests, accept and decline, remove, block, friend's profile | C | e2e with test users A and B | 8.4 |
+| 8.6 | Invites: SQL functions, link, QR code | C | live tests (expiry, reuse, own invite); e2e opening a link | 8.5 |
+| 8.7 | Activity and cheers: `core/social/activity.ts` (Q), SQL and feed UI (C) | Q+C | unit tests; live tests (only friends can cheer); e2e | 8.5 |
+| 8.8 | Leaderboard: `core/social/leaderboard.ts` (Q), UI (C) | Q+C | unit tests (ties, new week); e2e | 8.4 |
+| 8.9 | Shared quests: `core/social/challenge.ts` progress (Q), SQL and UI (C) | Q+C | unit tests; live tests (accept first, max 3, own progress only); e2e | 8.7 |
+| 8.10 | Security review, privacy page, docs, deploy, apply the migration to live | C | `/security-review` with no findings left; live checks | all |
+
+**Order:** 8.1-8.5 first (friends and profiles work end to end), then invites, activity and cheers, the
+leaderboard, and shared quests. Each ships when its tests pass.
+
+**Usage:** mostly Claude, since the access rules and screens can't go to Qwen. Qwen takes 5 pure modules
+(8.2, 8.3 and the Q halves of 8.7-8.9). No paid services; the summaries are a few KB per user, well inside
+the free Supabase plan.
+
+**Risks**
+- *Access rules wrong, so a stranger sees a profile:* every rule gets a live test with two real accounts;
+  security review before the live migration.
+- *Spam requests:* exact usernames only, database limits, decline and block.
+- *Health data leaking through the summary:* the summary is built from an allow-list of fields in the
+  contract (zod), and tests check that no weight, calories or food appear in it.
+- *Two features changing one screen:* the Friends tab is new, so existing screens only gain a profile link.
+
 ## Split and usage estimate
 
 - **Qwen:** 17 tasks, all pure `src/core/` modules or scripts with Claude's tests. 16 of them can run overnight.
