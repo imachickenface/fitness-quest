@@ -203,6 +203,126 @@ export const HERO_IDS = [
 export const HeroId = z.enum(HERO_IDS);
 export type HeroId = z.infer<typeof HeroId>;
 
+export const HeroLook = z.object({
+  head: HeroId.optional(),
+  colours: z.record(z.string().regex(/^\d{1,2}$/), z.number().int().min(0).max(63)).optional(),
+});
+export type HeroLook = z.infer<typeof HeroLook>;
+
+// ---------- social (M8): titles and what friends see ----------
+
+/**
+ * Titles a player unlocks and can show under their name, easiest first within each group. The unlock rules
+ * live in core/social/titles.ts.
+ */
+export const TITLE_IDS = [
+  // level
+  'novice',
+  'apprentice',
+  'adventurer',
+  'veteran',
+  'champion',
+  'legend',
+  // best run of active days in a row
+  'steady',
+  'unbreakable',
+  'relentless',
+  // workouts logged
+  'first_sweat',
+  'regular',
+  'iron_devotee',
+  'gym_rat',
+  // runs logged
+  'road_runner',
+  // quests completed
+  'quester',
+  'hero_of_the_realm',
+  // overall lift rank
+  'silver_lifter',
+  'gold_lifter',
+  'diamond_lifter',
+  'titan',
+] as const;
+export const TitleId = z.enum(TITLE_IDS);
+export type TitleId = z.infer<typeof TitleId>;
+
+export const BIO_MAX = 150;
+export const SHOWCASE_MAX = 3;
+
+/** The player's choices for their profile; stored in Profile and synced like it. */
+export const SocialSettings = z.object({
+  bio: z.string().max(BIO_MAX).optional(),
+  /** shown under the name; must be unlocked to be published */
+  title: TitleId.optional(),
+  showcaseTitles: z.array(TitleId).max(SHOWCASE_MAX).optional(),
+  /** exercise ids from core/exercises.ts */
+  showcaseLifts: z.array(z.string().min(1).max(64)).max(SHOWCASE_MAX).optional(),
+  /** share workouts, runs and finished quests with friends; default true */
+  shareActivity: z.boolean().optional(),
+  /** share lift ranks and PRs with friends; default true */
+  shareLifts: z.boolean().optional(),
+});
+export type SocialSettings = z.infer<typeof SocialSettings>;
+
+/** One lift as friends see it: the best set and its rank. */
+export const PublicLift = z
+  .object({
+    exerciseId: z.string().min(1).max(64),
+    name: z.string().min(1).max(100),
+    /** index into core/ranks.ts TIERS (0 Wood .. 8 Olympian) */
+    tierIndex: z.number().int().min(0).max(8),
+    score: z.number().int().min(0).max(1000),
+    e1rmKg: z.number().min(0).max(2000),
+    best: z
+      .object({
+        weightKg: z.number().min(0).max(2000),
+        reps: z.number().int().min(1).max(1000),
+        date: LocalDate,
+      })
+      .strict(),
+  })
+  .strict();
+export type PublicLift = z.infer<typeof PublicLift>;
+
+/**
+ * What a player's friends see, published by their phone after each sync. Built from an allow-list: no body
+ * weight, calories, food, notes or birth year. Friends' copies are untrusted and checked with this on read.
+ */
+export const PublicProfile = z
+  .object({
+    v: z.literal(1),
+    hero: HeroId.optional(),
+    heroLook: HeroLook.strict().optional(),
+    bio: z.string().max(BIO_MAX),
+    title: TitleId.optional(),
+    /** every unlocked title, in TITLE_IDS order */
+    titles: z.array(TitleId).max(TITLE_IDS.length),
+    showcaseTitles: z.array(TitleId).max(SHOWCASE_MAX),
+    level: z.number().int().min(1).max(100_000),
+    xp: z.number().int().min(0),
+    /** the Monday this week's XP counts from */
+    week: LocalDate,
+    weekXp: z.number().int().min(0),
+    streakDays: z.number().int().min(0),
+    workouts: z.number().int().min(0),
+    questsDone: z.number().int().min(0),
+    /** absent when lifts aren't shared or nothing is ranked */
+    overall: z
+      .object({
+        tierIndex: z.number().int().min(0).max(8),
+        score: z.number().int().min(0).max(1000),
+      })
+      .strict()
+      .optional(),
+    /** the showcase lifts, or else the best ranked ones; empty when lifts aren't shared */
+    lifts: z.array(PublicLift).max(SHOWCASE_MAX),
+    /** the active program's name */
+    program: z.string().max(100).optional(),
+    updatedAt: Timestamp,
+  })
+  .strict();
+export type PublicProfile = z.infer<typeof PublicProfile>;
+
 export const Profile = z.object({
   /** used only by the Mifflin-St Jeor equation */
   sex: z.enum(['male', 'female']),
@@ -224,14 +344,11 @@ export const Profile = z.object({
   /** the player's chosen character; the body shape on it comes from their records */
   hero: HeroId.optional(),
   /** customising the chosen character: another character's head, and palette cells swapped for others (0-63) */
-  heroLook: z
-    .object({
-      head: HeroId.optional(),
-      colours: z.record(z.string().regex(/^\d{1,2}$/), z.number().int().min(0).max(63)).optional(),
-    })
-    .optional(),
+  heroLook: HeroLook.optional(),
   /** how boss quests progress lifts; defaults from the goal when absent */
   style: z.enum(['powerlifting', 'bodybuilding', 'calisthenics']).optional(),
+  /** what friends see (M8); absent = nothing chosen yet, sharing on */
+  social: SocialSettings.optional(),
   updatedAt: Timestamp,
 });
 export type Profile = z.infer<typeof Profile>;
