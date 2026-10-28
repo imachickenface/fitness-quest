@@ -1,8 +1,9 @@
 # Setting up accounts (Supabase + Google sign-in)
 
-> **Status (2026-10-27): one fix left.** In both projects the Google **Client secret** box holds the
-> client ID by mistake, so Google refuses every sign-in ("Unable to exchange external code" in the auth
-> logs). Paste the real secret (`GOCSPX-...`) there (Part 3). Both migrations are applied to both projects. Supabase projects: `FitQuest`
+> **Status (2026-10-27): all done.** A real Google sign-in on the owner's phone worked on the live site,
+> including picking a username. (Before that, the **Client secret** box in both projects held the client ID
+> by mistake and Google refused every sign-in: "Unable to exchange external code" in the auth logs.) Both
+> migrations are applied to both projects. Supabase projects: `FitQuest`
 > (`cdwqgtguexebrnggasfr`, real) and `fitness-quest-test` (`cuaaopuywnkbiuanrpun`); Google Cloud project
 > `fitquest-512921`, client "Fitness Quest web", published (In production). The public values are in
 > [`src/syncConfig.ts`](../src/syncConfig.ts). Checked: signed-out requests are refused on both projects.
