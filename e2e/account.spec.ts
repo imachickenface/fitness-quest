@@ -176,6 +176,15 @@ test("two friends: a request by username, an accept, and each other's profile", 
   await editor.getByRole('button', { name: 'Save profile' }).click();
   await expect(pa.getByText(bio)).toBeVisible();
 
+  // badges: tapping one says what it is and how it's earned
+  const mine = pa.getByRole('region', { name: 'Your profile' });
+  await mine.getByText(/badges? earned$/).click();
+  await mine.getByRole('button', { name: 'Novice: show what it is' }).click();
+  const badge = pa.getByRole('dialog', { name: 'Novice' });
+  await expect(badge).toContainText('Start your adventure');
+  await expect(badge).toContainText("You've earned this badge.");
+  await badge.getByRole('button', { name: 'Close' }).click();
+
   // B asks A, by A's username in other capitals
   const add = pb.getByRole('form', { name: 'Add a friend' });
   await add.getByLabel('Their username').fill(a.name.toUpperCase());

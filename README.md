@@ -45,5 +45,6 @@ deletes the phone's copy; restoring a backup file or signing in brings it back.
   [USDA FoodData Central](https://fdc.nal.usda.gov) (CC0).
 - Exercise library: [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (public domain).
 - Hero models: [Kenney Mini Characters](https://kenney.nl/assets/mini-characters) (CC0).
+- Badges (`public/badges/`): supplied by the app's owner, cut from one sheet with `art/slice_badges.py`.
 - Fonts: Nunito and Pixelify Sans (SIL Open Font License).
-- Libraries: three.js, React, zod, zxing-wasm, barcode-detector (MIT); Dexie (Apache 2.0).
+- Libraries: three.js, React, zod, zxing-wasm, barcode-detector, supabase-js, uqr (MIT); Dexie (Apache 2.0).

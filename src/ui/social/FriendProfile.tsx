@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import type { PublicProfile } from '../../contract.ts';
 import { TIERS } from '../../core/ranks.ts';
-import { TITLES } from '../../core/social/titles.ts';
 import type { Contact } from '../../sync/social.ts';
 import { load, type Units } from '../format.ts';
 import { HeroAvatar } from '../HeroAvatar.tsx';
 import { Sheet } from '../Sheet.tsx';
+import { Badge } from './Badge.tsx';
 import { ProposeChallenge } from './Challenges.tsx';
 
 /** A profile's top half: hero, name, title, bio and the numbers. Used for friends and for your own preview. */
@@ -13,17 +13,22 @@ export function ProfileCard({
   name,
   profile,
   units,
+  owner,
 }: {
   name: string;
   profile: PublicProfile;
   units: Units;
+  /** a friend's name, for the badge sheets; leave out on your own profile */
+  owner?: string;
 }) {
   return (
     <div className="profile-card">
       <HeroAvatar hero={profile.hero} look={profile.heroLook} size={96} />
       <div className="profile-who">
-        <h3>{name}</h3>
-        {profile.title && <p className="profile-title">{TITLES[profile.title].name}</p>}
+        <h3>
+          {name}
+          {profile.title && <Badge id={profile.title} size={36} {...(owner ? { owner } : {})} />}
+        </h3>
         {profile.bio && <p className="profile-bio">{profile.bio}</p>}
       </div>
       <dl className="profile-stats">
@@ -57,13 +62,27 @@ export function ProfileCard({
         )}
       </dl>
       {profile.showcaseTitles.length > 0 && (
-        <ul className="chip-row profile-badges" aria-label="Showcase titles">
+        <ul className="badge-row showcase" aria-label="Showcase badges">
           {profile.showcaseTitles.map((t) => (
-            <li key={t} className="chip" title={TITLES[t].how}>
-              {TITLES[t].name}
+            <li key={t}>
+              <Badge id={t} size={64} {...(owner ? { owner } : {})} />
             </li>
           ))}
         </ul>
+      )}
+      {profile.titles.length > 0 && (
+        <details className="all-badges">
+          <summary>
+            {profile.titles.length} {profile.titles.length === 1 ? 'badge' : 'badges'} earned
+          </summary>
+          <ul className="badge-row" aria-label="Badges earned">
+            {profile.titles.map((t) => (
+              <li key={t}>
+                <Badge id={t} size={44} {...(owner ? { owner } : {})} />
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
       {profile.lifts.length > 0 && (
         <ul className="profile-lifts" aria-label="Best lifts">
@@ -109,7 +128,7 @@ export function FriendProfile({ contact, units, today, onClose, onRemove, onBloc
   return (
     <Sheet title={name} onClose={onClose}>
       {contact.profile ? (
-        <ProfileCard name={name} profile={contact.profile} units={units} />
+        <ProfileCard name={name} profile={contact.profile} units={units} owner={name} />
       ) : (
         <p className="muted">
           {name} hasn't shared a profile yet. It appears after their next sync.

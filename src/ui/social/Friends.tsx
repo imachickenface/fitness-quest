@@ -2,7 +2,6 @@ import { useState, type FormEvent } from 'react';
 import type { Profile, PublicProfile } from '../../contract.ts';
 import type { Records } from '../../core/records.ts';
 import { leaderboard } from '../../core/social/leaderboard.ts';
-import { TITLES } from '../../core/social/titles.ts';
 import { localDate } from '../../core/diary.ts';
 import {
   answerRequest,
@@ -17,6 +16,7 @@ import { getClient } from '../../sync/supabase.ts';
 import { USERNAME_MAX } from '../../sync/username.ts';
 import { useAccount } from '../accountContext.ts';
 import { HeroAvatar } from '../HeroAvatar.tsx';
+import { BadgeImage } from './Badge.tsx';
 import { Challenges } from './Challenges.tsx';
 import { Feed } from './Feed.tsx';
 import { FriendProfile, ProfileCard } from './FriendProfile.tsx';
@@ -207,10 +207,9 @@ export function Friends({ profile, me, liftChoices, records }: Props) {
                   <HeroAvatar hero={c.profile?.hero} look={c.profile?.heroLook} size={44} />
                   <span className="entry-name">
                     <b>{c.username}</b>
-                    <span className="muted">
-                      {c.profile
-                        ? `Level ${c.profile.level}${c.profile.title ? ` · ${TITLES[c.profile.title].name}` : ''}`
-                        : 'No profile yet'}
+                    <span className="muted friend-sub">
+                      {c.profile ? `Level ${c.profile.level}` : 'No profile yet'}
+                      {c.profile?.title && <BadgeImage id={c.profile.title} size={24} />}
                     </span>
                   </span>
                   {c.profile && <span className="entry-kcal">{c.profile.weekXp} XP</span>}

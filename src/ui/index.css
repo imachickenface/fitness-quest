@@ -2214,3 +2214,142 @@ p {
 .propose {
   margin-top: 16px;
 }
+
+/* ---------- badges ---------- */
+
+.badge-btn {
+  display: inline-grid;
+  place-items: center;
+  padding: 2px;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: none;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.badge-btn:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.badge-img {
+  display: block;
+  object-fit: contain;
+}
+
+.badge-img.locked {
+  filter: grayscale(1);
+  opacity: 0.45;
+}
+
+.profile-who h3 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.badge-row.showcase {
+  gap: 10px;
+}
+
+.all-badges summary {
+  color: var(--muted);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.all-badges .badge-row {
+  margin-top: 8px;
+}
+
+.friend-sub {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.badge-info {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  padding: 8px 0 16px;
+  text-align: center;
+}
+
+.badge-how {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.badge-info .muted {
+  margin: 0;
+}
+
+.badge-choices {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 8px;
+}
+
+.badge-choice input {
+  position: absolute;
+  opacity: 0;
+}
+
+.badge-choice > span {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  min-height: 100%;
+  padding: 8px 4px;
+  border: 2px solid var(--line);
+  border-bottom-width: 4px;
+  border-radius: var(--r-sm);
+  background: var(--card);
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-align: center;
+  cursor: pointer;
+}
+
+.badge-choice input:checked + span {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+  color: var(--blue-ink);
+}
+
+.badge-choice input:focus-visible + span {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.badge-choice input:disabled + span {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.badge-none {
+  display: block;
+  width: 56px;
+  height: 56px;
+  border: 3px dashed var(--line);
+  border-radius: 50%;
+}
+
+.locked-titles .badge-row {
+  display: flex;
+  margin-top: 8px;
+  padding-left: 0;
+}

@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { Profile, PublicProfile } from '../../contract.ts';
 import { exerciseRanks } from '../../core/ranks.ts';
 import { publicSummary } from '../../core/social/summary.ts';
 import { fingerprint } from '../../core/sync.ts';
-import { activityItems } from '../../core/social/activity.ts';
+import { activityItems, type ActivityItem } from '../../core/social/activity.ts';
 import { challengeValue } from '../../core/social/challenge.ts';
 import { addDays } from '../../core/dates.ts';
 import {
@@ -53,39 +53,62 @@ export function useMySummary(profile: Profile, game: Game | undefined): MySummar
   }, [profile, game]);
 }
 
+type Client = Awaited<ReturnType<typeof getClient>>;
+
 /**
- * Upload the summary for friends a few seconds after it changes, while signed in with a username. The last
- * upload's fingerprint is kept per account, so nothing is sent when nothing changed.
+ * Upload `value` a few seconds after it changes, while signed in with a username, and only when it differs
+ * from the last upload (its fingerprint is kept per account under `key`). A change that arrives while an
+ * upload is running is sent right after it, so the newest version always gets there.
  */
-export function usePublish(me: PublicProfile | undefined) {
+function useUpload<T>(
+  key: string,
+  value: T | undefined,
+  hashOf: (v: T) => string,
+  send: (c: Client, userId: string, v: T) => Promise<void>,
+) {
   const db = useDb();
   const account = useAccount();
   const userId = account.status === 'signed-in' && account.username ? account.userId : undefined;
+  const latest = useRef<{ value: T; userId: string } | undefined>(undefined);
   const sending = useRef(false);
 
-  useEffect(() => {
-    if (!me || !userId) return;
-    // the time it was worked out isn't a change
-    const hash = fingerprint({ ...me, updatedAt: '' });
-    const timer = setTimeout(() => {
-      if (sending.current || !navigator.onLine) return;
-      sending.current = true;
-      void (async () => {
-        try {
-          const last = (await db.kv.get(PUBLISHED_KEY))?.value as
-            { userId: string; hash: string } | undefined;
-          if (last?.userId === userId && last.hash === hash) return;
-          await publishProfile(await getClient(), userId, me);
-          await db.kv.put({ key: PUBLISHED_KEY, value: { userId, hash } });
-        } catch {
-          // tried again on the next change, or when the app opens
-        } finally {
-          sending.current = false;
+  const flush = useCallback(async () => {
+    if (sending.current) return; // the running upload picks up the newest value when it's done
+    sending.current = true;
+    try {
+      for (;;) {
+        const job = latest.current;
+        if (!job || !navigator.onLine) return;
+        const hash = hashOf(job.value);
+        const last = (await db.kv.get(key))?.value as { userId: string; hash: string } | undefined;
+        if (last?.userId !== job.userId || last.hash !== hash) {
+          await send(await getClient(), job.userId, job.value);
+          await db.kv.put({ key, value: { userId: job.userId, hash } });
         }
-      })();
-    }, AFTER_CHANGE_MS);
+        if (latest.current === job) return;
+      }
+    } catch {
+      // tried again on the next change, or when the app opens
+    } finally {
+      sending.current = false;
+    }
+  }, [db, key, hashOf, send]);
+
+  useEffect(() => {
+    if (value === undefined || !userId) return;
+    latest.current = { value, userId };
+    const timer = setTimeout(() => void flush(), AFTER_CHANGE_MS);
     return () => clearTimeout(timer);
-  }, [db, me, userId]);
+  }, [value, userId, flush]);
+}
+
+// the time a summary was worked out isn't a change
+const profileHash = (me: PublicProfile) => fingerprint({ ...me, updatedAt: '' });
+const activityHash = (items: ActivityItem[]) => fingerprint(items);
+
+/** Upload the summary for friends a few seconds after it changes. */
+export function usePublish(me: PublicProfile | undefined) {
+  useUpload(PUBLISHED_KEY, me, profileHash, publishProfile);
 }
 
 /** Publish this phone's progress on running shared quests a few seconds after the records change. */
@@ -130,11 +153,6 @@ const ACTIVITY_KEY = 'publishedActivity';
  * off, remove what was published. The last upload's fingerprint is kept per account.
  */
 export function usePublishActivity(profile: Profile, game: Game | undefined) {
-  const db = useDb();
-  const account = useAccount();
-  const userId = account.status === 'signed-in' && account.username ? account.userId : undefined;
-  const sending = useRef(false);
-
   const items = useMemo(() => {
     if (!game) return undefined;
     if (profile.social?.shareActivity === false) return [];
@@ -149,26 +167,5 @@ export function usePublishActivity(profile: Profile, game: Game | undefined) {
     });
   }, [game, profile]);
 
-  useEffect(() => {
-    if (!items || !userId) return;
-    const hash = fingerprint(items);
-    const timer = setTimeout(() => {
-      if (sending.current || !navigator.onLine) return;
-      sending.current = true;
-      void (async () => {
-        try {
-          const last = (await db.kv.get(ACTIVITY_KEY))?.value as
-            { userId: string; hash: string } | undefined;
-          if (last?.userId === userId && last.hash === hash) return;
-          await publishActivity(await getClient(), userId, items);
-          await db.kv.put({ key: ACTIVITY_KEY, value: { userId, hash } });
-        } catch {
-          // tried again on the next change
-        } finally {
-          sending.current = false;
-        }
-      })();
-    }, AFTER_CHANGE_MS);
-    return () => clearTimeout(timer);
-  }, [db, items, userId]);
+  useUpload(ACTIVITY_KEY, items, activityHash, publishActivity);
 }

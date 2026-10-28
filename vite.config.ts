@@ -25,7 +25,7 @@ export default defineConfig({
         theme_color: '#14162b',
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest,woff2,json}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,webp,ico,webmanifest,woff2,json}'],
         // the bundled USDA food list (public/foods.json) must be precached for offline search
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         // the barcode polyfill's decoder: only phones without a native BarcodeDetector need it

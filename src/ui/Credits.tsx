@@ -24,13 +24,19 @@ const CREDITS: { name: string; url: string; what: string; licence: string }[] = 
     licence: 'CC0',
   },
   {
+    name: 'Badge art',
+    url: 'https://github.com/imachickenface/fitness-quest/tree/main/public/badges',
+    what: 'the 20 badges, supplied by the app’s owner',
+    licence: 'used with the owner’s permission',
+  },
+  {
     name: 'Nunito and Pixelify Sans',
     url: 'https://fonts.google.com',
     what: 'the fonts',
     licence: 'SIL Open Font License',
   },
   {
-    name: 'three.js, React, Dexie, zod, zxing-wasm',
+    name: 'three.js, React, Dexie, zod, zxing-wasm, supabase-js, uqr',
     url: 'https://github.com/imachickenface/fitness-quest/blob/main/package.json',
     what: 'the code libraries',
     licence: 'MIT and Apache 2.0',

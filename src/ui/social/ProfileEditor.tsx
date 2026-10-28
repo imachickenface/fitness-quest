@@ -14,6 +14,7 @@ import { useDb } from '../dbContext.ts';
 import { nowStamp } from '../format.ts';
 import { HeroAvatar } from '../HeroAvatar.tsx';
 import { Sheet } from '../Sheet.tsx';
+import { Badge, BadgeImage } from './Badge.tsx';
 
 type Props = {
   profile: Profile;
@@ -88,43 +89,52 @@ export function ProfileEditor({ profile, me, liftChoices, onClose }: Props) {
         </label>
 
         <fieldset className="chip-fieldset">
-          <legend>Title under your name</legend>
-          <div className="chip-row">
-            <label className="chip-choice">
+          <legend>Badge next to your name</legend>
+          <div className="badge-choices">
+            <label className="badge-choice">
               <input
                 type="radio"
                 name="title"
                 checked={!title}
                 onChange={() => setTitle(undefined)}
               />
-              <span>None</span>
+              <span>
+                <span className="badge-none" aria-hidden="true" />
+                None
+              </span>
             </label>
             {TITLE_IDS.filter((t) => unlocked.has(t)).map((t) => (
-              <label key={t} className="chip-choice">
+              <label key={t} className="badge-choice">
                 <input
                   type="radio"
                   name="title"
                   checked={title === t}
                   onChange={() => setTitle(t)}
                 />
-                <span>{TITLES[t].name}</span>
+                <span>
+                  <BadgeImage id={t} size={56} />
+                  {TITLES[t].name}
+                </span>
               </label>
             ))}
           </div>
         </fieldset>
 
         <fieldset className="chip-fieldset">
-          <legend>Showcase titles (up to {SHOWCASE_MAX})</legend>
-          <div className="chip-row">
+          <legend>Showcase badges (up to {SHOWCASE_MAX})</legend>
+          <div className="badge-choices">
             {TITLE_IDS.filter((t) => unlocked.has(t)).map((t) => (
-              <label key={t} className="chip-choice">
+              <label key={t} className="badge-choice">
                 <input
                   type="checkbox"
                   checked={badges.includes(t)}
                   disabled={!badges.includes(t) && badges.length >= SHOWCASE_MAX}
                   onChange={() => setBadges((b) => toggle(b, t))}
                 />
-                <span>{TITLES[t].name}</span>
+                <span>
+                  <BadgeImage id={t} size={56} />
+                  {TITLES[t].name}
+                </span>
               </label>
             ))}
           </div>
@@ -168,7 +178,7 @@ export function ProfileEditor({ profile, me, liftChoices, onClose }: Props) {
             <span>My lift ranks and PRs</span>
           </label>
           <p className="muted">
-            Always shared with friends: your username, hero, bio, title, level, XP, streak, and how
+            Always shared with friends: your username, hero, bio, badges, level, XP, streak, and how
             many workouts and quests you've done. Never shared: your weight, food and calories.
           </p>
         </fieldset>
@@ -181,11 +191,12 @@ export function ProfileEditor({ profile, me, liftChoices, onClose }: Props) {
 
         {locked.length > 0 && (
           <details className="locked-titles">
-            <summary>Titles still to unlock ({locked.length})</summary>
-            <ul>
+            <summary>Badges still to earn ({locked.length})</summary>
+            <p className="muted">Tap one to see how to earn it.</p>
+            <ul className="badge-row">
               {locked.map((t) => (
                 <li key={t}>
-                  <b>{TITLES[t].name}</b> <span className="muted">{TITLES[t].how}</span>
+                  <Badge id={t} size={52} locked />
                 </li>
               ))}
             </ul>
