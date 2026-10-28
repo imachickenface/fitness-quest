@@ -8,6 +8,7 @@ export type Account =
   | { status: 'signed-out'; error?: string }
   | {
       status: 'signed-in';
+      userId: string;
       email: string;
       /** null until the account picks one (asked before the first sync); undefined while unknown */
       username: string | null | undefined;

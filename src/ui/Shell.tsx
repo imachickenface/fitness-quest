@@ -3,6 +3,13 @@ import type { Cheer } from './hero/heroScene.ts';
 import type { Profile } from '../contract.ts';
 import { Icon, type IconName } from './Icon.tsx';
 import { Quests } from './Quests.tsx';
+import { Friends } from './social/Friends.tsx';
+import {
+  useMySummary,
+  usePublish,
+  usePublishActivity,
+  usePublishProgress,
+} from './social/useMySummary.ts';
 import { Toast, type ToastMessage } from './Toast.tsx';
 import { Today } from './Today.tsx';
 import { Train } from './Train.tsx';
@@ -10,12 +17,13 @@ import { updateSettings } from '../db/db.ts';
 import { useDb } from './dbContext.ts';
 import { useGame } from './useGame.ts';
 
-type Tab = 'today' | 'train' | 'quests';
+type Tab = 'today' | 'train' | 'quests' | 'friends';
 
 const TABS: [Tab, string, IconName][] = [
   ['today', 'Food', 'apple'],
   ['train', 'Train', 'dumbbell'],
   ['quests', 'Quests', 'shield'],
+  ['friends', 'Friends', 'friends'],
 ];
 
 export function Shell({ profile }: { profile: Profile }) {
@@ -23,6 +31,10 @@ export function Shell({ profile }: { profile: Profile }) {
   const [tab, setTab] = useState<Tab>('quests');
   const game = useGame(profile);
   const db = useDb();
+  const { me, liftChoices } = useMySummary(profile, game);
+  usePublish(me);
+  usePublishProgress(game);
+  usePublishActivity(profile, game);
 
   // Ask the browser not to clear our storage when space runs low (Chrome decides without a prompt).
   useEffect(() => {
@@ -66,6 +78,9 @@ export function Shell({ profile }: { profile: Profile }) {
         {tab === 'today' && <Today profile={profile} streakDays={game?.state.streakDays} />}
         {tab === 'train' && <Train profile={profile} say={say} />}
         {tab === 'quests' && game && <Quests game={game} profile={profile} cheer={cheer} />}
+        {tab === 'friends' && (
+          <Friends profile={profile} me={me} liftChoices={liftChoices} records={game?.records} />
+        )}
       </main>
       <nav className="tabbar" aria-label="Sections">
         {TABS.map(([value, label, icon]) => (

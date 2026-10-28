@@ -230,6 +230,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
         ? { status: 'signed-out', ...(error ? { error } : {}) }
         : {
             status: 'signed-in',
+            userId: session.user.id,
             email: session.user.email ?? '',
             username,
             sync,

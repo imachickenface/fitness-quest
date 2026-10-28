@@ -923,7 +923,7 @@ p {
   left: 0;
   z-index: 5;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   padding: 4px 8px env(safe-area-inset-bottom);
   border-top: 2px solid var(--line);
   background: var(--bg);
@@ -1879,4 +1879,338 @@ p {
 
 .account a {
   color: var(--blue-ink);
+}
+
+/* ---------- friends and profiles ---------- */
+
+.hero-avatar {
+  display: inline-block;
+  flex: none;
+  overflow: hidden;
+  border: 3px solid var(--line);
+  border-radius: 50%;
+  background: var(--blue-soft);
+}
+
+.hero-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px 14px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.profile-who h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  overflow-wrap: anywhere;
+}
+
+.profile-title {
+  margin: 0;
+  color: var(--gold-ink);
+  font-weight: 800;
+}
+
+.profile-bio {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+
+.profile-stats,
+.profile-badges,
+.profile-lifts,
+.profile-card > p {
+  grid-column: 1 / -1;
+}
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.profile-stats div {
+  padding: 8px 10px;
+  border-radius: var(--r-sm);
+  background: var(--soft);
+}
+
+.profile-stats dt {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.profile-stats dd {
+  margin: 0;
+  font-family: var(--pixel);
+  font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.profile-badges {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.profile-badges .chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  color: var(--gold-ink);
+  font-weight: 800;
+}
+
+.profile-lifts {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.profile-lifts li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.profile-tier {
+  color: var(--blue-ink);
+  font-weight: 800;
+}
+
+.add-friend h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.friend-list .entry {
+  padding-right: 8px;
+}
+
+.friend-row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  min-height: 56px;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.friend-row:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+.friend-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.profile-editor-hero {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.profile-editor-hero p {
+  margin: 0;
+}
+
+.field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  resize: vertical;
+}
+
+.field textarea:focus {
+  border-color: var(--focus);
+  outline: none;
+}
+
+.chip-fieldset {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.chip-fieldset legend {
+  margin-bottom: 8px;
+  font-weight: 800;
+}
+
+.chip-choice input:disabled + span {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.check {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-height: 44px;
+}
+
+.check input {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--blue);
+}
+
+.locked-titles summary {
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.locked-titles ul {
+  display: grid;
+  gap: 6px;
+  padding-left: 18px;
+}
+
+.invites h2 {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+}
+
+.invite-shown {
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+  margin: 12px 0;
+}
+
+.qr {
+  width: min(220px, 70vw);
+  height: auto;
+  border-radius: var(--r-sm);
+}
+
+.invite-link {
+  max-width: 100%;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.invite-list .entry {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.leaderboard .entry {
+  grid-template-columns: 2.2em minmax(0, 1fr) auto;
+  padding-right: 16px;
+}
+
+.leader-rank {
+  font-family: var(--pixel);
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+.leader.me {
+  background: var(--blue-soft);
+}
+
+.feed-item {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  padding-right: 8px;
+}
+
+.cheer-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 2px solid var(--line);
+  border-radius: 50%;
+  background: var(--card);
+  color: var(--faint);
+  cursor: pointer;
+}
+
+.cheer-btn[aria-pressed='true'] {
+  border-color: var(--gold-edge);
+  background: var(--gold);
+  color: #5a4200;
+}
+
+.cheer-btn:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.cheered-you {
+  display: grid;
+  gap: 4px;
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  background: var(--soft);
+  list-style: none;
+}
+
+.cheered-you svg {
+  color: var(--gold-ink);
+  vertical-align: -3px;
+}
+
+.quest.shared-quest {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.shared-bar {
+  display: grid;
+  grid-template-columns: 5.5em minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+}
+
+.shared-bar .muted {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shared-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: center;
+}
+
+.propose {
+  margin-top: 16px;
 }

@@ -5,14 +5,14 @@
  * and cheers. Scenery is built in code from simple shapes in Kenney's chunky style (see world.ts for the layout).
  */
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { HeroId } from '../../contract.ts';
-import { remapUVs, usedCells } from './palette.ts';
+import { loadHeroModel, recolour, type Look } from './heroModel.ts';
+import { usedCells } from './palette.ts';
 import { along, decorFor, STEP, stopAt, type Decor, type Theme } from './world.ts';
 
 export type Cheer = 'emote-yes' | 'jump';
 
-export type Look = { head?: HeroId; colours?: Record<string, number> };
+export type { Look };
 
 export type HeroScene = {
   /** Load a character, optionally with another character's head and recoloured cells. */
@@ -301,38 +301,7 @@ export function createHeroScene(canvas: HTMLCanvasElement, theme: Theme): HeroSc
   }
 
   let skinned: THREE.Mesh[] = [];
-
-  /** Swap the body's head mesh for another character's, bound to this body's skeleton (same bone names). */
-  function swapHead(body: THREE.Object3D, other: THREE.Object3D) {
-    let mine: THREE.SkinnedMesh | undefined;
-    let theirs: THREE.SkinnedMesh | undefined;
-    body.traverse((o) => {
-      if ((o as THREE.SkinnedMesh).isSkinnedMesh && o.name.startsWith('head'))
-        mine = o as THREE.SkinnedMesh;
-    });
-    other.traverse((o) => {
-      if ((o as THREE.SkinnedMesh).isSkinnedMesh && o.name.startsWith('head'))
-        theirs = o as THREE.SkinnedMesh;
-    });
-    if (!mine || !theirs) return;
-    const byName = new Map(mine.skeleton.bones.map((b) => [b.name, b]));
-    const bones = theirs.skeleton.bones.map((b) => byName.get(b.name) ?? b);
-    const head = new THREE.SkinnedMesh(theirs.geometry, theirs.material);
-    head.name = theirs.name;
-    head.bind(new THREE.Skeleton(bones, theirs.skeleton.boneInverses), mine.bindMatrix);
-    mine.parent?.add(head);
-    mine.parent?.remove(mine);
-  }
-
-  function applyColours(colours: Record<string, number>) {
-    const map: Record<number, number> = {};
-    for (const [from, to] of Object.entries(colours)) map[Number(from)] = to;
-    for (const mesh of skinned) {
-      const uv = mesh.geometry.getAttribute('uv') as THREE.BufferAttribute;
-      remapUVs(mesh.userData.uv0 as Float32Array, uv.array as Float32Array, map);
-      uv.needsUpdate = true;
-    }
-  }
+  const applyColours = (colours: Record<string, number>) => recolour(skinned, colours);
 
   function applyBody() {
     hero?.traverse((o) => {
@@ -363,27 +332,10 @@ export function createHeroScene(canvas: HTMLCanvasElement, theme: Theme): HeroSc
 
   return {
     async load(id, look = {}) {
-      const loader = new GLTFLoader();
-      const url = (h: HeroId) => `${import.meta.env.BASE_URL}hero/${h}.glb`;
-      const [gltf, headGltf] = await Promise.all([
-        loader.loadAsync(url(id)),
-        look.head && look.head !== id
-          ? loader.loadAsync(url(look.head))
-          : Promise.resolve(undefined),
-      ]);
+      const loaded = await loadHeroModel(id, look);
       if (hero) scene.remove(hero);
-      const model = gltf.scene;
-      if (headGltf) swapHead(model, headGltf.scene);
-      skinned = [];
-      model.traverse((o) => {
-        const mesh = o as THREE.SkinnedMesh;
-        const uv = mesh.isMesh ? mesh.geometry.getAttribute('uv') : undefined;
-        if (uv) {
-          mesh.userData.uv0 = Float32Array.from(uv.array as ArrayLike<number>);
-          skinned.push(mesh);
-        }
-      });
-      applyColours(look.colours ?? {});
+      const { gltf, model } = loaded;
+      skinned = loaded.skinned;
       const box = new THREE.Box3().setFromObject(model);
       const height = box.max.y - box.min.y || 1;
       model.scale.setScalar(1.7 / height);

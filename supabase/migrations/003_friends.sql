@@ -7,7 +7,8 @@
 --   through the functions below, which always act for the signed-in user (auth.uid()).
 -- - profiles: the summary a phone publishes (no health data; see PublicProfile in src/contract.ts). Only
 --   its owner writes it; the owner and accepted friends read it.
--- - usernames: you can now also read the names of people you are friends with or have an open request with.
+-- - usernames: you can now also read the names of people you are friends with, have an open request with,
+--   or blocked.
 -- - Nothing at all without signing in. Rows go with the account (foreign keys cascade).
 
 -- ---------- friendships ----------
@@ -58,7 +59,7 @@ as $$
   );
 $$;
 
--- friends, or an open request either way
+-- friends, an open request either way, or someone you blocked (so you can see who to unblock)
 create function public.is_connected(other uuid) returns boolean
 language sql
 stable
@@ -69,7 +70,8 @@ as $$
     select 1 from public.friendships f
     where f.user_a = least((select auth.uid()), other)
       and f.user_b = greatest((select auth.uid()), other)
-      and f.status in ('pending', 'accepted')
+      and (f.status in ('pending', 'accepted')
+           or (f.status = 'blocked' and f.requested_by = (select auth.uid())))
   );
 $$;
 

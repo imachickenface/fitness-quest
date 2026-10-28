@@ -240,7 +240,7 @@ the delegation rules keep away from Qwen)
 | Health data privacy | trust, legal | privacy note, delete-account button, export via backup file; no analytics |
 - Until then, M6's backup file covers losing or changing the phone.
 
-### M8 - Friends and profiles (planned 2026-10-27, waiting for the owner's yes)
+### M8 - Friends and profiles (approved 2026-10-27; built 2026-10-28)
 
 **Goal:** add friends, show off a custom profile, and compete and train together, without any health data
 going public. Research: `docs/RESEARCH.md` section 10.
@@ -260,7 +260,7 @@ going public. Research: `docs/RESEARCH.md` section 10.
     current program name), level, total XP, this week's XP, overall lift rank and the top lift ranks;
   - **activity:** the last 30 days of workouts (name, date, sets, duration; no notes), finished quests and
     new PRs.
-- **Server (migration `003_social.sql`), all behind access rules:**
+- **Server (migrations `003_friends.sql` to `006_challenges.sql`), all behind access rules:**
   - `profiles`, `activity`: written only by the owner; read by the owner and accepted friends.
   - `friendships`: one row per pair; status pending, accepted or blocked. It is changed only through
     functions that act for the signed-in user: send a request by username, accept, decline, remove, block.
@@ -297,8 +297,8 @@ going public. Research: `docs/RESEARCH.md` section 10.
 | 8.5 | Friends tab: add by username, requests, accept and decline, remove, block, friend's profile | C | e2e with test users A and B | 8.4 |
 | 8.6 | Invites: SQL functions, link, QR code | C | live tests (expiry, reuse, own invite); e2e opening a link | 8.5 |
 | 8.7 | Activity and cheers: `core/social/activity.ts` (Q), SQL and feed UI (C) | Q+C | unit tests; live tests (only friends can cheer); e2e | 8.5 |
-| 8.8 | Leaderboard: `core/social/leaderboard.ts` (Q), UI (C) | Q+C | unit tests (ties, new week); e2e | 8.4 |
-| 8.9 | Shared quests: `core/social/challenge.ts` progress (Q), SQL and UI (C) | Q+C | unit tests; live tests (accept first, max 3, own progress only); e2e | 8.7 |
+| 8.8 | Leaderboard: `core/social/leaderboard.ts` (C: 20 lines, a spec would cost more), UI (C) | C | unit tests (ties, new week); e2e | 8.4 |
+| 8.9 | Shared quests: `core/social/challenge.ts` progress (C: small), SQL and UI (C); either side can give up | C | unit tests; live tests (accept first, max 3, own progress only); e2e | 8.7 |
 | 8.10 | Security review, privacy page, docs, deploy, apply the migration to live | C | `/security-review` with no findings left; live checks | all |
 
 **Order:** 8.1-8.5 first (friends and profiles work end to end), then invites, activity and cheers, the

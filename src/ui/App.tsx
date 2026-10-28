@@ -6,6 +6,7 @@ import { AccountPanel, FirstSyncSheet, UsernameSheet } from './AccountPanel.tsx'
 import { useAccount } from './accountContext.ts';
 import { DbContext, useDb } from './dbContext.ts';
 import { ProfileForm } from './ProfileForm.tsx';
+import { InviteSheet } from './social/InviteSheet.tsx';
 import { Shell } from './Shell.tsx';
 
 export function App({ db }: { db?: FitnessDb }) {
@@ -16,6 +17,7 @@ export function App({ db }: { db?: FitnessDb }) {
         <Main />
         <UsernameSheet />
         <FirstSyncSheet />
+        <InviteSheet />
       </AccountProvider>
     </DbContext.Provider>
   );

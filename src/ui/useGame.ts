@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo } from 'react';
-import type { GameState, Profile, Quest, QuestProgress } from '../contract.ts';
+import type { GameState, Profile, Program, Quest, QuestProgress } from '../contract.ts';
 import { localDate } from '../core/diary.ts';
 import { bodyShape } from '../core/body.ts';
 import { gameState } from '../core/game.ts';
@@ -32,6 +32,11 @@ export type Game = {
   active: QuestView[];
   /** the hero's shape: muscle 0..4, build -2..2 */
   body: { muscle: number; build: number };
+  /** everything the summary for friends is built from */
+  records: Records;
+  /** every stored quest with its progress */
+  views: QuestView[];
+  program: Program | undefined;
 };
 
 /** Everything game-related, derived from the stored records; undefined while they load. */
@@ -127,8 +132,8 @@ export function useGame(profile: Profile): Game | undefined {
       targetKcal: weightKg ? calorieTarget(profile, weightKg, today).kcal : undefined,
       today,
     });
-    return { today, state, active, body };
-  }, [records, quests, today, profile]);
+    return { today, state, active, body, records, views, program: program ?? undefined };
+  }, [records, quests, today, profile, program]);
 }
 
 /** Whole weeks between the week of the first workout and this week (0 in the first week). */
