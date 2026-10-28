@@ -74,7 +74,12 @@ function weekQuestXp(
   let xp = 0;
   for (const { quest, progress } of quests) {
     const completedOn = progress.completedOn;
-    if (progress.complete && completedOn !== undefined && week <= completedOn && completedOn <= today) {
+    if (
+      progress.complete &&
+      completedOn !== undefined &&
+      week <= completedOn &&
+      completedOn <= today
+    ) {
       xp += quest.xp;
     }
   }
