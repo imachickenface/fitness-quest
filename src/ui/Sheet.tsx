@@ -3,7 +3,8 @@ import { Icon } from './Icon.tsx';
 
 type Props = {
   title: string;
-  onClose: () => void;
+  /** leave out for a step that must be finished: no close button, Escape and the backdrop do nothing */
+  onClose?: () => void;
   children: ReactNode;
 };
 
@@ -23,18 +24,20 @@ export function Sheet({ title, onClose, children }: Props) {
       aria-label={title}
       onCancel={(e) => {
         e.preventDefault();
-        onClose();
+        onClose?.();
       }}
       onClick={(e) => {
-        if (e.target === ref.current) onClose();
+        if (e.target === ref.current) onClose?.();
       }}
     >
       <div className="sheet-body">
         <header className="sheet-head">
           <h2>{title}</h2>
-          <button type="button" className="icon-btn" aria-label="Close" onClick={onClose}>
-            <Icon name="close" />
-          </button>
+          {onClose && (
+            <button type="button" className="icon-btn" aria-label="Close" onClick={onClose}>
+              <Icon name="close" />
+            </button>
+          )}
         </header>
         {children}
       </div>

@@ -1,5 +1,6 @@
-import { useState, type FormEvent } from 'react';
+import { useId, useState, type FormEvent } from 'react';
 import { IS_TEST_PROJECT } from '../sync/supabase.ts';
+import { USERNAME_MAX, USERNAME_MIN } from '../sync/username.ts';
 import { useAccount } from './accountContext.ts';
 import { Sheet } from './Sheet.tsx';
 
@@ -16,6 +17,7 @@ export function AccountPanel() {
   const [leaving, setLeaving] = useState(false);
   const [confirm, setConfirm] = useState('');
   const [busy, setBusy] = useState(false);
+  const [renaming, setRenaming] = useState(false);
 
   if (account.status === 'checking') {
     return (
@@ -66,8 +68,21 @@ export function AccountPanel() {
     <section className="account" aria-labelledby="account-title">
       <h2 id="account-title">Account</h2>
       <p>
-        Signed in as <b>{account.email}</b>
+        Signed in as <b>{account.username ?? account.email}</b>
+        {account.username && <span className="muted"> ({account.email})</span>}
       </p>
+      {account.username &&
+        (renaming ? (
+          <UsernameForm
+            initial={account.username}
+            submitLabel="Save username"
+            onDone={() => setRenaming(false)}
+          />
+        ) : (
+          <button type="button" className="link-btn" onClick={() => setRenaming(true)}>
+            Change username
+          </button>
+        ))}
       <p className="muted" aria-live="polite">
         {status}
       </p>
@@ -153,6 +168,79 @@ function TestSignIn() {
         Test sign-in
       </button>
     </form>
+  );
+}
+
+/** Type a username and save it; says what's wrong (too short, taken) next to the box. */
+function UsernameForm({
+  initial,
+  submitLabel,
+  onDone,
+}: {
+  initial: string;
+  submitLabel: string;
+  onDone?: () => void;
+}) {
+  const account = useAccount();
+  const [name, setName] = useState(initial);
+  const [problem, setProblem] = useState<string | undefined>();
+  const [busy, setBusy] = useState(false);
+  const hint = useId();
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    const wrong = await account.chooseUsername(name.trim());
+    setBusy(false);
+    setProblem(wrong);
+    if (!wrong) onDone?.();
+  }
+
+  return (
+    <form className="form username-form" onSubmit={(e) => void submit(e)}>
+      <label className="field">
+        <span>Username</span>
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          autoComplete="username"
+          autoCapitalize="none"
+          spellCheck={false}
+          maxLength={USERNAME_MAX}
+          aria-invalid={problem ? true : undefined}
+          aria-describedby={hint}
+        />
+      </label>
+      <p id={hint} className={problem ? 'form-error' : 'muted'} aria-live="polite">
+        {problem ??
+          `${USERNAME_MIN}-${USERNAME_MAX} letters, numbers or _. No one else can use it.`}
+      </p>
+      <div className="backup-actions">
+        <button type="submit" className="btn btn-primary" disabled={busy}>
+          {submitLabel}
+        </button>
+        {onDone && (
+          <button type="button" className="link-btn" onClick={onDone}>
+            Cancel
+          </button>
+        )}
+      </div>
+    </form>
+  );
+}
+
+/** Right after an account's first sign-in: it must pick a username before anything syncs. */
+export function UsernameSheet() {
+  const account = useAccount();
+  if (account.status !== 'signed-in' || account.username !== null) return null;
+  return (
+    <Sheet title="Pick a username">
+      <p className="muted">You'll use this name in Fitness Quest. You can change it later.</p>
+      <UsernameForm initial="" submitLabel="Save username" />
+      <button type="button" className="link-btn" onClick={() => void account.signOut(false)}>
+        Not now: sign out
+      </button>
+    </Sheet>
   );
 }
 

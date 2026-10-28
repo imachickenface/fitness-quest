@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { getProfile, openDb, type FitnessDb } from '../db/db.ts';
 import { AccountProvider } from './account.tsx';
-import { AccountPanel, FirstSyncSheet } from './AccountPanel.tsx';
+import { AccountPanel, FirstSyncSheet, UsernameSheet } from './AccountPanel.tsx';
 import { useAccount } from './accountContext.ts';
 import { DbContext, useDb } from './dbContext.ts';
 import { ProfileForm } from './ProfileForm.tsx';
@@ -14,6 +14,7 @@ export function App({ db }: { db?: FitnessDb }) {
     <DbContext.Provider value={database}>
       <AccountProvider>
         <Main />
+        <UsernameSheet />
         <FirstSyncSheet />
       </AccountProvider>
     </DbContext.Provider>
@@ -40,7 +41,7 @@ function Welcome() {
       </div>
       {account.status === 'signed-in' && (
         <p className="restoring" aria-live="polite">
-          Signed in as <b>{account.email}</b>.{' '}
+          Signed in as <b>{account.username ?? account.email}</b>.{' '}
           {account.sync === 'syncing'
             ? 'Bringing your data to this phone…'
             : 'No profile in your account yet: fill it in below to start.'}

@@ -20,6 +20,7 @@ import {
   signOut as signOutRemote,
   supabaseRemote,
 } from '../sync/supabase.ts';
+import { fetchUsername, saveUsername, usernameProblem } from '../sync/username.ts';
 import { saveBackup } from './backupActions.ts';
 import { AccountContext, type Account, type Actions, type SyncStatus } from './accountContext.ts';
 import { useDb } from './dbContext.ts';
@@ -43,6 +44,9 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   const running = useRef(false);
   const again = useRef(false);
   const runLatest = useRef<() => void>(() => {});
+  // the username as the server last said, for whichever account it was read for
+  const [named, setNamed] = useState<{ userId: string; name: string | null } | undefined>();
+  const namedRef = useRef(named);
 
   // Pick up a saved session or Google's redirect, and follow sign-ins and sign-outs.
   useEffect(() => {
@@ -70,6 +74,12 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const userId = session?.user.id;
+  const username = named && named.userId === userId ? named.name : undefined;
+
+  const remember = useCallback((value: { userId: string; name: string | null }) => {
+    namedRef.current = value;
+    setNamed(value);
+  }, []);
 
   const runSync = useCallback(
     async (choice?: FirstSyncChoice) => {
@@ -85,7 +95,16 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       running.current = true;
       setSync('syncing');
       try {
-        const remote = supabaseRemote(await getClient(), userId);
+        const client = await getClient();
+        // a new account picks its username before anything syncs
+        if (namedRef.current?.userId !== userId) {
+          remember({ userId, name: await fetchUsername(client, userId) });
+        }
+        if (namedRef.current?.name === null) {
+          setSync('idle');
+          return;
+        }
+        const remote = supabaseRemote(client, userId);
         if (await needsFirstSync(db, userId)) {
           const r = await firstSyncWith(db, remote, userId, nowStamp(), choice);
           if (r === 'ask') {
@@ -111,7 +130,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
         }
       }
     },
-    [db, userId],
+    [db, userId, remember],
   );
 
   // a change that arrived while syncing runs the newest runSync afterwards
@@ -186,6 +205,22 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       if (choice !== 'phone') await saveBackup(db);
       await runSync(choice);
     },
+    chooseUsername: async (name) => {
+      if (!userId) return 'Sign in first.';
+      const problem = usernameProblem(name);
+      if (problem) return problem;
+      try {
+        const current = namedRef.current?.userId === userId ? namedRef.current.name : null;
+        if (current === name) return undefined;
+        const r = await saveUsername(await getClient(), userId, name, current);
+        if (r === 'taken') return 'That username is taken. Try another.';
+        remember({ userId, name });
+        if (current === null) void runSync();
+        return undefined;
+      } catch (e) {
+        return navigator.onLine ? message(e) : "You're offline. Try again when you're back online.";
+      }
+    },
   };
 
   const account: Account =
@@ -196,6 +231,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
         : {
             status: 'signed-in',
             email: session.user.email ?? '',
+            username,
             sync,
             ...(lastSyncedAt ? { lastSyncedAt } : {}),
             firstSyncChoice: askFirst,

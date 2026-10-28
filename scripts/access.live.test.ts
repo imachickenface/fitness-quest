@@ -111,4 +111,71 @@ describe.skipIf(!ready)('access rules on the test project', () => {
     const { error } = await a.from('records').delete().eq('id', ROW.id);
     expect(error?.code).toBe('42501');
   });
+
+  describe('usernames', () => {
+    // a new name each run, so earlier runs never collide
+    const name = `qa_${Date.now().toString(36)}`;
+    const aName = async () =>
+      (await a.from('usernames').select('username').eq('user_id', aId)).data?.[0]?.username;
+
+    beforeAll(async () => {
+      const had = await aName();
+      const { error } = had
+        ? await a.from('usernames').update({ username: name }).eq('user_id', aId)
+        : await a.from('usernames').insert({ user_id: aId, username: name });
+      expect(error).toBeNull();
+    });
+
+    it('A reads back its own name', async () => {
+      expect(await aName()).toBe(name);
+    });
+
+    it("B can't take A's name, in any capitals", async () => {
+      const bId = (await b.auth.getUser()).data.user!.id;
+      const { data: had } = await b.from('usernames').select('username').eq('user_id', bId);
+      const { error } = had?.length
+        ? await b.from('usernames').update({ username: name.toUpperCase() }).eq('user_id', bId)
+        : await b.from('usernames').insert({ user_id: bId, username: name.toUpperCase() });
+      expect(error?.code).toBe('23505');
+    });
+
+    it("B can't read, change or forge A's name", async () => {
+      const read = await b.from('usernames').select('*').eq('user_id', aId);
+      expect(read.data).toEqual([]);
+      await b.from('usernames').update({ username: 'stolen_name' }).eq('user_id', aId);
+      expect(await aName()).toBe(name);
+      const forged = await b.from('usernames').insert({ user_id: aId, username: 'forged_name' });
+      expect(forged.error?.code).toBe('42501');
+    });
+
+    it('B sees no other names when listing', async () => {
+      const bId = (await b.auth.getUser()).data.user!.id;
+      const { data } = await b.from('usernames').select('user_id');
+      expect(data!.every((r) => r.user_id === bId)).toBe(true);
+    });
+
+    it('the server refuses names outside the rule', async () => {
+      for (const bad of ['ab', 'a b', 'sam-smith', 'x'.repeat(21), 'sám']) {
+        const { error } = await a.from('usernames').update({ username: bad }).eq('user_id', aId);
+        expect(error?.code, bad).toBe('23514');
+      }
+      expect(await aName()).toBe(name);
+    });
+
+    it('A can change only the name: not the owner, and no deletes', async () => {
+      const bId = (await b.auth.getUser()).data.user!.id;
+      const move = await a.from('usernames').update({ user_id: bId }).eq('user_id', aId);
+      expect(move.error?.code).toBe('42501');
+      const del = await a.from('usernames').delete().eq('user_id', aId);
+      expect(del.error?.code).toBe('42501');
+      expect(await aName()).toBe(name);
+    });
+
+    it('signed out: no reading or writing', async () => {
+      const anon = client();
+      expect((await anon.from('usernames').select('*')).error?.code).toBe('42501');
+      const write = await anon.from('usernames').insert({ user_id: aId, username: 'anon_name' });
+      expect(write.error?.code).toBe('42501');
+    });
+  });
 });

@@ -193,12 +193,15 @@ account. Research: `docs/RESEARCH.md` section 9.
   - Synced: profile, foods the user made or favourited, food entries, saved meals, workouts, weigh-ins,
     programs, quests. Not synced: device settings (backup date, storage permission), cached search foods.
 - **Access rules (Row Level Security):** a user can only select, insert, update or delete rows where
-  `user_id = auth.uid()`. No other tables are exposed.
+  `user_id = auth.uid()`. The only other table, `usernames`, has the same rule (no deletes).
 - **Sign-in:** Google sign-in first (free, no email service needed). Email codes need a sending service
   (Supabase's built-in one sends 2 emails an hour, only to the project team) - see decision below.
 - **First sign-in on a phone with data:** if the account is empty, the phone's data is uploaded; if both
   have data, the app asks: "Combine both" (default; newest version of each record wins), "Use the
   account's" or "Use this phone's". A backup file is saved automatically before anything is replaced.
+- **Username (added 2026-10-27, owner's request):** after the first sign-in the account must pick a
+  username before anything syncs. Unique across all accounts ignoring capitals, 3-20 letters, numbers or
+  `_`; table `usernames` (`supabase/migrations/002_usernames.sql`), own row only, changeable in Account.
 - **Sign out:** asks whether to keep the data on this phone. **Delete account:** removes the account and
   every row (a database function that only deletes the caller's own data), after typing DELETE.
 

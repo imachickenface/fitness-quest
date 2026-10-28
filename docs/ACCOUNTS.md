@@ -1,7 +1,8 @@
 # Setting up accounts (Supabase + Google sign-in)
 
-> **Status (2026-10-27): all done.** A real Google sign-in and sync on the owner's phone worked on the live
-> site. Supabase projects: `FitQuest`
+> **Status (2026-10-27): one fix left.** In both projects the Google **Client secret** box holds the
+> client ID by mistake, so Google refuses every sign-in ("Unable to exchange external code" in the auth
+> logs). Paste the real secret (`GOCSPX-...`) there (Part 3). Both migrations are applied to both projects. Supabase projects: `FitQuest`
 > (`cdwqgtguexebrnggasfr`, real) and `fitness-quest-test` (`cuaaopuywnkbiuanrpun`); Google Cloud project
 > `fitquest-512921`, client "Fitness Quest web", published (In production). The public values are in
 > [`src/syncConfig.ts`](../src/syncConfig.ts). Checked: signed-out requests are refused on both projects.
@@ -34,7 +35,8 @@ Keep a note open while you go; you will copy a few values between the two sites.
 4. In **each** project: open **SQL Editor** (left menu) > **New query**, paste the whole of
    [`supabase/migrations/001_records.sql`](../supabase/migrations/001_records.sql), and click **Run**. It
    should say "Success. No rows returned". This creates the one table the app uses and the rules that keep
-   each person's data private.
+   each person's data private. Then do the same with
+   [`supabase/migrations/002_usernames.sql`](../supabase/migrations/002_usernames.sql) (unique usernames).
 5. In **each** project: open **Authentication** > **Sign In / Providers** > **Google** and copy the
    **Callback URL** it shows (it looks like `https://abcdefgh.supabase.co/auth/v1/callback`). Leave this
    page open; you'll come back in Part 3. Note which callback belongs to which project.
