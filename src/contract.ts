@@ -323,6 +323,20 @@ export const PublicProfile = z
   .strict();
 export type PublicProfile = z.infer<typeof PublicProfile>;
 
+/** One thing a player did lately, as their friends see it (M8.7). No notes, no food, no body weight. */
+export const PublicActivity = z
+  .object({
+    v: z.literal(1),
+    kind: z.enum(['workout', 'run', 'quest', 'pr']),
+    date: LocalDate,
+    /** "Push day", "Easy run", "Log 3 meals", "New best: Bench press" */
+    title: z.string().min(1).max(100),
+    /** "4 exercises · 14 sets · 52 min", "5.2 km in 28:40", "+40 XP", "85 kg × 3" */
+    detail: z.string().max(100),
+  })
+  .strict();
+export type PublicActivity = z.infer<typeof PublicActivity>;
+
 export const Profile = z.object({
   /** used only by the Mifflin-St Jeor equation */
   sex: z.enum(['male', 'female']),
