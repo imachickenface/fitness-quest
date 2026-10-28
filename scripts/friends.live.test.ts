@@ -63,14 +63,12 @@ describe.skipIf(!ready)('friends on the test project', () => {
   });
 
   it("friendships can't be written directly, only through the functions", async () => {
-    const forged = await b
-      .from('friendships')
-      .insert({
-        user_a: [aId, bId].sort()[0],
-        user_b: [aId, bId].sort()[1],
-        status: 'accepted',
-        requested_by: bId,
-      });
+    const forged = await b.from('friendships').insert({
+      user_a: [aId, bId].sort()[0],
+      user_b: [aId, bId].sort()[1],
+      status: 'accepted',
+      requested_by: bId,
+    });
     expect(forged.error?.code).toBe('42501');
     const helper = await b.rpc('lock_pair', { a: aId, b: bId });
     expect(helper.error).not.toBeNull();
