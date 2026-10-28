@@ -38,6 +38,34 @@ export function mayBeSignedIn(): boolean {
   }
 }
 
+const AUTH_PARAMS = ['code', 'error', 'error_code', 'error_description'];
+
+/** The reason Google or the server sent the user back without signing them in, if they did. */
+export function authErrorInUrl(): string | undefined {
+  try {
+    const query = new URLSearchParams(location.search);
+    const hash = new URLSearchParams(location.hash.slice(1));
+    for (const p of [query, hash]) {
+      // the server's message ends with Google's spent one-time code, which says nothing to a person
+      if (p.has('error'))
+        return (p.get('error_description') ?? p.get('error') ?? '').replace(/: \S+$/, '');
+    }
+  } catch {
+    // no location (tests)
+  }
+  return undefined;
+}
+
+/** Drop the one-time sign-in code or error from the address bar. */
+export function clearAuthParams(): void {
+  const url = new URL(location.href);
+  const hash = new URLSearchParams(url.hash.slice(1));
+  if (!AUTH_PARAMS.some((k) => url.searchParams.has(k) || hash.has(k))) return;
+  for (const k of AUTH_PARAMS) url.searchParams.delete(k);
+  if (AUTH_PARAMS.some((k) => hash.has(k))) url.hash = '';
+  history.replaceState(null, '', url);
+}
+
 export async function signInWithGoogle(): Promise<void> {
   const c = await getClient();
   const { error } = await c.auth.signInWithOAuth({

@@ -10,6 +10,8 @@ import {
   type FirstSyncChoice,
 } from '../sync/engine.ts';
 import {
+  authErrorInUrl,
+  clearAuthParams,
   deleteAccount as deleteRemoteAccount,
   getClient,
   mayBeSignedIn,
@@ -37,28 +39,27 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   const [sync, setSync] = useState<SyncStatus>('idle');
   const [lastSyncedAt, setLastSyncedAt] = useState<string | undefined>(undefined);
   const [askFirst, setAskFirst] = useState(false);
-  const [error, setError] = useState<string | undefined>(undefined);
+  const [error, setError] = useState<string | undefined>(authErrorInUrl);
   const running = useRef(false);
   const again = useRef(false);
   const runLatest = useRef<() => void>(() => {});
 
   // Pick up a saved session or Google's redirect, and follow sign-ins and sign-outs.
   useEffect(() => {
-    if (session === null && !mayBeSignedIn()) return;
+    if (session === null && !mayBeSignedIn()) {
+      clearAuthParams(); // a failed sign-in's error, already in `error`
+      return;
+    }
     let live = true;
     let unsubscribe = () => {};
     void getClient().then(async (c) => {
-      const { data } = await c.auth.getSession();
+      const { data, error: failed } = await c.auth.getSession();
       if (!live) return;
       setSession(data.session);
+      if (failed) setError(failed.message);
       const sub = c.auth.onAuthStateChange((_event, s) => setSession(s));
       unsubscribe = () => sub.data.subscription.unsubscribe();
-      // drop Google's one-time ?code= from the address bar
-      const url = new URL(location.href);
-      if (url.searchParams.has('code')) {
-        url.searchParams.delete('code');
-        history.replaceState(null, '', url);
-      }
+      clearAuthParams();
     });
     return () => {
       live = false;
