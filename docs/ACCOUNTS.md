@@ -1,6 +1,7 @@
 # Setting up accounts (Supabase + Google sign-in)
 
-> **Status (2026-10-27): done, except Part 4 (test users).** Supabase projects: `FitQuest`
+> **Status (2026-10-27): all done.** A real Google sign-in and sync on the owner's phone worked on the live
+> site. Supabase projects: `FitQuest`
 > (`cdwqgtguexebrnggasfr`, real) and `fitness-quest-test` (`cuaaopuywnkbiuanrpun`); Google Cloud project
 > `fitquest-512921`, client "Fitness Quest web", published (In production). The public values are in
 > [`src/syncConfig.ts`](../src/syncConfig.ts). Checked: signed-out requests are refused on both projects.
