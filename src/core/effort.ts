@@ -6,7 +6,8 @@
  */
 import type { ExerciseLog } from '../contract.ts';
 
-export type EffortLevel = 'Max' | 'Heavy' | 'Moderate+' | 'Moderate' | 'Light+' | 'Light' | 'Too light';
+export type EffortLevel =
+  'Max' | 'Heavy' | 'Moderate+' | 'Moderate' | 'Light+' | 'Light' | 'Too light';
 
 export type EffortRow = {
   /** stored value: reps in reserve, the middle of a range ("3-4" is 3.5); 11 is "too light" */
@@ -33,6 +34,7 @@ const row = (
 ): EffortRow => ({ rir, rirLabel, rpe, rpeLabel, level, effort, pct });
 
 /** Hardest first, as in the chart. */
+// prettier-ignore
 export const EFFORT_ROWS: readonly EffortRow[] = [
   row(0, '0', 10, '10', 'Max', 'Absolute max', [100, 95.5, 92.2, 89.2, 86.3, 83.7, 81.1, 78.6, 76.2, 73.9]),
   row(0.5, '0-1', 9.5, '9.5', 'Heavy', 'Max effort near failure', [97.5, 92.5, 90, 87.5, 85, 82.5, 80, 77.5, 75, 72.5]),

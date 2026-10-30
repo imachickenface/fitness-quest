@@ -6,6 +6,7 @@
  * DOM, no clock, no mutation of the inputs.
  */
 import type { Workout } from '../contract.ts';
+import { chartE1rm, logRir } from './effort.ts';
 import type { Exercise } from './exercises.ts';
 import { FEMALE_LOWER, FEMALE_UPPER, findExercise } from './exercises.ts';
 
@@ -101,6 +102,7 @@ export function exerciseRanks(workouts: Workout[], bodyweightKg: number, sex: Se
     for (const log of workout.exercises) {
       const exercise = findExercise(log.name);
       if (exercise === undefined || exercise.top === undefined) continue;
+      const rir = logRir(log);
       for (const set of log.sets) {
         const reps = set.reps;
         if (reps === undefined || !(reps > 0)) continue;
@@ -117,7 +119,9 @@ export function exerciseRanks(workouts: Workout[], bodyweightKg: number, sex: Se
           load = logged;
         }
 
-        const e1rmKg = e1rm(load, reps);
+        // a rated set reads its e1RM off the effort chart; others count as near failure (Epley)
+        const e1rmKg =
+          (rir === undefined ? undefined : chartE1rm(load, reps, rir)) ?? e1rm(load, reps);
         if (!(e1rmKg > 0)) continue;
 
         const kept = best.get(exercise.id);

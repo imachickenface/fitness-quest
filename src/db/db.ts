@@ -241,6 +241,11 @@ export async function startProgram(db: FitnessDb, program: Program): Promise<voi
   });
 }
 
+/** Save changes to a program, such as sessions moved to another day. */
+export async function saveProgram(db: FitnessDb, program: Program): Promise<void> {
+  await db.programs.put(Program.parse(program));
+}
+
 export async function getActiveProgram(db: FitnessDb): Promise<Program | null> {
   const all = await db.programs.toArray();
   return all.find((p) => p.active) ?? null;

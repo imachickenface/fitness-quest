@@ -316,7 +316,7 @@ the free Supabase plan.
   contract (zod), and tests check that no weight, calories or food appear in it.
 - *Two features changing one screen:* the Friends tab is new, so existing screens only gain a profile link.
 
-### M9 - Change what's next, effort (RIR and RPE), calories burned (approved 2026-10-29)
+### M9 - Change what's next, effort (RIR and RPE), calories burned (approved and built 2026-10-29) ✅
 
 **Goal:** pick a different workout without losing the calendar, log how hard each exercise was and let
 that steer the next weights, and see roughly what today's exercise burned. Research: `docs/RESEARCH.md`

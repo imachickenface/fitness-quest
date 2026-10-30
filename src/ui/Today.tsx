@@ -43,6 +43,7 @@ import { LabelSheet } from './LabelSheet.tsx';
 import { PortionSheet } from './PortionSheet.tsx';
 import { ProfileForm } from './ProfileForm.tsx';
 import { AccountPanel } from './AccountPanel.tsx';
+import { BurnCard } from './BurnCard.tsx';
 import { BackupPanel } from './BackupPanel.tsx';
 import { Credits } from './Credits.tsx';
 import { backupDue, saveBackup } from './backupActions.ts';
@@ -329,6 +330,8 @@ export function Today({ profile, streakDays }: { profile: Profile; streakDays?: 
           </p>
         )}
       </section>
+
+      <BurnCard date={date} today={today} />
 
       <div className="actions">
         <button

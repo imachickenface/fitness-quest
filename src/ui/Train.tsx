@@ -2,10 +2,12 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useMemo, useState } from 'react';
 import type { ExerciseLog, Goal, PlannedSession, Profile, SetEntry, Workout } from '../contract.ts';
 import { addDays } from '../core/dates.ts';
+import { effortRow, effortText, logRir } from '../core/effort.ts';
 import { localDate } from '../core/diary.ts';
 import { findExercise } from '../core/exercises.ts';
 import { generateProgram, isoDay } from '../core/program/generate.ts';
-import { nextTarget } from '../core/progression.ts';
+import { moveToToday, type SwapError } from '../core/program/swap.ts';
+import { aimRir, effortTarget, lastEffort, nextTarget } from '../core/progression.ts';
 import { exerciseRanks, TIERS } from '../core/ranks.ts';
 import { runTitle, runTypeFor } from '../core/runTypes.ts';
 import { ARNOLD, dayTemplate, nextSplitDay } from '../core/split.ts';
@@ -15,6 +17,7 @@ import {
   listWeighIns,
   listWorkouts,
   saveProfile,
+  saveProgram,
   startProgram,
   stopProgram,
   upsertWorkout,
@@ -27,6 +30,7 @@ import { describeItem } from './programFormat.ts';
 import { Ranks } from './Ranks.tsx';
 import { dayTitle, load, newId, nowStamp, type Units } from './format.ts';
 import { RunSheet } from './RunSheet.tsx';
+import { SplitCard } from './SplitCard.tsx';
 import { formatPace, recentExercises } from './workoutFormat.ts';
 import { WorkoutSheet } from './WorkoutSheet.tsx';
 
@@ -45,8 +49,25 @@ export function Train({ profile, say }: Props) {
     () => (bodyweight ? exerciseRanks(workouts, bodyweight, profile.sex) : []),
     [workouts, bodyweight, profile.sex],
   );
-  const nextDay = ARNOLD.find((d) => d.id === nextSplitDay(workouts)) ?? ARNOLD[0]!;
-  const template = useMemo(() => dayTemplate(nextDay.id, workouts), [nextDay.id, workouts]);
+  const style = profile.style ?? 'bodybuilding';
+  const suggested = nextSplitDay(workouts);
+  // a split day picked with "Change" holds until the next workout is logged
+  const [picked, setPicked] = useState<{ dayId: string; after: string | undefined } | null>(null);
+  const pickedId = picked && picked.after === workouts[0]?.id ? picked.dayId : suggested;
+  const nextDay = ARNOLD.find((d) => d.id === pickedId) ?? ARNOLD[0]!;
+  const template = useMemo(
+    () =>
+      dayTemplate(nextDay.id, workouts).map((e) => {
+        // with an effort logged last time, the sets carry the chart's next weight
+        const ex = findExercise(e.name);
+        const last = ex ? lastEffort(workouts, ex.id) : undefined;
+        const t = ex && last ? effortTarget(style, ex, last, profile.units, {}) : undefined;
+        if (!t) return e;
+        const set: SetEntry = { reps: t.reps, ...(t.weightKg > 0 ? { weightKg: t.weightKg } : {}) };
+        return { name: e.name, sets: e.sets.map(() => ({ ...set })) };
+      }),
+    [nextDay.id, workouts, style, profile.units],
+  );
   const program = useLiveQuery(() => getActiveProgram(db), [db], null);
   const [open, setOpen] = useState<
     'none' | 'lift' | 'split' | 'run' | 'import' | 'program' | 'session-lift' | 'session-run'
@@ -56,7 +77,7 @@ export function Train({ profile, say }: Props) {
     setOpen('none');
     setSession(null);
   };
-  const style = profile.style ?? 'bodybuilding';
+  const aimText = (deload: boolean) => effortText(effortRow(aimRir(style, deload))!);
   const longestM = Math.max(
     0,
     ...workouts
@@ -97,12 +118,19 @@ export function Train({ profile, say }: Props) {
     const deload = s.title.endsWith('(deload)');
     return s.items.flatMap((item) => {
       if (item.type !== 'lift') return [];
-      const rank = ranks.find((r) => findExercise(item.exercise)?.id === r.exercise.id);
-      const target = rank
-        ? nextTarget(style, rank.exercise, rank.best, profile.units, deload ? 'week' : undefined)
-        : undefined;
+      const ex = findExercise(item.exercise);
+      const rank = ranks.find((r) => ex?.id === r.exercise.id);
+      const last = ex && !deload ? lastEffort(workouts, ex.id) : undefined;
+      // the effort chart when last time was rated, else the style's rules from the best set
+      const fromEffort =
+        ex && last ? effortTarget(style, ex, last, profile.units, { reps: item.reps }) : undefined;
+      const target =
+        fromEffort ??
+        (rank
+          ? nextTarget(style, rank.exercise, rank.best, profile.units, deload ? 'week' : undefined)
+          : undefined);
       const set: SetEntry = {
-        reps: item.reps,
+        reps: fromEffort ? fromEffort.reps : item.reps,
         ...(target && target.weightKg > 0 ? { weightKg: target.weightKg } : {}),
       };
       return [{ name: item.exercise, sets: Array.from({ length: item.sets }, () => ({ ...set })) }];
@@ -124,6 +152,17 @@ export function Train({ profile, say }: Props) {
       return;
     }
     setOpen(first?.type === 'run' ? 'session-run' : 'session-lift');
+  }
+
+  /** Move a session of this week to today, swapping days; a problem to show, or null. */
+  function moveSession(s: PlannedSession): string | null {
+    if (!program) return null;
+    const done = new Set(workouts.flatMap((w) => (w.programSessionId ? [w.programSessionId] : [])));
+    const moved = moveToToday(program, s.id, today, done);
+    if ('error' in moved) return MOVE_PROBLEMS[moved.error];
+    void saveProgram(db, moved);
+    say(`${s.title} moved to today`, () => void saveProgram(db, program));
+    return null;
   }
 
   /** "Bench press ranked up: Gold to Platinum!" when a new workout moves a lift up a tier. */
@@ -180,19 +219,24 @@ export function Train({ profile, say }: Props) {
           program={program}
           workouts={workouts}
           today={today}
+          aim={aimText(false)}
           onStart={startSession}
+          onMove={moveSession}
           onStop={() => void stopProgram(db, program.id)}
         />
       ) : (
         <>
-          <section className="panel next-up" aria-labelledby="next-title">
-            <p className="muted next-label">Next up · Arnold split</p>
-            <h2 id="next-title">{nextDay.title}</h2>
-            <p className="muted next-list">{template.map((e) => e.name).join(' · ')}</p>
-            <button type="button" className="btn btn-primary" onClick={() => setOpen('split')}>
-              Start {nextDay.title.toLowerCase()}
-            </button>
-          </section>
+          <SplitCard
+            workouts={workouts}
+            today={today}
+            day={nextDay}
+            suggested={suggested}
+            template={template}
+            aim={aimText(false)}
+            exercisesFor={(id) => dayTemplate(id, workouts).map((e) => e.name)}
+            onPick={(dayId) => setPicked({ dayId, after: workouts[0]?.id })}
+            onStart={() => setOpen('split')}
+          />
           <button
             type="button"
             className="link-btn start-program"
@@ -263,6 +307,7 @@ export function Train({ profile, say }: Props) {
             void saveProfile(db, { ...profile, units, updatedAt: nowStamp() })
           }
           initial={{ title: session.title, exercises: sessionExercises(session) }}
+          aim={aimRir(style, session.title.endsWith('(deload)'))}
           onClose={close}
           onSave={(exercises: ExerciseLog[], title) =>
             void save({ kind: 'strength', exercises, ...(title ? { title } : {}) })
@@ -298,6 +343,7 @@ export function Train({ profile, say }: Props) {
             void saveProfile(db, { ...profile, units, updatedAt: nowStamp() })
           }
           initial={open === 'split' ? { title: nextDay.title, exercises: template } : undefined}
+          {...(open === 'split' ? { aim: aimRir(style, false) } : {})}
           onClose={close}
           onSave={(exercises: ExerciseLog[], title) =>
             void save({ kind: 'strength', exercises, ...(title ? { title } : {}) })
@@ -322,6 +368,14 @@ export function Train({ profile, say }: Props) {
   );
 }
 
+const MOVE_PROBLEMS: Record<SwapError, string> = {
+  'not-found': 'That session is no longer in the program.',
+  'not-this-week': 'Only sessions from this week can move to today.',
+  done: 'That session is already done.',
+  'already-today': "That's already today's session.",
+  'today-done': "Today's session is done, so the week stays as it is.",
+};
+
 function workoutTitle(w: Workout): string {
   if (w.title) return w.title;
   if (w.kind === 'run') return `${km(runDistance(w))} km run`;
@@ -338,7 +392,12 @@ function workoutDetail(w: Workout, units: Units): string {
     .map((e) => {
       const best = e.sets.reduce((m, s) => Math.max(m, s.weightKg ?? 0), 0);
       const failure = e.sets.every((s) => s.toFailure) ? ' to failure' : '';
-      return `${e.name} ${e.sets.length}×${best > 0 ? ` ${load(best, units)}` : ''}${failure}`;
+      const rir = logRir(e);
+      const row = rir === undefined ? undefined : effortRow(rir);
+      const effort = row
+        ? ` @ ${row.level === 'Too light' ? 'too light' : `RPE ${row.rpeLabel}`}`
+        : '';
+      return `${e.name} ${e.sets.length}×${best > 0 ? ` ${load(best, units)}` : ''}${failure}${effort}`;
     })
     .join(' · ');
 }

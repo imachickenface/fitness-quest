@@ -2353,3 +2353,204 @@ p {
   margin-top: 8px;
   padding-left: 0;
 }
+
+/* ---------- effort (M9): the owner's chart colours ---------- */
+.effort-field {
+  display: grid;
+  grid-template-columns: auto 12px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+.effort-field select {
+  min-width: 0;
+  min-height: 40px;
+  border: 2px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  padding: 0 8px;
+}
+.effort-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--effort, transparent);
+  border: 2px solid var(--line);
+}
+.effort-none {
+  --effort: transparent;
+}
+.effort-max {
+  --effort: #e5222a;
+}
+.effort-heavy {
+  --effort: #f39321;
+}
+.effort-moderate-plus {
+  --effort: #3fc63c;
+}
+.effort-moderate {
+  --effort: #8fd96b;
+}
+.effort-light-plus {
+  --effort: #f2ea2e;
+}
+.effort-light {
+  --effort: #a9c3ea;
+}
+.effort-too-light {
+  --effort: #d9a8c8;
+}
+.effort-aim {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  background: var(--green-soft);
+  color: var(--ink);
+}
+.effort-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.effort-tag .effort-dot {
+  width: 9px;
+  height: 9px;
+  border-width: 1px;
+}
+
+/* ---------- next up: change what's next (M9) ---------- */
+.btn-small {
+  min-height: 40px;
+  padding: 0 12px;
+  font-size: 0.8rem;
+}
+.next-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+button.week-day {
+  width: 100%;
+  background: var(--card);
+  font-family: var(--sans);
+  cursor: pointer;
+}
+button.week-day.done {
+  background: var(--green);
+}
+.week-strip li {
+  min-width: 0;
+}
+.week-list {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.week-row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 2px solid var(--line);
+  border-radius: var(--r-sm);
+}
+.week-row.is-today {
+  border-color: var(--orange);
+}
+.week-row.focus {
+  background: var(--soft);
+}
+.week-row .week-day {
+  width: 34px;
+}
+.week-row-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.week-row-text .muted {
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+.week-state {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--faint);
+}
+.week-state.done {
+  color: var(--green-ink);
+}
+.week-state.planned {
+  color: var(--blue-ink);
+}
+.split-days {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.split-day {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 2px solid var(--line);
+  border-radius: var(--r-sm);
+}
+.split-day.current {
+  border-color: var(--green);
+}
+
+/* ---------- calories burned (M9) ---------- */
+.burn-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+.burn-head h2 {
+  margin: 0;
+}
+.burn-total {
+  margin: 0;
+  white-space: nowrap;
+}
+.burn-total b {
+  font-size: 1.25rem;
+  color: var(--orange-ink);
+}
+.burn-list {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.burn-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.burn-list li span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.burn-note {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+}

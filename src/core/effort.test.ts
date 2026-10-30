@@ -34,7 +34,9 @@ describe('the effort chart', () => {
   });
 
   it('keeps the Max row as printed', () => {
-    expect(EFFORT_ROWS[0]!.pct).toEqual([100, 95.5, 92.2, 89.2, 86.3, 83.7, 81.1, 78.6, 76.2, 73.9]);
+    expect(EFFORT_ROWS[0]!.pct).toEqual([
+      100, 95.5, 92.2, 89.2, 86.3, 83.7, 81.1, 78.6, 76.2, 73.9,
+    ]);
   });
 
   it('follows the chart pattern below Max: 5 points from 1 to 2 reps, then 2.5 a rep, 2.5 a row', () => {
@@ -97,7 +99,15 @@ describe('lookups', () => {
 
   it('reads an exercise effort from the pick, else the hardest set RPE', () => {
     expect(logRir({ name: 'Bench', sets: [{ reps: 5 }], rir: 1.5 })).toBe(1.5);
-    expect(logRir({ name: 'Bench', sets: [{ reps: 5, rpe: 7 }, { reps: 5, rpe: 8 }] })).toBe(2);
+    expect(
+      logRir({
+        name: 'Bench',
+        sets: [
+          { reps: 5, rpe: 7 },
+          { reps: 5, rpe: 8 },
+        ],
+      }),
+    ).toBe(2);
     expect(logRir({ name: 'Bench', sets: [{ reps: 5 }] })).toBeUndefined();
   });
 });

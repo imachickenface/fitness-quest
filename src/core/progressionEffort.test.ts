@@ -21,14 +21,26 @@ describe('aimRir', () => {
 describe('effortTarget for weighted lifts', () => {
   it('reads the next weight off the chart when there was room left', () => {
     // 100 x 8 at RIR 3-4 (67.5%) -> e1RM 148.1; 8 reps at RIR 1-2 is 72.5% -> 107.4 -> 107.5
-    const t = effortTarget('bodybuilding', bench, { weightKg: 100, reps: 8, rir: 3.5 }, 'metric', {});
+    const t = effortTarget(
+      'bodybuilding',
+      bench,
+      { weightKg: 100, reps: 8, rir: 3.5 },
+      'metric',
+      {},
+    );
     expect(t).toMatchObject({ weightKg: 107.5, reps: 8, deload: false });
     expect(t!.why).toMatch(/RPE/);
   });
 
   it('uses the style aim: powerlifting aims for RPE 8', () => {
     // e1RM 148.1 x 70% = 103.7 -> 102.5
-    const t = effortTarget('powerlifting', bench, { weightKg: 100, reps: 8, rir: 3.5 }, 'metric', {});
+    const t = effortTarget(
+      'powerlifting',
+      bench,
+      { weightKg: 100, reps: 8, rir: 3.5 },
+      'metric',
+      {},
+    );
     expect(t).toMatchObject({ weightKg: 102.5, reps: 8 });
   });
 
@@ -49,13 +61,25 @@ describe('effortTarget for weighted lifts', () => {
   it('moves the e1RM at most 10% from what the set would show at the aimed effort', () => {
     // 100 x 10 at RIR 0 (73.9%) -> 135.3; at RIR 2 it would be 153.8; floor 0.9 x 153.8 = 138.5;
     // 10 reps at 65% -> 90 (87.5 without the cap)
-    const t = effortTarget('powerlifting', bench, { weightKg: 100, reps: 10, rir: 0 }, 'metric', {});
+    const t = effortTarget(
+      'powerlifting',
+      bench,
+      { weightKg: 100, reps: 10, rir: 0 },
+      'metric',
+      {},
+    );
     expect(t).toMatchObject({ weightKg: 90, reps: 10 });
   });
 
   it('reads a too-easy set as RIR 4-5, so it never claims more than the chart can say', () => {
     // RIR 9-10 counts as 4.5: 100 x 5 at 72.5% -> 137.9; 5 reps at 77.5% -> 106.9 -> 107.5
-    const t = effortTarget('powerlifting', bench, { weightKg: 100, reps: 5, rir: 9.5 }, 'metric', {});
+    const t = effortTarget(
+      'powerlifting',
+      bench,
+      { weightKg: 100, reps: 5, rir: 9.5 },
+      'metric',
+      {},
+    );
     expect(t).toMatchObject({ weightKg: 107.5, reps: 5 });
   });
 
@@ -72,7 +96,13 @@ describe('effortTarget for weighted lifts', () => {
 
   it('snaps to 5 lb plates in imperial', () => {
     // 107.4 kg = 236.8 lb -> 235 lb = 106.6 kg
-    const t = effortTarget('bodybuilding', bench, { weightKg: 100, reps: 8, rir: 3.5 }, 'imperial', {});
+    const t = effortTarget(
+      'bodybuilding',
+      bench,
+      { weightKg: 100, reps: 8, rir: 3.5 },
+      'imperial',
+      {},
+    );
     expect(t).toMatchObject({ weightKg: 106.6, reps: 8 });
   });
 
@@ -91,7 +121,13 @@ describe('effortTarget for weighted lifts', () => {
 describe('effortTarget for bodyweight moves', () => {
   it('turns reps left in the tank into reps', () => {
     // 8 reps at RIR 3-4: about 11 possible; aim RIR 2 -> 9
-    const t = effortTarget('calisthenics', pullUp, { weightKg: 0, reps: 8, rir: 3.5 }, 'metric', {});
+    const t = effortTarget(
+      'calisthenics',
+      pullUp,
+      { weightKg: 0, reps: 8, rir: 3.5 },
+      'metric',
+      {},
+    );
     expect(t).toMatchObject({ weightKg: 0, reps: 9 });
   });
 

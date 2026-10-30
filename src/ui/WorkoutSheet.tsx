@@ -1,13 +1,16 @@
 import { useState, type FormEvent } from 'react';
 import { exerciseKey, type ExerciseLog, type SetEntry } from '../contract.ts';
+import { effortRow, effortText } from '../core/effort.ts';
 import type { RecentExercise } from './workoutFormat.ts';
 import { fromUnit, toUnit, type Units } from './format.ts';
+import { EffortSelect } from './EffortSelect.tsx';
 import { ExercisePicker } from './ExercisePicker.tsx';
 import { Sheet } from './Sheet.tsx';
 import { UnitSwitch } from './UnitSwitch.tsx';
 
 type SetDraft = { reps: string; kg: string };
-type ExerciseDraft = { key: number; name: string; sets: SetDraft[] };
+/** `rir`: the effort picked from the chart (core/effort.ts), absent when not rated */
+type ExerciseDraft = { key: number; name: string; sets: SetDraft[]; rir?: number | undefined };
 
 const toDraft = (s: SetEntry, units: Units): SetDraft => ({
   reps: s.reps === undefined ? '' : String(s.reps),
@@ -19,6 +22,8 @@ type Props = {
   /** pre-filled exercises and title, e.g. today's split day */
   initial?: { title: string; exercises: { name: string; sets: SetEntry[] }[] };
   units?: Units;
+  /** the effort to aim for (a stored RIR), shown above the exercises */
+  aim?: number;
   /** the kg | lb switch was flipped */
   onUnitsChange?: (units: Units) => void;
   onSave: (exercises: ExerciseLog[], title: string) => void;
@@ -29,6 +34,7 @@ export function WorkoutSheet({
   recent,
   initial,
   units: startUnits = 'metric',
+  aim,
   onUnitsChange,
   onSave,
   onClose,
@@ -46,6 +52,7 @@ export function WorkoutSheet({
   const [picking, setPicking] = useState(false);
   const [title, setTitle] = useState(initial?.title ?? '');
 
+  const aimRow = aim === undefined ? undefined : effortRow(aim);
   const inWorkout = new Set(exercises.map((e) => exerciseKey(e.name)));
   const suggestions = recent.filter((r) => !inWorkout.has(exerciseKey(r.name)));
 
@@ -79,6 +86,7 @@ export function WorkoutSheet({
     .map((e) => ({
       name: e.name,
       sets: e.sets.map((s) => parseSet(s, units)).filter((s) => s !== null),
+      ...(e.rir === undefined ? {} : { rir: e.rir }),
     }))
     .filter((e) => e.sets.length > 0);
 
@@ -103,6 +111,11 @@ export function WorkoutSheet({
             onChange={switchUnits}
           />
         </div>
+        {aimRow && (
+          <p className="effort-aim">
+            Aim for <b>{effortText(aimRow)}</b> on your hardest set, then say how hard it was.
+          </p>
+        )}
         {suggestions.length > 0 && (
           <div>
             <p className="muted">Tap to add with last time's sets</p>
@@ -199,6 +212,11 @@ export function WorkoutSheet({
             >
               + Set
             </button>
+            <EffortSelect
+              exercise={e.name}
+              value={e.rir}
+              onChange={(rir) => update(e.key, (x) => ({ ...x, rir }))}
+            />
           </fieldset>
         ))}
 

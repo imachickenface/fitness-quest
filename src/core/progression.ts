@@ -5,8 +5,6 @@
  * increment a real gym offers (2.5 kg plates, 1 kg dumbbells, 5 lb adjustable dumbbells).
  */
 import type { Goal, Workout } from '../contract.ts';
-import { findExercise } from './exercises.ts';
-import type { Exercise } from './exercises.ts';
 import {
   chartE1rm,
   chartWeight,
@@ -15,8 +13,9 @@ import {
   effortText,
   logRir,
   MAX_CHART_REPS,
+  type EffortRow,
 } from './effort.ts';
-import type { EffortRow } from './effort.ts';
+import { findExercise, type Exercise } from './exercises.ts';
 import { e1rm } from './ranks.ts';
 
 export type Style = 'powerlifting' | 'bodybuilding' | 'calisthenics';

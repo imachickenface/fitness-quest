@@ -59,7 +59,13 @@ describe('workoutBurn', () => {
     );
     expect(workoutBurn(w({ kind: 'strength', exercises: lifts([0, 3.5, 0, 1]) }), 80)).toBe(120);
     const imported: ExerciseLog[] = [
-      { name: 'Squat', sets: [{ reps: 3, weightKg: 140, rpe: 9.5 }, { reps: 3, weightKg: 140 }] },
+      {
+        name: 'Squat',
+        sets: [
+          { reps: 3, weightKg: 140, rpe: 9.5 },
+          { reps: 3, weightKg: 140 },
+        ],
+      },
     ];
     // 2 sets = 6 min; 4 x 80 x 0.1 = 32
     expect(workoutBurn(w({ kind: 'strength', exercises: imported }), 80)).toBe(32);

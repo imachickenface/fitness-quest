@@ -80,6 +80,31 @@ describe('liftScore', () => {
   });
 });
 
+describe('exerciseRanks with efforts', () => {
+  const rated = (rir: number | undefined, rpe?: number): Workout => ({
+    ...lift('2026-10-20', 'Bench', [{ reps: 5, weightKg: 100, ...(rpe ? { rpe } : {}) }]),
+    exercises: [
+      {
+        name: 'Bench',
+        sets: [{ reps: 5, weightKg: 100, ...(rpe ? { rpe } : {}) }],
+        ...(rir === undefined ? {} : { rir }),
+      },
+    ],
+  });
+  const e1 = (w: Workout) => exerciseRanks([w], 80, 'male')[0]!.e1rmKg;
+
+  it('reads a rated set off the effort chart', () => {
+    // 5 reps at RIR 2 is 77.5% of a max
+    expect(e1(rated(2))).toBeCloseTo(129.03, 2);
+    expect(e1(rated(undefined, 8))).toBeCloseTo(129.03, 2);
+  });
+
+  it('keeps Epley for unrated sets and for sets too easy to tell', () => {
+    expect(e1(rated(undefined))).toBeCloseTo(116.667, 2);
+    expect(e1(rated(7.5))).toBeCloseTo(116.667, 2);
+  });
+});
+
 describe('exerciseRanks', () => {
   const workouts = [
     lift('2026-10-20', 'Bench', [

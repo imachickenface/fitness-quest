@@ -30,6 +30,12 @@ const CREDITS: { name: string; url: string; what: string; licence: string }[] = 
     licence: 'used with the owner’s permission',
   },
   {
+    name: 'Mash Elite Relative Intensity chart',
+    url: 'https://www.mashelite.com',
+    what: 'the RIR, RPE and %1RM numbers behind effort and the next weights, supplied by the app’s owner',
+    licence: 'figures used as a training reference',
+  },
+  {
     name: 'Nunito and Pixelify Sans',
     url: 'https://fonts.google.com',
     what: 'the fonts',
