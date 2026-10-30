@@ -238,6 +238,50 @@ no body weight, calories or food leave the account.
 - **Avatars:** the hero is a 3D model (Kenney Mini Characters, CC0). Twelve heads give twelve portraits, so
   friend lists can use small pre-rendered images and only a friend's profile page loads the 3D hero.
 
+## 11. Steps, RIR and calories burned (checked 2026-10-29)
+
+**Can a web app count steps with the screen locked? No.**
+- Browsers stop motion-sensor events when the page is hidden. The cross-browser Web Platform Tests check
+  exactly this ([devicemotion page-visibility test](https://searchfox.org/firefox-main/source/testing/web-platform/tests/orientation-event/motion/page-visibility.https.html)),
+  and Chrome ties sensor-style APIs to page visibility and screen-off
+  ([Chromium engineer, W3C list](https://lists.w3.org/Archives/Public/public-device-apis/2014Jan/0039.html)).
+- iOS suspends a web app (Safari or installed) about three seconds after it leaves the screen
+  ([Frontend Masters, background JavaScript](https://frontendmasters.com/courses/background-javascript/observing-mobile-background-javascript)).
+- A web app can't read the phone's own step counter: Apple Health has no web access, and Android's Health
+  Connect is on-device only. Google Fit's APIs are deprecated; the cloud successor, the Google Health API,
+  is still reaching parity with Health Connect in Q4 2026 to Q1 2027
+  ([Google Health API](https://developers.google.com/health/about), [Sahha, July 2026](https://sahha.ai/blog/fitbit-api-sunset-migration/)).
+- Only a store app (a native wrapper using HealthKit / Health Connect) can count all day with the screen
+  locked. That costs Apple's $99 a year and a Mac or cloud build for iPhone, so it is left for later.
+
+**What works in a web app**
+- **Motion-sensor counting while the app is open.** The Screen Wake Lock API keeps the screen from
+  locking; it works in installed iPhone web apps from iOS 18.4
+  ([MDN compat data](https://chromium.googlesource.com/external/github.com/mdn/browser-compat-data/+/73d346309ee9d8be7e32fda8ff574d4c79dd4c51/api/WakeLock.json),
+  [progressier](https://progressier.com/pwa-capabilities/screen-wake-lock)). The lock is dropped when the
+  app is left, and iPhone asks for motion permission (`DeviceMotionEvent.requestPermission()`).
+- **iPhone: the phone's own count through Apple Shortcuts.** The Health app counts steps all day, locked or
+  not. A shortcut can read today's step count from Health and open the app with it, one tap from the home
+  screen, a widget or Siri ([Apple Shortcuts guide](https://support.apple.com/guide/shortcuts/apd690170742/ios),
+  [example](https://www.addictivetips.com/ios/get-daily-step-count-siri-shortcut)). An automation that runs
+  by itself fails while the phone is locked, because Health data is locked then
+  ([Home Assistant forum](https://community.home-assistant.io/t/ios-steps-showing-incorrect-data/553185)).
+  So it's a tap, not fully automatic.
+- **Android:** no web route to the phone's own count; the motion counter, or typing the total in.
+
+**Calories burned: the method**
+- Energy = MET × body weight (kg) × hours. The app shows *active* calories, (MET − 1) × kg × hours, the
+  part on top of what the body burns at rest, the same idea as a watch's "active calories".
+- **Lifting:** 2024 Adult Compendium code 02054, multiple exercises at 8-15 reps, **3.5 MET**; code 02052,
+  heavy squats and deadlifts, **5.0 MET** ([conditioning exercise](https://pacompendium.com/conditioning-exercise),
+  [2024 Compendium paper](https://pubmed.ncbi.nlm.nih.gov/38242596/)). The workout form records no
+  duration, so a set counts as 3 minutes with its rest.
+- **Steps:** 10,000 steps ≈ 4.25 MET-hours at 3 MET ([PMC table](https://pmc.ncbi.nlm.nih.gov/articles/PMC3085087/table/T1)),
+  so about 200 active kcal for a 70 kg person.
+- **Runs:** about 1 kcal per kg per km, the classic running estimate, less the resting part.
+- Estimates like these are off by 20-30% for a given person, so the app says "about" and keeps it out of
+  the food target (the activity level already counts usual exercise).
+
 ## 8. Risks
 
 | Risk | Impact | Handling |

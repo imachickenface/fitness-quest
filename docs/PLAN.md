@@ -316,6 +316,72 @@ the free Supabase plan.
   contract (zod), and tests check that no weight, calories or food appear in it.
 - *Two features changing one screen:* the Friends tab is new, so existing screens only gain a profile link.
 
+### M9 - Change what's next, effort (RIR and RPE), calories burned (approved 2026-10-29)
+
+**Goal:** pick a different workout without losing the calendar, log how hard each exercise was and let
+that steer the next weights, and see roughly what today's exercise burned. Research: `docs/RESEARCH.md`
+section 11.
+
+**The owner's choices (2026-10-29)**
+- Next up: picking another workout **swaps the days** in the calendar.
+- Effort: **one per exercise**, using the owner's **Mash Elite Relative Intensity chart** (RIR, RPE and
+  %1RM for 1-10 reps). It drives the progressive overload maths and everything else effort is needed for.
+  The chart's velocity columns are left out: the app has no bar-speed sensor.
+- Calories burned: **shown only**, not added to the food target.
+- Steps: **not now** (parked; RESEARCH §11 has what a web app can and can't do).
+
+**Architecture**
+- **Effort chart** (`core/effort.ts`): the chart's 14 rows as data. Each row has a stored RIR value (0,
+  0.5, 1, 1.5, 2, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10, 11 for "too light"), its RIR and RPE labels, the
+  chart's effort name and the %1RM for 1-10 reps. Lookups: a row by RIR, the nearest row for an RPE
+  (imported sets carry RPE), %1RM for any reps (past 10 reps, 2.5 points less per rep, up to 15), e1RM
+  from a set, and the weight for a rep count at an effort.
+- **Logging:** `ExerciseLog` gains an optional `rir`. The workout form, shared by program sessions and
+  manual logs, has a "How hard was it?" choice per exercise listing the chart rows ("RPE 8 · RIR 2 · Hard
+  effort"). History shows "RPE 8". Program sessions show the effort to aim for.
+- **Progressive overload with effort** (`core/progression.ts`): when the last session of a lift has an
+  effort, the next weight comes from the chart. The e1RM comes from last time's weight, reps and RIR, and
+  the target is the planned reps at the style's aim: RPE 8 (RIR 2) for powerlifting and calisthenics, RPE
+  8.5 (RIR 1-2) for bodybuilding, RPE 5-6 (RIR 4-5) in deload weeks. It moves at most 10% at a time, and
+  when the weight rounds to the same plate and there was room left, it adds a rep instead. Bodyweight
+  moves add reps from the reps left in the tank. Without an effort logged, the current rules stay.
+- **Ranks:** a set with an effort of RIR 5 or less gets its e1RM from the chart (5 reps at RIR 3 shows
+  more strength than 5 to failure). Other sets keep Epley.
+- **Next up:**
+  - *On a program:* tap any day in the week strip to see that day's session. "Do it today" moves it to
+    today, and today's session moves to the day it came from. A missed session from earlier in the week
+    can be pulled into today too; today's session then goes to the next rest day this week, or to the
+    missed slot if there is none. The change is saved in the program, so it syncs.
+  - *On the split (no program):* a strip of this week's training days, and "Change" picks any split day
+    instead of the suggested one.
+- **Calories burned today**, on the Today tab: about N active kcal from today's workouts, with the
+  breakdown, from the latest weigh-in. Lifting is 3.5 MET, or 5.0 when the efforts average RPE 9 or more
+  (Compendium 02054 and 02052), at 3 minutes a set unless a duration was logged. Runs are about 1 kcal per
+  kg per km. Cardio uses its activity's MET. Active means (MET − 1) × kg × hours.
+
+**Tasks** (Q = Qwen with Claude's tests; C = Claude)
+
+| # | Task | Owner | Done when | Needs |
+|---|---|---|---|---|
+| 9.1 | Contract `rir`; `core/effort.ts` with the chart typed in from the owner's image | C | unit tests check every row against the image | - |
+| 9.2 | Progression with effort; last effort per lift; ranks e1RM from the chart | Q | Claude's unit tests | 9.1 |
+| 9.3 | Effort choice in the workout form, history, aims on program sessions, quests and session weights | C | e2e: log an effort, the next session suggests the chart's weight | 9.2 |
+| 9.4 | `core/program/swap.ts`: move a session to today | Q | unit tests (future day, missed day, no rest day left, done sessions untouched) | - |
+| 9.5 | Next up: tappable week strip, day sheet, "Do it today"; split strip and "Change" | C | e2e: swap, reload, calendar shows the new order | 9.4 |
+| 9.6 | `core/burn.ts`: calories burned by today's workouts | Q | unit tests against hand-worked numbers | 9.1 |
+| 9.7 | Calories burned card; docs; deploy | C | e2e; all tests pass; live check | 9.6 |
+
+**Usage:** Qwen takes the three pure modules (progression, swap, burn). Claude types in the chart, writes
+the tests and all screens. No paid services, no new dependencies, no database change (`rir` rides inside
+the workout record, which already syncs).
+
+**Risks**
+- *A typo in the chart:* a test checks each row's numbers against the image and the chart's own pattern
+  (each row 2.5 points under the one above).
+- *Effort-driven jumps too big or too small:* capped at 10% a session; the old rules stay when no effort
+  is logged.
+- *Calorie estimates are rough:* labelled "about" and kept out of the food target.
+
 ## Split and usage estimate
 
 - **Qwen:** 17 tasks, all pure `src/core/` modules or scripts with Claude's tests. 16 of them can run overnight.

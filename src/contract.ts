@@ -131,6 +131,11 @@ export const ExerciseLog = z.object({
   /** display name; matching across workouts uses exerciseKey() */
   name: z.string().min(1).max(100),
   sets: z.array(SetEntry).min(1),
+  /**
+   * How hard the exercise was, as reps in reserve on the hardest set: one of the effort chart's rows in
+   * core/effort.ts (0 = absolute max, 11 = too light). RPE is read off the same row.
+   */
+  rir: z.number().min(0).max(11).multipleOf(0.5).optional(),
 });
 export type ExerciseLog = z.infer<typeof ExerciseLog>;
 
