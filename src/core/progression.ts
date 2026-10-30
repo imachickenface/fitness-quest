@@ -4,8 +4,19 @@
  * Pure: no DOM, no clock, no mutation of the inputs. Loads are always snapped to the
  * increment a real gym offers (2.5 kg plates, 1 kg dumbbells, 5 lb adjustable dumbbells).
  */
-import type { Goal } from '../contract.ts';
+import type { Goal, Workout } from '../contract.ts';
+import { findExercise } from './exercises.ts';
 import type { Exercise } from './exercises.ts';
+import {
+  chartE1rm,
+  chartWeight,
+  EFFORT_ROWS,
+  effortRow,
+  effortText,
+  logRir,
+  MAX_CHART_REPS,
+} from './effort.ts';
+import type { EffortRow } from './effort.ts';
 import { e1rm } from './ranks.ts';
 
 export type Style = 'powerlifting' | 'bodybuilding' | 'calisthenics';
@@ -184,4 +195,98 @@ export function runTarget(
     deload: false,
     why: 'Distance week: 10% further than your longest run.',
   };
+}
+
+/** The effort a style aims for, as the stored RIR: deload 4-5, bodybuilding 1-2, else 2. */
+export function aimRir(style: Style, deload: boolean): number {
+  if (deload) return 4.5;
+  return style === 'bodybuilding' ? 1.5 : 2;
+}
+
+/** One set as the effort chart reads it: the load, the counted reps and the effort it was at. */
+export type Effort = { weightKg: number; reps: number; rir: number };
+
+/** The newest logged set with an effort for this lift: its load, reps and effort. */
+export function lastEffort(workouts: Workout[], exerciseId: string): Effort | undefined {
+  const newestFirst = [...workouts].sort(
+    (a, b) => b.date.localeCompare(a.date) || b.loggedAt.localeCompare(a.loggedAt),
+  );
+  for (const w of newestFirst) {
+    for (const log of w.exercises) {
+      const ex = findExercise(log.name);
+      if (ex?.id !== exerciseId) continue;
+      const rir = logRir(log);
+      if (rir === undefined) continue;
+      const counted = log.sets.filter((s) => (s.reps ?? 0) > 0);
+      if (counted.length === 0) continue;
+      const bodyweight = ex.bodyweight === true;
+      const best = counted.reduce((a, b) => {
+        const wA = a.weightKg ?? 0;
+        const wB = b.weightKg ?? 0;
+        if (bodyweight) {
+          const rA = a.reps ?? 0;
+          const rB = b.reps ?? 0;
+          if (rB !== rA) return rB > rA ? b : a;
+          return wB > wA ? b : a;
+        }
+        if (wB !== wA) return wB > wA ? b : a;
+        return (b.reps ?? 0) > (a.reps ?? 0) ? b : a;
+      });
+      return { weightKg: best.weightKg ?? 0, reps: best.reps ?? 0, rir };
+    }
+  }
+  return undefined;
+}
+
+/** A row for an effort the chart doesn't list: the nearest stored row at or below it. */
+function rowAtOrBelow(rir: number): EffortRow | undefined {
+  let best: EffortRow | undefined;
+  for (const r of EFFORT_ROWS) {
+    if (r.rir <= rir && (best === undefined || r.rir > best.rir)) best = r;
+  }
+  return best;
+}
+
+/** "Last time was RPE 6-7 · RIR 3-4: aiming for RPE 8.5." */
+function effortWhy(last: Effort, aim: number): string {
+  const done = effortRow(last.rir);
+  const was = done ? effortText(done) : `RIR ${last.rir}`;
+  const aimRow = effortRow(aim)!;
+  return `Last time was ${was}: aiming for RPE ${aimRow.rpeLabel}.`;
+}
+
+/** The next target read off the effort chart: same load, more reps (bodyweight) or a new load. */
+export function effortTarget(
+  style: Style,
+  ex: Exercise,
+  last: Effort,
+  units: Units,
+  opts: { reps?: number },
+): Target | undefined {
+  const aim = aimRir(style, false);
+
+  if (ex.bodyweight === true) {
+    const possible = last.reps + Math.floor(Math.min(last.rir, 10));
+    let reps = Math.max(1, possible - Math.ceil(aim));
+    if (reps === last.reps && last.rir > aim) reps = last.reps + 1;
+    return lift(last.weightKg, reps, false, effortWhy(last, aim));
+  }
+
+  if (!(last.weightKg > 0) || last.reps > MAX_CHART_REPS) return undefined;
+  const reps = Math.min(MAX_CHART_REPS, Math.max(1, Math.round(opts.reps ?? last.reps)));
+  // A set easier than RIR 4-5 is read as RIR 4-5: the chart can't say more than that.
+  const usedRow = effortRow(Math.min(last.rir, 4.5)) ?? rowAtOrBelow(Math.min(last.rir, 4.5));
+  if (!usedRow) return undefined;
+  const e1 = chartE1rm(last.weightKg, last.reps, usedRow.rir);
+  const e1Aim = chartE1rm(last.weightKg, last.reps, aim);
+  if (e1 === undefined || e1Aim === undefined) return undefined;
+  const capped = Math.min(Math.max(e1, 0.9 * e1Aim), 1.1 * e1Aim);
+  const raw = chartWeight(capped, reps, aim);
+  if (raw === undefined) return undefined;
+  const weightKg = roundLoad(raw, units, ex.perHand === true);
+  let nextReps = reps;
+  if (weightKg === last.weightKg && reps === last.reps && last.rir > aim) {
+    nextReps = Math.min(MAX_CHART_REPS, reps + 1);
+  }
+  return lift(weightKg, nextReps, false, effortWhy(last, aim));
 }
