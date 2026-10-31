@@ -2558,3 +2558,43 @@ button.week-day.done {
   margin: 8px 0 0;
   font-size: 0.85rem;
 }
+.effort-aim p {
+  margin: 0;
+}
+.effort-aim p + p {
+  margin-top: 6px;
+  font-size: 0.9rem;
+}
+.inline-link {
+  display: inline;
+  min-height: 0;
+  padding: 0;
+  font-size: inherit;
+  text-decoration: underline;
+  text-transform: none;
+  letter-spacing: normal;
+  line-height: inherit;
+}
+.effort-table {
+  width: 100%;
+  margin-top: 12px;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.effort-table th,
+.effort-table td {
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: middle;
+}
+.effort-table th {
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.effort-table .effort-dot {
+  display: inline-block;
+  vertical-align: -1px;
+}

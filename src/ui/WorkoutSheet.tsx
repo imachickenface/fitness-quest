@@ -3,7 +3,7 @@ import { exerciseKey, type ExerciseLog, type SetEntry } from '../contract.ts';
 import { effortRow, effortText } from '../core/effort.ts';
 import type { RecentExercise } from './workoutFormat.ts';
 import { fromUnit, toUnit, type Units } from './format.ts';
-import { EffortSelect } from './EffortSelect.tsx';
+import { EffortChart, EffortSelect } from './EffortSelect.tsx';
 import { ExercisePicker } from './ExercisePicker.tsx';
 import { Sheet } from './Sheet.tsx';
 import { UnitSwitch } from './UnitSwitch.tsx';
@@ -50,6 +50,7 @@ export function WorkoutSheet({
   );
   const [nextKey, setNextKey] = useState((initial?.exercises.length ?? 0) + 1);
   const [picking, setPicking] = useState(false);
+  const [chart, setChart] = useState(false);
   const [title, setTitle] = useState(initial?.title ?? '');
 
   const aimRow = aim === undefined ? undefined : effortRow(aim);
@@ -111,10 +112,21 @@ export function WorkoutSheet({
             onChange={switchUnits}
           />
         </div>
-        {aimRow && (
-          <p className="effort-aim">
-            Aim for <b>{effortText(aimRow)}</b> on your hardest set, then say how hard it was.
-          </p>
+        {(aimRow || exercises.length > 0) && (
+          <div className="effort-aim">
+            {aimRow && (
+              <p>
+                Aim for <b>{effortText(aimRow)}</b> on your hardest set, then say how hard it was.
+              </p>
+            )}
+            <p>
+              <b>RIR</b> is reps in reserve: how many more you could have done. <b>RPE</b> is how
+              hard it felt, out of 10.{' '}
+              <button type="button" className="link-btn inline-link" onClick={() => setChart(true)}>
+                Show the chart
+              </button>
+            </p>
+          </div>
         )}
         {suggestions.length > 0 && (
           <div>
@@ -234,6 +246,7 @@ export function WorkoutSheet({
           </button>
         </div>
       </form>
+      {chart && <EffortChart onClose={() => setChart(false)} />}
       {picking && (
         <ExercisePicker
           taken={inWorkout}

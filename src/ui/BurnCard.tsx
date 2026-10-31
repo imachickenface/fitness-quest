@@ -21,7 +21,7 @@ export function BurnCard({ date, today }: { date: string; today: string }) {
     <section className="panel burn" aria-labelledby="burn-title">
       <div className="burn-head">
         <h2 id="burn-title">Burned by exercise</h2>
-        {burn && (
+        {burn && burn.items.length > 0 && (
           <p className="burn-total">
             <span className="muted">about</span> <b>{kcal(burn.total)}</b> kcal
           </p>

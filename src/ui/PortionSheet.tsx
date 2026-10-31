@@ -22,7 +22,13 @@ export function PortionSheet({ food, defaultGrams, defaultMeal, onLog, onClose }
   const [meal, setMeal] = useState<MealSlot>(defaultMeal);
   const [favourite, setFavourite] = useState(food.favourite);
 
+  const [pickedLabel, setPickedLabel] = useState<string | null>(null);
+
   const grams = Number(gramsText);
+  // one size lit up even when two weigh the same (USDA's cup of banana powder is 100 g)
+  const pressed =
+    options.find((p) => p.label === pickedLabel && p.grams === grams) ??
+    options.find((p) => p.grams === grams);
   const valid = Number.isFinite(grams) && grams > 0 && grams <= 5000;
   const preview = valid ? nutritionFor(food, grams) : null;
 
@@ -36,8 +42,11 @@ export function PortionSheet({ food, defaultGrams, defaultMeal, onLog, onClose }
             key={p.label}
             type="button"
             className="chip"
-            aria-pressed={grams === p.grams}
-            onClick={() => setGramsText(String(p.grams))}
+            aria-pressed={p === pressed}
+            onClick={() => {
+              setGramsText(String(p.grams));
+              setPickedLabel(p.label);
+            }}
           >
             {p.label}
           </button>

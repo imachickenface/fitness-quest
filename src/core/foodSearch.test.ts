@@ -66,6 +66,24 @@ describe('searchFoods', () => {
     expect(r.slice(2).sort()).toEqual(['eggnog', 'eggplant']);
   });
 
+  it('counts a singular or plural as a whole word, so the plain food comes first', () => {
+    const fruit = buildIndex([
+      food('powder', 'Bananas, dehydrated, or banana powder'),
+      food('melon', 'Melon, banana (Navajo)'),
+      food('chips', 'Snacks, banana chips'),
+      food('raw', 'Bananas, raw'),
+      food('tomato', 'Tomatoes, red, ripe, raw'),
+      food('scrambled', 'Eggs, scrambled, frozen mixture'),
+      food('egg', 'Egg, whole, raw, fresh'),
+    ]);
+    expect(searchFoods(fruit, 'banana')[0]!.id).toBe('raw');
+    expect(searchFoods(fruit, 'bananas')[0]!.id).toBe('raw');
+    expect(searchFoods(fruit, 'bananas').map((f) => f.id)).toContain('melon');
+    expect(searchFoods(fruit, 'tomato')[0]!.id).toBe('tomato');
+    expect(searchFoods(index, 'eggs').map((f) => f.id)).toEqual(['egg-raw', 'egg-boiled']);
+    expect(searchFoods(fruit, 'eggs')[0]!.id).toBe('egg');
+  });
+
   it('breaks ties by fewer words, then name, then id', () => {
     // both egg entries have 4 words after normalising: "egg whole raw fresh" / "egg whole cooked hard boiled" (5)
     expect(ids(searchFoods(index, 'egg')).slice(0, 2)).toEqual(['egg-raw', 'egg-boiled']);

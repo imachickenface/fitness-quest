@@ -45,6 +45,12 @@ for (const colorScheme of ['light', 'dark'] as const) {
         .getByLabel('Bench press: how hard was it?')
         .selectOption({ label: 'RPE 6-7 · RIR 3-4 · Challenging' });
       await scan(page, 'the workout form');
+      await page.getByRole('button', { name: 'Show the chart' }).click();
+      await scan(page, 'the effort chart');
+      await page
+        .getByRole('dialog', { name: 'Effort chart' })
+        .getByRole('button', { name: 'Close' })
+        .click();
       await page.getByRole('button', { name: 'Save workout' }).click();
       await page.getByRole('button', { name: 'Change' }).click();
       await scan(page, "the split's day picker");

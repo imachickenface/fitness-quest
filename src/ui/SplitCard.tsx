@@ -65,8 +65,13 @@ export function SplitCard({
         {template.length > 0 && ` · aim for ${aim}`}
       </p>
       <div className="next-actions">
-        <button type="button" className="btn btn-primary" onClick={onStart}>
-          Start {day.title.toLowerCase()}
+        <button
+          type="button"
+          className="btn btn-primary"
+          aria-label={`Start ${day.title.toLowerCase()}`}
+          onClick={onStart}
+        >
+          Start
         </button>
         <button type="button" className="btn" onClick={() => setPicking(true)}>
           Change

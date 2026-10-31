@@ -64,6 +64,23 @@ up. **Fix:** highlight only the first matching size.
 *Task 3.* "Start shoulders & arms" beside "Change" breaks into three short lines at 360 px. **Fix:** "Start" (the
 day's name is the heading right above it), keeping the full name for screen readers.
 
+## Fixed (2026-10-31)
+
+All six findings are fixed and covered by tests:
+
+1. **Search.** A singular or plural counts as a whole word, and a short list of everyday foods
+   (`src/core/everyday.ts`, 44 searches) puts the plain form first. The probe that found more cases: "eggs"
+   gave dried egg, "rice" rice crackers, "milk" dried buttermilk, "potato" potato flour. Now "banana", "eggs",
+   "rice", "milk", "potatoes", "oatmeal" and "chicken breast" each give the everyday food first (unit tests
+   against the real food list, and a browser test).
+2. **RIR and RPE.** The workout form says what each means in one line, with "Show the chart" opening the
+   owner's chart as a table (RPE, RIR, what it feels like). The table is in the accessibility scan.
+3. **Default goal.** New players start at "Stay where I am" (maintenance).
+4. **Portion sizes.** Only one size lights up: the one tapped, else the first that matches.
+5. **Calories burned.** No total is shown until a workout is logged.
+6. **Start button.** It reads "Start"; screen readers still hear "Start chest & back". The program card does
+   the same.
+
 ## What works well
 
 - Every log ends in a short message with **Undo** (user control, H3), and a rank-up is called out right away.

@@ -96,9 +96,10 @@ export function ProgramCard({ program, workouts, today, aim, onStart, onMove, on
               <button
                 type="button"
                 className="btn btn-primary"
+                aria-label={`Start ${next.session.title.replace(' (deload)', '').toLowerCase()}`}
                 onClick={() => onStart(next.session)}
               >
-                Start {next.session.title.replace(' (deload)', '').toLowerCase()}
+                Start
               </button>
               {canChange && (
                 <button type="button" className="btn" onClick={() => setPicking(today)}>

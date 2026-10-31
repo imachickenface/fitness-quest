@@ -144,3 +144,17 @@ test("a meal's own Add food button logs into that meal", async ({ page }) => {
   await page.getByRole('button', { name: 'Log it' }).click();
   await expect(page.getByRole('region', { name: 'Dinner' }).locator('.entry')).toHaveCount(1);
 });
+
+test('searching a plain food puts the plain food first', async ({ page }) => {
+  await setUpProfile(page);
+  await page.getByRole('button', { name: 'Search food' }).click();
+  const box = page.getByRole('searchbox', { name: 'Search foods' });
+  const results = page
+    .getByRole('dialog', { name: 'Find food' })
+    .getByRole('button')
+    .filter({ hasText: /kcal\/100/ });
+  await box.fill('banana');
+  await expect(results.first()).toHaveText(/^Bananas, raw/);
+  await box.fill('eggs');
+  await expect(results.first()).toHaveText(/^Egg, whole, raw, fresh/);
+});

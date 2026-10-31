@@ -17,6 +17,11 @@ test('an effort from the chart sets the next weight, and today shows what it bur
   await setUp(page, '2026-11-02');
   await page.getByRole('button', { name: 'Start chest & back' }).click();
   await expect(page.getByText(/^Aim for RPE 8\.5 · RIR 1-2/)).toBeVisible();
+  await page.getByRole('button', { name: 'Show the chart' }).click();
+  const chart = page.getByRole('dialog', { name: 'Effort chart' });
+  await expect(chart.getByRole('row')).toHaveCount(15);
+  await expect(chart.getByRole('row', { name: /8 2 Hard effort/ })).toBeVisible();
+  await chart.getByRole('button', { name: 'Close' }).click();
   await page.getByLabel('Bench press set 1 reps').fill('5');
   await page.getByLabel('Bench press set 1 kg').fill('100');
   await page

@@ -59,7 +59,8 @@ export function ProfileForm({
     initial?.style ?? 'bodybuilding',
   );
   const [activity, setActivity] = useState<ActivityLevel>(initial?.activity ?? 'light');
-  const [goal, setGoal] = useState<Goal>(initial?.goal ?? 'lose_weight');
+  // a new player starts at maintenance: a deficit should be a choice, not a default
+  const [goal, setGoal] = useState<Goal>(initial?.goal ?? 'maintain');
   const [error, setError] = useState<string | null>(null);
   const [kcalT, setKcalT] = useState(asText(initial?.kcalTargetOverride));
   const [proteinT, setProteinT] = useState(asText(initial?.macroTargets?.proteinG));
