@@ -1116,6 +1116,10 @@ p {
   background: var(--green);
 }
 
+.quest.done .quest-bar .quest-label {
+  color: #ffffff;
+}
+
 .quest-bar .quest-label {
   position: absolute;
   inset: 0;
@@ -2488,7 +2492,7 @@ button.week-day.done {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--faint);
+  color: var(--muted);
 }
 .week-state.done {
   color: var(--green-ink);

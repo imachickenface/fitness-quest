@@ -1,21 +1,38 @@
 import { overallRank, TIER_FLOORS, TIERS, type ExerciseRank, type Tier } from '../core/ranks.ts';
 import { load, type Units } from './format.ts';
 
+/** Each tier's colour; the three darkest are deepened so white text on them meets WCAG AA (4.5:1). */
 const TIER_COLOURS: Record<Tier, string> = {
-  Wood: '#a0754b',
+  Wood: '#8f6840',
   Bronze: '#cd7f32',
   Silver: '#9aa6b2',
   Gold: '#e0a800',
   Platinum: '#3fb6b2',
   Diamond: '#3d9df5',
-  Champion: '#9b5cf5',
-  Titan: '#e5484d',
+  Champion: '#8b4ff0',
+  Titan: '#d6383e',
   Olympian: '#ff9600',
+};
+
+/** Badge text: dark on the light tiers, white on the dark ones, whichever passes 4.5:1. */
+const TIER_INK: Record<Tier, string> = {
+  Wood: '#ffffff',
+  Bronze: '#1f1f1f',
+  Silver: '#1f1f1f',
+  Gold: '#1f1f1f',
+  Platinum: '#1f1f1f',
+  Diamond: '#1f1f1f',
+  Champion: '#ffffff',
+  Titan: '#ffffff',
+  Olympian: '#1f1f1f',
 };
 
 export function TierBadge({ tier, size = 'small' }: { tier: Tier; size?: 'small' | 'big' }) {
   return (
-    <span className={`tier-badge tier-${size}`} style={{ background: TIER_COLOURS[tier] }}>
+    <span
+      className={`tier-badge tier-${size}`}
+      style={{ background: TIER_COLOURS[tier], color: TIER_INK[tier] }}
+    >
       {tier}
     </span>
   );
