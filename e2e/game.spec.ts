@@ -64,6 +64,7 @@ test('log a run with a pace', async ({ page }) => {
 test('logging food completes a daily quest; its XP waits for the Claim button', async ({
   page,
 }) => {
+  test.setTimeout(90_000); // two claims and a reload of the 3D Quests screen; CI renders it in software
   await setUpProfile(page);
   await page.getByRole('button', { name: /^Quests/ }).click();
   await expect(page.getByText('Level', { exact: true })).toBeVisible();
@@ -106,6 +107,7 @@ test('logging food completes a daily quest; its XP waits for the Claim button', 
 });
 
 test('with reduced motion, a claim lands at once and the banner just appears', async ({ page }) => {
+  test.setTimeout(90_000); // two banners shown in full, one after the other
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await setUpProfile(page);
   // the weigh-in from the profile finished "Step on the scale"; its banner goes away by itself
