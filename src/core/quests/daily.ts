@@ -121,6 +121,11 @@ function moveOptions(records: Records, goal: Goal, from: string, to: string): Mo
   return options;
 }
 
+/** The meals quest's title; every food entry counts, snacks included. */
+export function mealsTitle(count: number): string {
+  return `Log ${count} meals or snacks`;
+}
+
 /** The quests for one day, in meals / calories / move order. */
 export function dailyQuests(input: QuestInput): Quest[] {
   const { date, records, goal, target, now } = input;
@@ -138,7 +143,7 @@ export function dailyQuests(input: QuestInput): Quest[] {
       id: `daily-${date}-meals`,
       ...shared,
       condition: { type: 'log_meals', count: mealCount },
-      title: `Log ${mealCount} meals`,
+      title: mealsTitle(mealCount),
       xp: 20,
     },
   ];

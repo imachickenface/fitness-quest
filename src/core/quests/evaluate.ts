@@ -72,7 +72,7 @@ function counted(n: number, target: number, unit: string): Outcome {
 
 /** Attach the outcome to the quest it belongs to. */
 const SINGULAR: Record<string, string> = {
-  meals: 'meal',
+  'meals or snacks': 'meal or snack',
   'days on target': 'day on target',
   workouts: 'workout',
   'weigh-ins': 'weigh-in',
@@ -129,7 +129,7 @@ function logMeals(
 ): Outcome {
   const inside = byLoggedAt(entriesIn(entries, window));
   const reached = inside.length >= c.count ? inside[c.count - 1]?.date : undefined;
-  const progress = counted(inside.length, c.count, 'meals');
+  const progress = counted(inside.length, c.count, 'meals or snacks');
   return { ...progress, ...(reached !== undefined ? { completedOn: reached } : {}) };
 }
 

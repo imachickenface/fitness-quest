@@ -4,7 +4,7 @@ import type { GameState, Profile, Program, Quest, QuestProgress } from '../contr
 import { localDate } from '../core/diary.ts';
 import { bodyShape } from '../core/body.ts';
 import { gameState } from '../core/game.ts';
-import { dailyQuests, weekStart, weeklyQuest } from '../core/quests/daily.ts';
+import { dailyQuests, mealsTitle, weekStart, weeklyQuest } from '../core/quests/daily.ts';
 import { addDays } from '../core/dates.ts';
 import { sessionOn } from '../core/program/generate.ts';
 import { bossQuests } from '../core/quests/fromHistory.ts';
@@ -114,7 +114,10 @@ export function useGame(profile: Profile): Game | undefined {
 
   return useMemo(() => {
     if (!records || !quests) return undefined;
-    const views = quests.map((quest) => ({ quest, progress: questProgress(quest, records) }));
+    const views = quests.map((stored) => {
+      const quest = reworded(stored);
+      return { quest, progress: questProgress(quest, records) };
+    });
     const order = { daily: 0, weekly: 1, boss: 2, story: 3 } as const;
     const active = views
       .filter((v) => v.quest.window.start <= today && today <= v.quest.window.end)
@@ -134,6 +137,12 @@ export function useGame(profile: Profile): Game | undefined {
     });
     return { today, state, active, body, records, views, program: program ?? undefined };
   }, [records, quests, today, profile, program]);
+}
+
+/** Meals quests stored before snacks were named in the title ("Log 3 meals") read like today's. */
+function reworded(quest: Quest): Quest {
+  if (quest.condition.type !== 'log_meals' || !/^Log \d+ meals$/.test(quest.title)) return quest;
+  return { ...quest, title: mealsTitle(quest.condition.count) };
 }
 
 /** Whole weeks between the week of the first workout and this week (0 in the first week). */

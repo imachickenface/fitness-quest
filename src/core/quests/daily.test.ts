@@ -73,6 +73,7 @@ describe('dailyQuests', () => {
 
   it('meals: 2 with no history, else the median meals per logged day, kept within 2..4', () => {
     expect(byId(dailyQuests(base), 'meals')?.condition).toEqual({ type: 'log_meals', count: 2 });
+    expect(byId(dailyQuests(base), 'meals')?.title).toBe('Log 2 meals or snacks');
 
     const three = Array.from({ length: 5 }, (_, d) =>
       Array.from({ length: 3 }, (_, i) => food(`f${d}-${i}`, addDays('2026-10-26', -1 - d))),

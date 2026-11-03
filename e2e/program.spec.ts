@@ -41,7 +41,7 @@ test("a lifting program plans the week and today's session is a quest", async ({
   await expect(week.getByLabel('Today: Chest & back, done')).toBeVisible();
 
   await page.getByRole('button', { name: /^Quests/ }).click();
-  await expect(quest).toHaveAccessibleName(/complete$/);
+  await expect(quest).toHaveAccessibleName(/: complete, 60 XP to claim$/);
 });
 
 test('a running program shows the plan when logging the run', async ({ page }) => {

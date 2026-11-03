@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { FoodEntry, Quest, QuestProgress, Workout } from '../contract.ts';
 import * as fx from '../test/fixtures.ts';
 import { addDays } from './dates.ts';
-import { gameState, levelFor, recordXp, streak, XP } from './game.ts';
+import { claimable, gameState, isClaimed, levelFor, recordXp, streak, XP } from './game.ts';
 import type { Records } from './records.ts';
 
 const food = (id: string, date: string): FoodEntry => ({
@@ -128,14 +128,14 @@ describe('streak', () => {
 });
 
 describe('gameState', () => {
-  it('adds quest XP for completed quests and reports level, streak and map node', () => {
+  it('adds quest XP for completed, claimed quests and reports level, streak and map node', () => {
     const r: Records = {
       ...none,
       foodEntries: [food('a', '2026-10-25'), food('b', '2026-10-26')],
       workouts: [workout('w', '2026-10-26')],
     };
     const done = (id: string, xp: number): { quest: Quest; progress: QuestProgress } => ({
-      quest: { ...fx.dailyQuest, id, xp },
+      quest: { ...fx.dailyQuest, id, xp, claimedAt: '2026-10-26T20:00:00Z' },
       progress: {
         questId: id,
         fraction: 1,
@@ -159,6 +159,57 @@ describe('gameState', () => {
       completedQuestIds: ['q1', 'q2'],
       mapNode: 2,
     });
+  });
+
+  it('holds back the XP of a completed quest until it is claimed', () => {
+    const today = '2026-10-26';
+    const finished = (over: Partial<Quest>): { quest: Quest; progress: QuestProgress } => ({
+      quest: { ...fx.dailyQuest, xp: 30, ...over },
+      progress: {
+        questId: fx.dailyQuest.id,
+        fraction: 1,
+        label: 'done',
+        complete: true,
+        completedOn: today,
+      },
+    });
+    const waiting = finished({});
+    const claimed = finished({ claimedAt: '2026-10-26T20:00:00Z' });
+
+    const before = gameState(none, [waiting], today);
+    expect(before.xp).toBe(0);
+    // completion still moves the hero along the map; only the XP waits
+    expect(before.completedQuestIds).toEqual([fx.dailyQuest.id]);
+    expect(before.mapNode).toBe(1);
+    expect(claimable([waiting], today)).toEqual([waiting]);
+
+    expect(gameState(none, [claimed], today).xp).toBe(30);
+    expect(claimable([claimed], today)).toEqual([]);
+  });
+
+  it('claims a quest by itself once its window has ended', () => {
+    const q: Quest = { ...fx.dailyQuest, window: { start: '2026-10-26', end: '2026-10-26' } };
+    expect(isClaimed(q, '2026-10-26')).toBe(false);
+    expect(isClaimed(q, '2026-10-27')).toBe(true);
+    expect(isClaimed({ ...q, claimedAt: '2026-10-26T20:00:00Z' }, '2026-10-26')).toBe(true);
+    // a weekly quest stays claimable until its last day is over
+    expect(isClaimed(fx.bossQuest, '2026-11-08')).toBe(false);
+    expect(isClaimed(fx.bossQuest, '2026-11-09')).toBe(true);
+
+    const finished = {
+      quest: { ...q, xp: 30 },
+      progress: { questId: q.id, fraction: 1, label: 'done', complete: true },
+    };
+    expect(gameState(none, [finished], '2026-10-27').xp).toBe(30);
+  });
+
+  it('never counts the XP of an incomplete quest, claimed or not', () => {
+    const half = {
+      quest: { ...fx.dailyQuest, xp: 30, claimedAt: '2026-10-26T20:00:00Z' },
+      progress: { questId: fx.dailyQuest.id, fraction: 0.5, label: 'half', complete: false },
+    };
+    expect(gameState(none, [half], '2026-10-27').xp).toBe(0);
+    expect(claimable([half], '2026-10-26')).toEqual([]);
   });
 
   it('a weigh-in alone keeps the streak alive', () => {

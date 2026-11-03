@@ -148,16 +148,34 @@ function activeDaysFor(records: Records, today: string): Set<string> {
   return days;
 }
 
-/** The whole game state: records XP plus completed quest XP, level, streak and the overworld node. */
+/**
+ * Whether a quest's XP has been collected: the player tapped Claim, or the quest's window has ended (a quest
+ * left unclaimed on an earlier day is claimed for the player, so no XP is ever lost).
+ */
+export function isClaimed(quest: Quest, today: string): boolean {
+  return quest.claimedAt !== undefined || quest.window.end < today;
+}
+
+/** Completed quests whose XP is still waiting for a tap on Claim. */
+export function claimable(
+  quests: Array<{ quest: Quest; progress: QuestProgress }>,
+  today: string,
+): Array<{ quest: Quest; progress: QuestProgress }> {
+  return quests.filter(({ quest, progress }) => progress.complete && !isClaimed(quest, today));
+}
+
+/** The whole game state: records XP plus claimed quest XP, level, streak and the overworld node. */
 export function gameState(
   records: Records,
   quests: Array<{ quest: Quest; progress: QuestProgress }>,
   today: string,
 ): GameState {
-  // Completed quests, in input order: their ids feed the map node and their XP feeds the total.
+  // Completed quests, in input order: their ids feed the map node; only claimed ones add their XP.
   const completed = quests.filter(({ progress }) => progress.complete);
   const completedQuestIds = completed.map(({ quest }) => quest.id);
-  const questXp = completed.reduce((sum, { quest }) => sum + quest.xp, 0);
+  const questXp = completed
+    .filter(({ quest }) => isClaimed(quest, today))
+    .reduce((sum, { quest }) => sum + quest.xp, 0);
 
   const xp = recordXp(records, today) + questXp;
   const { level, xpIntoLevel, xpForLevel } = levelFor(xp);

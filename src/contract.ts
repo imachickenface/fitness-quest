@@ -451,7 +451,7 @@ export type Program = z.infer<typeof Program>;
 
 /** What a quest asks for; progress is evaluated from records inside the quest's window. */
 export const QuestCondition = z.discriminatedUnion('type', [
-  /** log at least `count` food entries */
+  /** log at least `count` food entries, in any slot: breakfast, lunch, dinner or snacks */
   z.object({ type: z.literal('log_meals'), count: z.number().int().min(1) }),
   /** on at least `days` days, total kcal falls inside [minKcal, maxKcal] */
   z.object({
@@ -510,6 +510,8 @@ export const Quest = z
     /** inclusive local-date window in which records count */
     window: z.object({ start: LocalDate, end: LocalDate }),
     createdAt: Timestamp,
+    /** when the player tapped Claim; a completed quest's XP counts once claimed or once its window has ended */
+    claimedAt: Timestamp.optional(),
   })
   .refine((q) => q.window.start <= q.window.end, { message: 'window ends before it starts' });
 export type Quest = z.infer<typeof Quest>;

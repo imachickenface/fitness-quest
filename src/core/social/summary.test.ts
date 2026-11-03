@@ -132,6 +132,23 @@ describe('publicSummary', () => {
     expect(recordXp(r, TODAY)).toBeGreaterThan(0);
   });
 
+  it('publishes only claimed quest XP', () => {
+    // a quest still running today: its XP waits for the Claim button
+    const running = (id: string, claimedAt?: string): Quest => ({
+      ...quest(id, 30),
+      window: { start: TODAY, end: TODAY },
+      ...(claimedAt ? { claimedAt } : {}),
+    });
+    const waiting = publicSummary(input({ quests: [done(running('q1'), TODAY)] }));
+    expect(waiting.xp).toBe(0);
+    expect(waiting.weekXp).toBe(0);
+    expect(waiting.questsDone).toBe(1);
+
+    const claimed = publicSummary(input({ quests: [done(running('q1', NOW), TODAY)] }));
+    expect(claimed.xp).toBe(30);
+    expect(claimed.weekXp).toBe(30);
+  });
+
   it("doesn't count workouts after today", () => {
     const r: Records = {
       ...none,

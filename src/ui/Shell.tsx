@@ -10,6 +10,7 @@ import {
   usePublishActivity,
   usePublishProgress,
 } from './social/useMySummary.ts';
+import { QuestBanner, type Finished } from './QuestBanner.tsx';
 import { Toast, type ToastMessage } from './Toast.tsx';
 import { Today } from './Today.tsx';
 import { Train } from './Train.tsx';
@@ -55,18 +56,30 @@ export function Shell({ profile }: { profile: Profile }) {
   // Celebrate quests completed and levels reached while the app is open (not ones from before).
   const seen = useRef<{ done: Set<string>; level: number } | null>(null);
   const [cheer, setCheer] = useState<{ n: number; clip: Cheer } | undefined>(undefined);
+  const [finished, setFinished] = useState<Finished[]>([]);
+  const nextBanner = useCallback(() => setFinished((queue) => queue.slice(1)), []);
   useEffect(() => {
     if (!game) return;
     const done = new Set(game.state.completedQuestIds);
     const before = seen.current;
     seen.current = { done, level: game.state.level };
     if (!before) return;
+    // each newly finished quest gets the banner in turn; the hero walks on and cheers
     const fresh = game.active.filter((v) => v.progress.complete && !before.done.has(v.quest.id));
+    if (fresh.length > 0) {
+      setFinished((queue) => [
+        ...queue,
+        ...fresh.map((v, i) => ({
+          key: Date.now() + i,
+          title: v.quest.title,
+          xp: v.quest.xp,
+        })),
+      ]);
+    }
+    // the level only rises when XP is claimed, on the Quests tab
     if (game.state.level > before.level) {
       say(`Level up! You reached level ${game.state.level}`);
       setCheer((c) => ({ n: (c?.n ?? 0) + 1, clip: 'jump' }));
-    } else if (fresh[0]) {
-      say(`Quest complete: ${fresh[0].quest.title} +${fresh[0].quest.xp} XP`); // the hero walks on and cheers
     }
   }, [game, say]);
 
@@ -101,7 +114,10 @@ export function Shell({ profile }: { profile: Profile }) {
           </button>
         ))}
       </nav>
-      <Toast toast={toast} onDone={clearToast} className="toast-top" />
+      <div className="top-stack">
+        <QuestBanner item={finished[0]} onDone={nextBanner} onOpen={() => setTab('quests')} />
+        <Toast toast={toast} onDone={clearToast} className="toast-top toast-stacked" />
+      </div>
     </>
   );
 }

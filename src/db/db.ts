@@ -219,6 +219,15 @@ export async function addQuestsIfMissing(db: FitnessDb, quests: readonly Quest[]
   });
 }
 
+/** Collect a completed quest's XP. The first claim stands, so a second tap (or another phone) changes nothing. */
+export async function claimQuest(db: FitnessDb, id: string, at: string): Promise<void> {
+  await db.transaction('rw', db.quests, async () => {
+    const quest = await db.quests.get(id);
+    if (quest === undefined || quest.claimedAt !== undefined) return;
+    await db.quests.put(Quest.parse({ ...quest, claimedAt: at }));
+  });
+}
+
 export async function listQuests(db: FitnessDb): Promise<Quest[]> {
   return await db.quests.toArray();
 }

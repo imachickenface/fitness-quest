@@ -382,6 +382,23 @@ the workout record, which already syncs).
   is logged.
 - *Calorie estimates are rough:* labelled "about" and kept out of the food target.
 
+### Quest rewards: claim and the quest-complete banner (owner's request, 2026-11-03)
+
+- The meals quest reads "Log N meals or snacks"; every food entry counts, snacks included.
+- A finished quest's XP waits for its **Claim** button. Tapping it flies "+N XP" into the level bar, which
+  then fills (to the end, then again under the new level on a level-up). The claim is stored as
+  `claimedAt` on the quest record. XP left unclaimed is added once the quest's window ends. Friends see
+  claimed XP only.
+- A banner at the top of the screen when a quest is finished anywhere in the app: the quest's name, a bar
+  that fills up and a chest with a tick. It fades after 4.5 s; a tap opens Quests.
+
+| # | Task | Owner | Done when | Needs |
+|---|---|---|---|---|
+| 10.1 | Meals wording; `isClaimed` / `claimable` in `core/game.ts`; claimed-only XP in the summary; `claimQuest` | C | unit tests | - |
+| 10.2 | Claim button, flying XP, animated level bar, quest-complete banner | C | e2e: claim, reload, reduced motion; a11y light + dark | 10.1 |
+
+**Usage:** all Claude: each logic change is a few lines, smaller than a Qwen brief and its tests.
+
 ## Split and usage estimate
 
 - **Qwen:** 17 tasks, all pure `src/core/` modules or scripts with Claude's tests. 16 of them can run overnight.

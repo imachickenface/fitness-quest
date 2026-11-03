@@ -16,7 +16,7 @@ import {
   type QuestProgress,
   type Workout,
 } from '../../contract.ts';
-import { gameState, recordXp } from '../game.ts';
+import { gameState, isClaimed, recordXp } from '../game.ts';
 import { TIERS, type ExerciseRank, exerciseRanks, overallRank } from '../ranks.ts';
 import type { Records } from '../records.ts';
 import { weekStart } from '../quests/daily.ts';
@@ -65,7 +65,10 @@ export function weekXp(records: Records, today: string): number {
   );
 }
 
-/** XP from quests finished inside the current week; a completed quest with no date is not this week's. */
+/**
+ * XP from quests finished inside the current week and claimed; a completed quest with no date is not this
+ * week's, and XP still waiting on the Claim button is not shown to friends yet.
+ */
 function weekQuestXp(
   quests: Array<{ quest: Quest; progress: QuestProgress }>,
   week: string,
@@ -76,6 +79,7 @@ function weekQuestXp(
     const completedOn = progress.completedOn;
     if (
       progress.complete &&
+      isClaimed(quest, today) &&
       completedOn !== undefined &&
       week <= completedOn &&
       completedOn <= today

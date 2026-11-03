@@ -86,7 +86,10 @@ describe('log_meals', () => {
   it('counts entries and completes on the day the count is reached', () => {
     const q = quest({ type: 'log_meals', count: 3 });
     const two = recs({ foodEntries: [food('a', '2026-10-26', 1), food('b', '2026-10-27', 1)] });
-    expect(questProgress(q, two)).toMatchObject({ fraction: 2 / 3, label: '2 / 3 meals' });
+    expect(questProgress(q, two)).toMatchObject({
+      fraction: 2 / 3,
+      label: '2 / 3 meals or snacks',
+    });
     const four = recs({
       foodEntries: [
         food('d', '2026-10-29', 1),
@@ -98,10 +101,39 @@ describe('log_meals', () => {
     expect(questProgress(q, four)).toEqual({
       questId: 'q',
       fraction: 1,
-      label: '3 / 3 meals',
+      label: '3 / 3 meals or snacks',
       complete: true,
       completedOn: '2026-10-28',
     });
+  });
+});
+
+describe('log_meals slots', () => {
+  it('counts snacks as well as breakfast, lunch and dinner', () => {
+    const q = quest({ type: 'log_meals', count: 4 });
+    const slots = (['breakfast', 'lunch', 'dinner', 'snack'] as const).map((meal, i) => ({
+      ...food(`m${i}`, '2026-10-26', 100),
+      meal,
+    }));
+    expect(questProgress(q, recs({ foodEntries: slots.slice(0, 3) }))).toMatchObject({
+      complete: false,
+      label: '3 / 4 meals or snacks',
+    });
+    expect(questProgress(q, recs({ foodEntries: slots }))).toMatchObject({
+      complete: true,
+      label: '4 / 4 meals or snacks',
+    });
+    // two snacks are two entries
+    const snacks = [slots[3]!, { ...slots[3]!, id: 'm4' }];
+    expect(
+      questProgress(quest({ type: 'log_meals', count: 2 }), recs({ foodEntries: snacks })),
+    ).toMatchObject({ complete: true });
+  });
+
+  it('reads "meal or snack" for a target of 1', () => {
+    expect(questProgress(quest({ type: 'log_meals', count: 1 }), none).label).toBe(
+      '0 / 1 meal or snack',
+    );
   });
 });
 

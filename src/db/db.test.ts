@@ -6,6 +6,7 @@ import {
   addFoodEntries,
   addFoodEntry,
   addQuestsIfMissing,
+  claimQuest,
   deleteFoodEntry,
   deleteSavedMeal,
   deleteWorkout,
@@ -222,6 +223,17 @@ describe('quests', () => {
     const stored = await listQuests(db);
     expect(stored).toHaveLength(2);
     expect(stored.find((q) => q.id === fx.dailyQuest.id)?.xp).toBe(30);
+  });
+
+  it('claims a quest once and keeps the claim when the quests are added again', async () => {
+    await addQuestsIfMissing(db, [fx.dailyQuest]);
+    await claimQuest(db, fx.dailyQuest.id, '2026-10-26T20:00:00+00:00');
+    await claimQuest(db, fx.dailyQuest.id, '2026-10-26T21:00:00+00:00');
+    await claimQuest(db, 'no-such-quest', '2026-10-26T21:00:00+00:00');
+    await addQuestsIfMissing(db, [fx.dailyQuest]);
+    const stored = await listQuests(db);
+    expect(stored).toHaveLength(1);
+    expect(stored[0]?.claimedAt).toBe('2026-10-26T20:00:00+00:00');
   });
 });
 
