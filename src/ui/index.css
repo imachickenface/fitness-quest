@@ -1,5 +1,6 @@
 @import '@fontsource-variable/nunito';
 @import '@fontsource-variable/pixelify-sans';
+@import '@fontsource-variable/fredoka';
 
 /*
  * Bright and chunky (Duolingo) for the feel, MyFitnessPal's diary structure for food.
@@ -38,6 +39,8 @@
 
   --sans: 'Nunito Variable', system-ui, sans-serif;
   --pixel: 'Pixelify Sans Variable', var(--sans);
+  /* the level: badge, "Level N" and the flying XP */
+  --display: 'Fredoka Variable', var(--sans);
   --r: 16px;
   --r-sm: 12px;
 
@@ -1139,10 +1142,84 @@ p {
 /* ---------- quests: the Duolingo board ---------- */
 
 .hero-card {
+  /* tier 0, levels 1-9: gold; every 10 levels the badge and the bar change colour */
+  --tier: var(--gold);
+  --tier-edge: var(--gold-edge);
+  --tier-ink: #5c3d00;
+  --tier-shine: rgb(255 255 255 / 40%);
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 4px 16px;
   align-items: center;
+}
+
+/* levels 10-19: ember */
+.hero-card[data-tier='1'] {
+  --tier: #ff8a00;
+  --tier-edge: #cc6a00;
+  --tier-ink: #4a2200;
+}
+
+/* 20-29: ruby */
+.hero-card[data-tier='2'] {
+  --tier: #d93030;
+  --tier-edge: #a82222;
+  --tier-ink: #ffffff;
+  --tier-shine: rgb(0 0 0 / 20%);
+}
+
+/* 30-39: rose */
+.hero-card[data-tier='3'] {
+  --tier: #c2307f;
+  --tier-edge: #8f1f5c;
+  --tier-ink: #ffffff;
+  --tier-shine: rgb(0 0 0 / 20%);
+}
+
+/* 40-49: amethyst */
+.hero-card[data-tier='4'] {
+  --tier: #7e45c2;
+  --tier-edge: #5c2f93;
+  --tier-ink: #ffffff;
+  --tier-shine: rgb(0 0 0 / 20%);
+}
+
+/* 50-59: sapphire */
+.hero-card[data-tier='5'] {
+  --tier: #0a68c4;
+  --tier-edge: #084f96;
+  --tier-ink: #ffffff;
+  --tier-shine: rgb(0 0 0 / 20%);
+}
+
+/* 60-69: teal */
+.hero-card[data-tier='6'] {
+  --tier: #0b7f72;
+  --tier-edge: #075a51;
+  --tier-ink: #ffffff;
+  --tier-shine: rgb(0 0 0 / 20%);
+}
+
+/* 70-79: emerald */
+.hero-card[data-tier='7'] {
+  --tier: #2f8411;
+  --tier-edge: #225f0b;
+  --tier-ink: #ffffff;
+  --tier-shine: rgb(0 0 0 / 20%);
+}
+
+/* 80-89: platinum */
+.hero-card[data-tier='8'] {
+  --tier: #b9c4cd;
+  --tier-edge: #8a98a5;
+  --tier-ink: #26313a;
+}
+
+/* 90 and up: diamond, an ice-to-violet shimmer */
+.hero-card[data-tier='9'] {
+  --tier: linear-gradient(135deg, #7dd3fc, #c4b5fd 55%, #f9a8d4);
+  --tier-edge: #8b7fd6;
+  --tier-ink: #1e1b4b;
 }
 
 .level-badge {
@@ -1152,16 +1229,20 @@ p {
   width: 72px;
   height: 72px;
   border-radius: 20px;
-  background: var(--gold);
-  box-shadow: inset 0 -6px 0 var(--gold-edge);
-  color: #5c3d00;
-  font-size: 2.2rem;
-  text-shadow: 0 2px 0 rgb(255 255 255 / 40%);
+  background: var(--tier);
+  box-shadow: inset 0 -6px 0 var(--tier-edge);
+  color: var(--tier-ink);
+  font: 700 2.4rem/1 var(--display);
+  text-shadow: 0 2px 0 var(--tier-shine);
+}
+
+/* three digits still fit the badge */
+.level-badge.long {
+  font-size: 1.8rem;
 }
 
 .hero-level {
-  font-weight: 800;
-  font-size: 1.15rem;
+  font: 600 1.3rem/1.2 var(--display);
 }
 
 .hero-xp {
@@ -1170,7 +1251,7 @@ p {
 }
 
 .xp-bar .bar-fill {
-  background: var(--gold);
+  background: var(--tier);
 }
 
 .xp-bar .bar-fill {
@@ -1181,9 +1262,9 @@ p {
   transition: none;
 }
 
-/* while claimed XP pours in, the bar glows */
+/* while claimed XP pours in, the bar glows in its tier's colour */
 .xp-bar.filling {
-  box-shadow: 0 0 0 3px rgb(255 200 0 / 45%);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--tier-edge) 45%, transparent);
   transition: box-shadow 0.2s;
 }
 
@@ -1206,10 +1287,10 @@ p {
   z-index: 20;
   padding: 6px 12px;
   border-radius: 999px;
-  background: var(--gold);
-  box-shadow: 0 3px 0 var(--gold-edge);
-  color: #5c3d00;
-  font-size: 1.05rem;
+  background: var(--tier, var(--gold));
+  box-shadow: 0 3px 0 var(--tier-edge, var(--gold-edge));
+  color: var(--tier-ink, #5c3d00);
+  font: 700 1.1rem/1.2 var(--display);
   white-space: nowrap;
   pointer-events: none;
 }

@@ -107,14 +107,11 @@ test('logging food completes a daily quest; its XP waits for the Claim button', 
 });
 
 test('with reduced motion, a claim lands at once and the banner just appears', async ({ page }) => {
-  test.setTimeout(90_000); // two banners shown in full, one after the other
+  test.setTimeout(60_000); // a banner shown in full
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await setUpProfile(page);
-  // the weigh-in from the profile finished "Step on the scale"; its banner goes away by itself
-  const first = page.getByRole('button', { name: /^Quest complete Step on the scale/ });
-  await expect(first).toBeVisible();
-  expect(await first.evaluate((el) => getComputedStyle(el).animationName)).toBe('none');
-  await expect(first).toHaveCount(0, { timeout: 8000 });
+  // "Step on the scale" arrived already finished by the profile's weigh-in: no banner for it
+  await expect(page.getByRole('button', { name: /^Quest complete/ })).toHaveCount(0);
   for (const kcal of ['400', '600']) {
     await page.getByRole('button', { name: '+ kcal' }).click();
     await page.getByLabel('Calories (kcal)').fill(kcal);
@@ -122,7 +119,10 @@ test('with reduced motion, a claim lands at once and the banner just appears', a
   }
   const banner = page.getByRole('button', { name: /^Quest complete Log 2 meals or snacks/ });
   await expect(banner).toBeVisible();
-  await expect(banner).toHaveCount(0, { timeout: 8000 });
+  expect(await banner.evaluate((el) => getComputedStyle(el).animationName)).toBe('none');
+  // it goes away by itself after 4.5 s (later here when software-rendered 3D in parallel tests holds
+  // up the page's timers)
+  await expect(banner).toHaveCount(0, { timeout: 15_000 });
 
   await page.getByRole('button', { name: /^Quests/ }).click();
   await expect(page.getByText('9 / 100 XP to level 2')).toBeVisible();

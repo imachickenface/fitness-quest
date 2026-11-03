@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState, type RefObject } from 'react';
 import type { GameState, HeroId, Profile, QuestCondition } from '../contract.ts';
-import { isClaimed } from '../core/game.ts';
+import { isClaimed, levelTier } from '../core/game.ts';
 import { claimQuest, saveProfile } from '../db/db.ts';
 import { flyXp, reducedMotion } from './claimFx.ts';
 import { useDb } from './dbContext.ts';
@@ -149,10 +149,15 @@ export function HeroCard({
           Customise
         </button>
       </section>
-      <section className="panel hero-card" aria-label="Level">
+      {/* the badge and the bar change colour every 10 levels (index.css, data-tier) */}
+      <section className="panel hero-card" aria-label="Level" data-tier={levelTier(shown.level)}>
         <span
           key={levelUps}
-          className={levelUps > 0 ? 'level-badge pixel level-up' : 'level-badge pixel'}
+          className={[
+            'level-badge',
+            levelUps > 0 ? 'level-up' : '',
+            shown.level >= 100 ? 'long' : '',
+          ].join(' ')}
           aria-hidden="true"
         >
           {shown.level}

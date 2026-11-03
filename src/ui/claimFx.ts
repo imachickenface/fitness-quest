@@ -20,9 +20,14 @@ export async function flyXp(from: HTMLElement, to: HTMLElement | null, xp: numbe
   const a = from.getBoundingClientRect();
   const b = to.getBoundingClientRect();
   const chip = document.createElement('div');
-  chip.className = 'xp-fly pixel';
+  chip.className = 'xp-fly';
   chip.setAttribute('aria-hidden', 'true');
   chip.textContent = `+${xp} XP`;
+  // the chip wears the bar's tier colours, which live on the level card
+  const tier = getComputedStyle(to);
+  for (const name of ['--tier', '--tier-edge', '--tier-ink']) {
+    chip.style.setProperty(name, tier.getPropertyValue(name));
+  }
   document.body.append(chip);
 
   const w = chip.offsetWidth;

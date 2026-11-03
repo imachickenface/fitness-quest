@@ -54,18 +54,19 @@ export function Shell({ profile }: { profile: Profile }) {
   }, []);
 
   // Celebrate quests completed and levels reached while the app is open (not ones from before).
-  const seen = useRef<{ done: Set<string>; level: number } | null>(null);
+  const seen = useRef<{ open: Set<string>; level: number } | null>(null);
   const [cheer, setCheer] = useState<{ n: number; clip: Cheer } | undefined>(undefined);
   const [finished, setFinished] = useState<Finished[]>([]);
   const nextBanner = useCallback(() => setFinished((queue) => queue.slice(1)), []);
   useEffect(() => {
     if (!game) return;
-    const done = new Set(game.state.completedQuestIds);
+    const unfinished = game.active.filter((v) => !v.progress.complete).map((v) => v.quest.id);
     const before = seen.current;
-    seen.current = { done, level: game.state.level };
+    seen.current = { open: new Set(unfinished), level: game.state.level };
     if (!before) return;
-    // each newly finished quest gets the banner in turn; the hero walks on and cheers
-    const fresh = game.active.filter((v) => v.progress.complete && !before.done.has(v.quest.id));
+    // each quest seen open that is now finished gets the banner in turn (one that arrives already
+    // finished, like "Step on the scale" after the first weigh-in, does not); the hero walks on and cheers
+    const fresh = game.active.filter((v) => v.progress.complete && before.open.has(v.quest.id));
     if (fresh.length > 0) {
       setFinished((queue) => [
         ...queue,

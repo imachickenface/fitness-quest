@@ -84,6 +84,17 @@ export function levelFor(xp: number): { level: number; xpIntoLevel: number; xpFo
   return { level, xpIntoLevel: remaining, xpForLevel: xpForLevel(level) };
 }
 
+/** Levels per colour tier: levels 1-9 are tier 0, 10-19 tier 1, and so on. */
+export const LEVELS_PER_TIER = 10;
+/** The last tier; every level from 90 on stays in it. */
+export const TOP_TIER = 9;
+
+/** The colour tier of a level: it changes every 10 levels, up to the top tier at level 90. */
+export function levelTier(level: number): number {
+  const safe = Number.isFinite(level) && level > 0 ? level : 1;
+  return Math.min(TOP_TIER, Math.floor(safe / LEVELS_PER_TIER));
+}
+
 /** The days with any record, oldest first, dropping anything after today. */
 function activeDaysOnOrBefore(activeDays: Set<string>, today: string): string[] {
   const days = [...activeDays].filter((date) => date <= today);

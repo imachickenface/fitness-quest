@@ -2,7 +2,17 @@ import { describe, expect, it } from 'vitest';
 import type { FoodEntry, Quest, QuestProgress, Workout } from '../contract.ts';
 import * as fx from '../test/fixtures.ts';
 import { addDays } from './dates.ts';
-import { claimable, gameState, isClaimed, levelFor, recordXp, streak, XP } from './game.ts';
+import {
+  claimable,
+  gameState,
+  isClaimed,
+  levelFor,
+  levelTier,
+  recordXp,
+  streak,
+  TOP_TIER,
+  XP,
+} from './game.ts';
 import type { Records } from './records.ts';
 
 const food = (id: string, date: string): FoodEntry => ({
@@ -50,6 +60,18 @@ describe('XP rules', () => {
 
   it('ignores records dated after today', () => {
     expect(recordXp({ ...none, foodEntries: [food('a', '2026-10-27')] }, '2026-10-26')).toBe(0);
+  });
+});
+
+describe('levelTier', () => {
+  it('changes colour every 10 levels and stays on the top tier from level 90', () => {
+    expect([1, 9, 10, 19, 20, 29, 50, 89].map(levelTier)).toEqual([0, 0, 1, 1, 2, 2, 5, 8]);
+    expect(levelTier(90)).toBe(TOP_TIER);
+    expect(levelTier(250)).toBe(TOP_TIER);
+  });
+
+  it('treats junk levels as level 1', () => {
+    expect([0, -5, Number.NaN, Number.POSITIVE_INFINITY].map(levelTier)).toEqual([0, 0, 0, 0]);
   });
 });
 
