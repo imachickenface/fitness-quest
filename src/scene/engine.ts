@@ -43,7 +43,7 @@ const WALK_SPEED = 48; // scene pixels a second
 const WALK_FPS = 12; // walk-cycle frames a second at WALK_SPEED
 const EMOTE_SECONDS = 1.8;
 const BREATH_SECONDS = 3.8; // one slow breath while standing
-const BREATH_WAIST = 0.6; // where the lifting upper body meets the legs, as a share of the frame height
+const BREATH_WAIST = 0.75; // where the lifting body meets the legs (below the hands, so the arms lift whole)
 
 /** 1 while the shoulders are lifted by a breath in, else 0: in for 40% of the breath, out and at rest for 60%. */
 function breathIn(time: number): number {
