@@ -444,19 +444,16 @@ Research: `docs/RESEARCH.md` section 13. (This replaces the 2026-11-05 3D revamp
   tap spots are real buttons with names; the canvas pauses when off screen or the tab is hidden; image budgets per
   scene (WebP, about 300-600 KB).
 
-**What the owner provides per scene** (a spec sheet goes in `docs/SCENES.md`):
-- a panorama about **3-4x as wide as it is tall** for 5 stops (e.g. 3200 x 900; this first image is 1672 x 941,
-  enough for about 3 stops in portrait, so either a wider version or 3 stops for it);
-- optional layers (same size, transparent PNG);
-- optional night/day versions;
-- the sprites, and whether the art may be shipped publicly (if a generator made it, that tool's terms apply).
+**What the owner provides per scene:** see [`docs/SCENES.md`](SCENES.md): three 1536 x 1024 panels that continue
+into each other (stitched to about 3000 x 1024, shown at about 750 x 256), optional layers, moving parts and
+day/night versions, the scene's length (5-10 levels), and whether the art may be shipped.
 
 **Tasks** (Q = Qwen with Claude's tests; C = Claude; O = the owner)
 
 | # | Task | Owner | Done when | Needs |
 |---|---|---|---|---|
 | 10.0 ✅ | **Living-scene prototype** on the forest station: crisp scaling, layers, fireflies, smoke, mist, lantern flicker, bell tap, parallax, dusk/night grade, rain; a GIF for the owner | C | the owner approves the feel | depth model yes |
-| 10.1 | Scene manifest contract (zod) + `docs/SCENES.md` spec for the owner | C | the station's manifest validates | 10.0 |
+| 10.1 ✅ | Scene manifest contract (zod rules, `public/scenes/world.json`, `sceneSpan`) + `docs/SCENES.md` spec for the owner | C + Q (rules) | the station's manifest validates | 10.0 |
 | 10.2 ✅ | `core/scenes.ts`: level → scene and stop, unlocked scenes, chosen scene | Q | Claude's unit tests (scene lengths 5-10, level 1, last scene, a pick of a locked scene) | 10.1 |
 | 10.3 | Character sprites: loader, idle/walk/cheer, walk between stops (in the lab: the owner's three characters, cut by `art/character_sheets.py`; the e2e comes with 10.4) | C | e2e level-up walks the character | O sprites ✅ |
 | 10.4 | Quests screen: the scene replaces the 3D view; level-up pan and walk; scene-change transition | C | e2e: level 5 → 6 changes scene | 10.2, 10.3 |
