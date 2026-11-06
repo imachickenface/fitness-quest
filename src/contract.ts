@@ -208,6 +208,11 @@ export const HERO_IDS = [
 export const HeroId = z.enum(HERO_IDS);
 export type HeroId = z.infer<typeof HeroId>;
 
+/** The pixel characters (public/characters/<id>.webp, cut by art/character_sheets.py). */
+export const CHARACTER_IDS = ['jacket', 'hoodie', 'tee'] as const;
+export const CharacterId = z.enum(CHARACTER_IDS);
+export type CharacterId = z.infer<typeof CharacterId>;
+
 export const HeroLook = z.object({
   head: HeroId.optional(),
   colours: z.record(z.string().regex(/^\d{1,2}$/), z.number().int().min(0).max(63)).optional(),
@@ -360,6 +365,8 @@ export const Profile = z.object({
       fatG: z.number().int().min(0).max(400).optional(),
     })
     .optional(),
+  /** the pixel character walking through the scenes (M10); absent = the first one */
+  character: CharacterId.optional(),
   /** the player's chosen character; the body shape on it comes from their records */
   hero: HeroId.optional(),
   /** customising the chosen character: another character's head, and palette cells swapped for others (0-63) */

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { CHARACTER_IDS } from '../contract.ts';
 import { CharacterList } from './character.ts';
 import { SceneManifest, SceneWorld, sceneSpan } from './manifest.ts';
 import stationRaw from '../../public/scenes/station/scene.json?raw';
@@ -41,8 +42,9 @@ describe('the shipped scenes', () => {
     expect([...folders].sort()).toEqual([...world.scenes].sort());
   });
 
-  it('the characters list validates', () => {
-    expect(CharacterList.safeParse(JSON.parse(charactersRaw)).success).toBe(true);
+  it('the characters list validates and matches the ids a profile can pick', () => {
+    const list = CharacterList.parse(JSON.parse(charactersRaw));
+    expect(list.characters.map((c) => c.id)).toEqual([...CHARACTER_IDS]);
   });
 });
 

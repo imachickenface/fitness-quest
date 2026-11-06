@@ -154,8 +154,19 @@ walk_rows = rows_of(walk[..., 3])
 pose_rows = rows_of(poses[..., 3])
 assert len(walk_rows) == 3 and len(pose_rows) == 2, (walk_rows, pose_rows)
 pose_centres = [256 + 512 * i for i in range(3)]
-standing = figures(poses[pose_rows[0][0] : pose_rows[0][1]], pose_centres)
-emotes = figures(poses[pose_rows[1][0] : pose_rows[1][1]], pose_centres)
+
+
+def on_feet(fig: tuple[np.ndarray, float]) -> tuple[np.ndarray, float]:
+    """Anchor a pose on the middle of its feet: the poses sheet doesn't centre figures in their columns, and a
+    standing frame anchored off-centre would make the character jump sideways when it stops walking."""
+    img, _ = fig
+    h = img.shape[0]
+    cols = np.nonzero((img[int(h * 0.85) :, :, 3] > 128).any(0))[0]
+    return img, (cols.min() + cols.max() + 1) / 2
+
+
+standing = [on_feet(f) for f in figures(poses[pose_rows[0][0] : pose_rows[0][1]], pose_centres)]
+emotes = [on_feet(f) for f in figures(poses[pose_rows[1][0] : pose_rows[1][1]], pose_centres)]
 os.makedirs(OUT, exist_ok=True)
 manifest = []
 previews = []

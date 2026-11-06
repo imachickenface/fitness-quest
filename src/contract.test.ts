@@ -3,6 +3,7 @@ import {
   Backup,
   Food,
   FoodEntry,
+  CHARACTER_IDS,
   HERO_IDS,
   Profile,
   Program,
@@ -122,5 +123,17 @@ describe('Profile.hero', () => {
   });
   it('rejects an unknown character', () => {
     expect(Profile.safeParse({ ...fx.profile, hero: 'wizard' }).success).toBe(false);
+  });
+});
+
+describe('Profile.character', () => {
+  it('accepts one of the pixel characters and stays optional', () => {
+    expect(Profile.parse({ ...fx.profile, character: 'hoodie' }).character).toBe('hoodie');
+    expect(Profile.parse(fx.profile).character).toBeUndefined();
+    expect(CHARACTER_IDS).toEqual(['jacket', 'hoodie', 'tee']);
+  });
+  it('rejects an unknown character and keeps an old 3D hero choice readable', () => {
+    expect(Profile.safeParse({ ...fx.profile, character: 'wizard' }).success).toBe(false);
+    expect(Profile.parse({ ...fx.profile, hero: 'male-c', character: 'tee' }).hero).toBe('male-c');
   });
 });

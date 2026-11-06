@@ -1573,6 +1573,105 @@ p {
   }
 }
 
+/* ---------- scene (M10): the player's place in the pixel world ---------- */
+
+.scene-stage {
+  position: relative;
+  padding: 0;
+  overflow: hidden;
+  background: #241f33;
+}
+
+.scene-frame {
+  position: relative;
+  min-height: 240px;
+  transition: opacity 450ms ease;
+}
+
+.scene-frame.fading {
+  opacity: 0;
+}
+
+.scene-canvas {
+  display: block;
+  width: 100%;
+  image-rendering: pixelated;
+  touch-action: pan-y;
+}
+
+.scene-still {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: pixelated;
+}
+
+.scene-spot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.scene-spot:focus-visible {
+  outline: 3px solid #ffd23f;
+  outline-offset: 2px;
+}
+
+.scene-change {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 2;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 88%);
+  color: #0a68c4;
+}
+
+.character-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.character-option {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 12px 4px 10px;
+  border: 2px solid var(--line);
+  border-bottom-width: 4px;
+  border-radius: var(--r);
+  background: var(--soft);
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.character-option[aria-pressed='true'] {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.character-sprite {
+  display: block;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+}
+
 /* ---------- hero ---------- */
 
 .hero-stage {

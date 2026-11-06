@@ -5,7 +5,7 @@
       "id": "jacket",
       "name": "Jacket",
       "src": "jacket.webp",
-      "frameWidth": 54,
+      "frameWidth": 32,
       "frameHeight": 45,
       "walk": [
         0,
@@ -49,7 +49,7 @@
       "id": "tee",
       "name": "Tee",
       "src": "tee.webp",
-      "frameWidth": 54,
+      "frameWidth": 34,
       "frameHeight": 45,
       "walk": [
         0,

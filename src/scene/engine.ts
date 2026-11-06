@@ -27,6 +27,8 @@ export type SceneView = {
   setCharacter(c: CharacterSprite | null): void;
   /** Play the character's emote for a moment. */
   emote(): void;
+  /** Resolves once the character stands still (at once if it is not walking). */
+  arrived(): Promise<void>;
   /** Press a tap spot (from a button or a tap on the canvas). */
   press(id: string): void;
   /** A tap at a point on the canvas in CSS pixels: presses the spot there, or scatters fireflies. */
@@ -40,6 +42,7 @@ export type SceneView = {
 
 const FRAME = 1 / 30;
 const WALK_SPEED = 48; // scene pixels a second
+const WALK_MAX_SECONDS = 4;
 const WALK_FPS = 12; // walk-cycle frames a second at WALK_SPEED
 const EMOTE_SECONDS = 1.8;
 const BREATH_SECONDS = 3.8; // one slow breath while standing
@@ -286,10 +289,12 @@ export async function createScene(
   let charX = m.stops[0]!;
   let camX = 0;
   let walkingTo: number | null = null;
+  let walkFrom = 0; // where the current walk started
   let hero: CharacterSprite | null = null;
   let facing = 1; // 1 right, -1 left
   let stepClock = 0; // seconds of walking, for the walk cycle
   let emoteLeft = 0;
+  const waiting: (() => void)[] = []; // arrived() promises, resolved when a walk ends
   let t = 0;
   const lampBoost = new Map<string, number>(); // tap id -> seconds left
   const r = rand(1234);
@@ -343,13 +348,17 @@ export async function createScene(
     if (walkingTo !== null) {
       const dir = Math.sign(walkingTo - charX);
       if (dir !== 0) facing = dir;
-      stepClock += dt;
+      // a long way (several levels at once) is walked faster, so no walk takes much over WALK_MAX_SECONDS;
+      // the steps speed up with it, so the feet don't slide
+      const speed = Math.max(WALK_SPEED, Math.abs(walkingTo - walkFrom) / WALK_MAX_SECONDS);
+      stepClock += (dt * speed) / WALK_SPEED;
       emoteLeft = 0;
-      charX += dir * WALK_SPEED * dt;
+      charX += dir * speed * dt;
       if (Math.sign(walkingTo - charX) !== dir) {
         charX = walkingTo;
         walkingTo = null;
         stepClock = 0;
+        for (const done of waiting.splice(0)) done();
       }
     }
     const want = cameraFor(charX);
@@ -713,9 +722,13 @@ export async function createScene(
     setStop(i, walk) {
       stop = Math.max(0, Math.min(m.stops.length - 1, i));
       const x = m.stops[stop]!;
-      if (walk && !reducedMotion) walkingTo = x;
-      else {
+      // a walk to where the character already stands would never arrive: that is a cut
+      if (walk && !reducedMotion && x !== charX) {
+        walkingTo = x;
+        walkFrom = charX;
+      } else {
         walkingTo = null;
+        for (const done of waiting.splice(0)) done();
         charX = x;
         camX = cameraFor(x);
       }
@@ -731,6 +744,9 @@ export async function createScene(
     },
     setCharacter(c) {
       hero = c;
+    },
+    arrived() {
+      return walkingTo === null ? Promise.resolve() : new Promise((done) => waiting.push(done));
     },
     emote() {
       if (hero?.entry.emote && walkingTo === null) emoteLeft = EMOTE_SECONDS;
@@ -792,6 +808,7 @@ export async function createScene(
     dispose() {
       cancelAnimationFrame(raf);
       io.disconnect();
+      for (const done of waiting.splice(0)) done();
     },
   };
   return view;

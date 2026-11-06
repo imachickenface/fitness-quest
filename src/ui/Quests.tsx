@@ -1,19 +1,15 @@
-import { lazy, Suspense, useEffect, useRef, useState, type RefObject } from 'react';
-import type { GameState, HeroId, Profile, QuestCondition } from '../contract.ts';
+import { useEffect, useRef, useState, type RefObject } from 'react';
+import type { CharacterId, GameState, Profile, QuestCondition } from '../contract.ts';
 import { isClaimed, levelTier } from '../core/game.ts';
 import { claimQuest, saveProfile } from '../db/db.ts';
 import { flyXp, reducedMotion } from './claimFx.ts';
 import { useDb } from './dbContext.ts';
 import { nowStamp } from './format.ts';
-import type { Cheer, Look } from './hero/heroScene.ts';
-import { DEFAULT_HERO, HERO_NAMES } from './hero/heroNames.ts';
-import { CustomiseSheet } from './hero/CustomiseSheet.tsx';
-import { HeroPicker } from './hero/HeroPicker.tsx';
+import type { Cheer } from './hero/heroScene.ts';
 import { Icon, type IconName } from './Icon.tsx';
+import { CharacterPicker } from './scene/CharacterPicker.tsx';
+import { SceneStage } from './scene/SceneStage.tsx';
 import type { Game, QuestView } from './useGame.ts';
-
-// three.js only loads when the Quests screen does
-const HeroView = lazy(() => import('./hero/HeroView.tsx'));
 
 const QUEST_ICON: Record<QuestCondition['type'], IconName> = {
   log_meals: 'apple',
@@ -92,63 +88,22 @@ type HeroProps = {
   state: GameState;
   /** the level bar, where claimed XP flies to */
   barRef?: RefObject<HTMLDivElement | null>;
-  goal: string;
-  hero: HeroId;
-  body: Game['body'];
+  character: CharacterId;
   cheer?: { n: number; clip: Cheer };
-  look?: Look;
-  onCells: (cells: number[]) => void;
-  onChange: () => void;
-  onCustomise: () => void;
+  onChangeCharacter: () => void;
 };
 
-export function HeroCard({
-  state,
-  barRef,
-  goal,
-  hero,
-  body,
-  cheer,
-  look,
-  onCells,
-  onChange,
-  onCustomise,
-}: HeroProps) {
+export function HeroCard({ state, barRef, character, cheer, onChangeCharacter }: HeroProps) {
   const { shown, filling, levelUps } = useXpBar(state);
   const pct = Math.min(100, (shown.into / shown.of) * 100);
   return (
     <>
-      <section className="panel hero-stage" aria-label={`Your hero: ${HERO_NAMES[hero]}`}>
-        <Suspense
-          fallback={
-            <div className="hero-view" data-hero={hero} data-state="loading">
-              <img
-                className="hero-still"
-                src={`${import.meta.env.BASE_URL}hero/${hero}.png`}
-                alt=""
-              />
-            </div>
-          }
-        >
-          <HeroView
-            key={goal}
-            hero={hero}
-            muscle={body.muscle}
-            build={body.build}
-            node={state.mapNode}
-            goal={goal}
-            look={look}
-            onCells={onCells}
-            cheer={cheer}
-          />
-        </Suspense>
-        <button type="button" className="link-btn hero-change" onClick={onChange}>
-          Change hero
-        </button>
-        <button type="button" className="link-btn hero-customise" onClick={onCustomise}>
-          Customise
-        </button>
-      </section>
+      <SceneStage
+        level={state.level}
+        character={character}
+        cheer={cheer?.n}
+        onChangeCharacter={onChangeCharacter}
+      />
       {/* the badge and the bar change colour every 10 levels (index.css, data-tier) */}
       <section className="panel hero-card" aria-label="Level" data-tier={levelTier(shown.level)}>
         <span
@@ -212,8 +167,6 @@ type Props = { game: Game; profile: Profile; cheer?: { n: number; clip: Cheer } 
 export function Quests({ game, profile, cheer }: Props) {
   const db = useDb();
   const [picking, setPicking] = useState(false);
-  const [customising, setCustomising] = useState(false);
-  const [cells, setCells] = useState<number[]>([]);
   const bar = useRef<HTMLDivElement>(null);
   // quests mid-claim: their button is spent while the XP flies
   const [claiming, setClaiming] = useState<ReadonlySet<string>>(new Set());
@@ -225,7 +178,7 @@ export function Quests({ game, profile, cheer }: Props) {
     await claimQuest(db, quest.id, nowStamp());
     setClaimed(`Claimed ${quest.xp} XP: ${quest.title}`);
   };
-  const hero = profile.hero ?? DEFAULT_HERO;
+  const character = profile.character ?? 'jacket';
   const save = (patch: Partial<Profile>) =>
     void saveProfile(db, { ...profile, ...patch, updatedAt: nowStamp() });
   const daily = game.active.filter((v) => v.quest.kind === 'daily');
@@ -239,16 +192,11 @@ export function Quests({ game, profile, cheer }: Props) {
         <h1>Quests</h1>
       </header>
       <HeroCard
-        goal={profile.goal}
         state={game.state}
         barRef={bar}
-        hero={hero}
-        body={game.body}
+        character={character}
         cheer={cheer}
-        look={profile.heroLook}
-        onCells={setCells}
-        onChange={() => setPicking(true)}
-        onCustomise={() => setCustomising(true)}
+        onChangeCharacter={() => setPicking(true)}
       />
       {list('Daily quests', daily)}
       {other.length > 0 && list('This week', other)}
@@ -261,23 +209,13 @@ export function Quests({ game, profile, cheer }: Props) {
         a finished quest to collect its XP; XP left unclaimed is added when the quest ends.
       </p>
       {picking && (
-        <HeroPicker
-          current={hero}
+        <CharacterPicker
+          current={character}
           onClose={() => setPicking(false)}
           onPick={(id) => {
             setPicking(false);
-            // colours belong to one character's palette use, so a new hero starts fresh
-            save({ hero: id, heroLook: undefined });
+            save({ character: id });
           }}
-        />
-      )}
-      {customising && (
-        <CustomiseSheet
-          hero={hero}
-          look={profile.heroLook ?? {}}
-          cells={cells}
-          onClose={() => setCustomising(false)}
-          onChange={(look) => save({ heroLook: look })}
         />
       )}
     </div>
