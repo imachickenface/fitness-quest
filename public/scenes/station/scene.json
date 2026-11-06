@@ -1,0 +1,38 @@
+{
+  "v": 1,
+  "id": "station",
+  "name": "Forest station",
+  "width": 750,
+  "height": 256,
+  "ground": 190,
+  "layers": [
+    { "src": "layer-0.webp", "depth": -1 },
+    { "src": "layer-1.webp", "depth": 0 },
+    { "src": "layer-2.webp", "depth": 0 },
+    { "src": "layer-3.webp", "depth": 0 },
+    { "src": "layer-4.webp", "depth": 0 }
+  ],
+  "stops": [70, 215, 330, 455, 640],
+  "levels": 5,
+  "lights": { "top": 110, "bottom": 186 },
+  "smoke": [{ "x": 68, "y": 109 }],
+  "fireflies": { "x0": 0, "x1": 750, "y0": 105, "y1": 185, "count": 36 },
+  "mist": [
+    { "y": 112, "height": 18, "speed": 2.2, "alpha": 0.22 },
+    { "y": 140, "height": 14, "speed": -1.4, "alpha": 0.16 }
+  ],
+  "puddles": { "y0": 196, "y1": 220 },
+  "taps": [
+    {
+      "id": "bell",
+      "label": "Ring the bell",
+      "kind": "bell",
+      "box": [419, 130, 441, 176],
+      "pivot": [430.5, 131],
+      "sprite": { "src": "sprite-bell.webp", "x": 420, "y": 132 }
+    },
+    { "id": "station-lamps", "label": "Brighten the station lamps", "kind": "lamp", "box": [28, 128, 90, 178] },
+    { "id": "bell-lamp", "label": "Brighten the lamp by the bell", "kind": "lamp", "box": [442, 132, 454, 150] },
+    { "id": "tunnel-lamps", "label": "Brighten the tunnel lamps", "kind": "lamp", "box": [610, 136, 720, 178] }
+  ]
+}

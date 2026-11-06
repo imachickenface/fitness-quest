@@ -455,7 +455,7 @@ Research: `docs/RESEARCH.md` section 13. (This replaces the 2026-11-05 3D revamp
 
 | # | Task | Owner | Done when | Needs |
 |---|---|---|---|---|
-| 10.0 | **Living-scene prototype** on the forest station: crisp scaling, layers, fireflies, smoke, mist, lantern flicker, bell tap, parallax, dusk/night grade, rain; a GIF for the owner | C | the owner approves the feel | depth model yes |
+| 10.0 ✅ | **Living-scene prototype** on the forest station: crisp scaling, layers, fireflies, smoke, mist, lantern flicker, bell tap, parallax, dusk/night grade, rain; a GIF for the owner | C | the owner approves the feel | depth model yes |
 | 10.1 | Scene manifest contract (zod) + `docs/SCENES.md` spec for the owner | C | the station's manifest validates | 10.0 |
 | 10.2 | `core/scenes.ts`: level → scene and stop, unlocked scenes, chosen scene | Q | Claude's unit tests (scene lengths 5-10, level 1, last scene, a pick of a locked scene) | 10.1 |
 | 10.3 | Character sprites: loader, idle/walk/cheer, walk between stops | C | e2e level-up walks the character | O sprites |

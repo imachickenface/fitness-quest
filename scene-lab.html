@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Scene lab</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: system-ui, sans-serif;
+      }
+      body {
+        margin: 0;
+        background: #15161f;
+        color: #e8e8f0;
+      }
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+      .frame {
+        position: relative;
+        width: 100%;
+        max-width: var(--frame, 100%);
+        margin: 0 auto;
+        border-radius: 16px;
+        overflow: hidden;
+        background: #241f33;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 420px;
+        image-rendering: pixelated;
+        touch-action: pan-y;
+      }
+      .spot {
+        position: absolute;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+      }
+      .spot:focus-visible {
+        outline: 2px solid #ffd23f;
+        outline-offset: 2px;
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 12px 0;
+        align-items: center;
+      }
+      button,
+      select,
+      label {
+        font: inherit;
+        font-size: 14px;
+      }
+      .controls button,
+      select {
+        min-height: 40px;
+        padding: 0 12px;
+        border-radius: 10px;
+        border: 1px solid #444;
+        background: #2a2b3a;
+        color: inherit;
+      }
+      .controls button[aria-pressed='true'] {
+        background: #3c6fd8;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Scene lab: forest station</h1>
+      <div class="controls">
+        <button type="button" id="levelup">Level up (next stop)</button>
+        <span id="stops"></span>
+      </div>
+      <div class="controls">
+        <label
+          >Sky
+          <select id="sky">
+            <option value="auto">From my clock</option>
+            <option value="morning">Morning</option>
+            <option value="day">Day</option>
+            <option value="dusk">Dusk</option>
+            <option value="night">Night</option>
+          </select></label
+        >
+        <button type="button" id="rain" aria-pressed="false">Rain</button>
+        <button type="button" id="reduced" aria-pressed="false">Reduced motion</button>
+        <label
+          >Frame
+          <select id="frame">
+            <option value="390px">Phone (390 px)</option>
+            <option value="100%">Wide</option>
+          </select></label
+        >
+      </div>
+      <div class="frame" id="frameEl">
+        <canvas id="scene" aria-label="Forest station at dusk"></canvas>
+      </div>
+      <p>
+        Drag across the scene (or tilt a phone) for parallax. Tap the bell or the lamps; tap the
+        forest to scatter fireflies.
+      </p>
+    </main>
+    <script type="module" src="/src/scene/lab.ts"></script>
+  </body>
+</html>
