@@ -42,8 +42,14 @@ const FRAME = 1 / 30;
 const WALK_SPEED = 48; // scene pixels a second
 const WALK_FPS = 12; // walk-cycle frames a second at WALK_SPEED
 const EMOTE_SECONDS = 1.8;
-const BREATH_SECONDS = 3.4; // one slow breath while standing
-const HEAD_LAG = 0.3; // seconds the head follows the chest by
+const BREATH_SECONDS = 3.8; // one slow breath while standing
+const BREATH_WAIST = 0.6; // where the lifting upper body meets the legs, as a share of the frame height
+
+/** 1 while the shoulders are lifted by a breath in, else 0: in for 40% of the breath, out and at rest for 60%. */
+function breathIn(time: number): number {
+  const p = (((time / BREATH_SECONDS) % 1) + 1) % 1;
+  return p < 0.4 ? 1 : 0;
+}
 const MAX_LEAN = 10; // scene pixels the whole view slides at full lean
 const FAR_LAG = 0.4; // the far layer (sky, mountains) slides this much less, for a little depth
 
@@ -632,17 +638,23 @@ export async function createScene(
       const left = -Math.floor(fw / 2);
       const sx = frame * fw;
       if (frame === e.stand && !reducedMotion) {
-        // breathing: the legs stay put, the chest settles a pixel on each breath out and the head follows a
-        // moment later. Each upper band is drawn one row taller, so a band that has moved never leaves a gap.
-        const neck = Math.round(fh * 0.36);
-        const hip = Math.round(fh * 0.6);
-        const out = (time: number) =>
-          Math.round((1 - Math.cos((2 * Math.PI * time) / BREATH_SECONDS)) / 2);
-        const chest = out(t);
-        const head = out(t - HEAD_LAG);
-        g.drawImage(hero.img, sx, hip, fw, fh - hip, left, hip, fw, fh - hip);
-        g.drawImage(hero.img, sx, neck, fw, hip - neck + 1, left, neck + chest, fw, hip - neck + 1);
-        g.drawImage(hero.img, sx, 0, fw, neck + 1, left, head, fw, neck + 1);
+        // breathing: the shoulders lift on the breath in, carrying the arms and head with them as one piece,
+        // and settle on the breath out; the legs stay put. The legs are drawn one row taller upwards, so the
+        // lifted body never leaves a gap at the waist.
+        const waist = Math.round(fh * BREATH_WAIST);
+        const lift = breathIn(t);
+        g.drawImage(
+          hero.img,
+          sx,
+          waist - 1,
+          fw,
+          fh - waist + 1,
+          left,
+          waist - 1,
+          fw,
+          fh - waist + 1,
+        );
+        g.drawImage(hero.img, sx, 0, fw, waist, left, -lift, fw, waist);
       } else g.drawImage(hero.img, sx, 0, fw, fh, left, 0, fw, fh);
       g.restore();
       return;

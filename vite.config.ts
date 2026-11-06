@@ -1,4 +1,5 @@
 /// <reference types="vitest/config" />
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -8,6 +9,15 @@ const base = '/fitness-quest/';
 
 export default defineConfig({
   base,
+  build: {
+    rollupOptions: {
+      // the scene lab (M10) ships as its own page until the scene joins the Quests screen
+      input: {
+        main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        lab: fileURLToPath(new URL('./scene-lab.html', import.meta.url)),
+      },
+    },
+  },
   plugins: [
     react(),
     VitePWA({
@@ -26,6 +36,14 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,webp,ico,webmanifest,woff2,json}'],
+        // scene and character art is fetched when a scene is shown, not downloaded up front for everyone
+        globIgnores: [
+          '**/node_modules/**/*',
+          'sw.js',
+          'workbox-*.js',
+          'scenes/**',
+          'characters/**',
+        ],
         // the bundled USDA food list (public/foods.json) must be precached for offline search
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         // the barcode polyfill's decoder: only phones without a native BarcodeDetector need it
@@ -34,6 +52,12 @@ export default defineConfig({
             urlPattern: /\.wasm$/,
             handler: 'CacheFirst',
             options: { cacheName: 'wasm' },
+          },
+          // scene and character art: cached once seen, then it works offline
+          {
+            urlPattern: /\/(scenes|characters)\/.+\.(webp|json)$/,
+            handler: 'StaleWhileRevalidate',
+            options: { cacheName: 'scenes' },
           },
           // hero models: only the chosen one is ever fetched, then it works offline
           {
