@@ -282,7 +282,100 @@ no body weight, calories or food leave the account.
 - Estimates like these are off by 20-30% for a given person, so the app says "about" and keeps it out of
   the food target (the activity level already counts usual exercise).
 
+## 12. Visual revamp: heroes, outfits and biomes (checked 2026-11-05)
+
+*Superseded on 2026-11-06 by section 13: the owner chose pixel-art scenes and sprites instead of 3D.*
+
+**The owner's direction (2026-11-05):** stylised 3D in a soft, cute, clay-like look (like their own character
+sheet); heroes earn **unlockable outfits and gear**; the world changes into **new scenery (biomes) along the quest
+path**; **free and local tools only**. Body changes with training were not picked (see the plan's open question).
+
+**How comparable apps present it**
+- **Habitica** ([wiki](https://habitica.fandom.com/wiki/Costume_Carnival), [blog](https://blog.habitrpg.com/tagged/backgrounds/page/2)):
+  the avatar wears **gear sets** earned by playing, plus collectable **backgrounds**; seasonal sets come and go.
+  *Borrow:* gear as the main reward; a wardrobe that shows what's still locked. *Avoid:* paid currency, limited-time FOMO.
+- **Finch** ([review](https://www.autonomous.ai/en-GB/ourblog/finch-self-care-app-review-full-breakdown),
+  [Paste](https://www.pastemagazine.com/article/finch-app-mental-health-virtual-pet-self-care)): soft pastel
+  companion that earns clothes for finishing tasks; praised for its gentle visual style. *Borrow:* the soft, kind
+  look and clothes as rewards.
+- **Fitness RPGs** ([RPGFitness](https://www.producthunt.com/products/rpgfitness/launches/rpgfitness-2),
+  [Fitness RPG](https://apps.apple.com/us/app/fitness-rpg-hero-health-game/id1252580641)): equipment and a hero
+  that "gets stronger" are the norm. *Borrow:* gear tied to real training milestones (badges, levels, ranks).
+
+**Art style that stays light on phones**
+- Keep one shared **gradient palette texture** per kit (Kenney and KayKit both do this: KayKit's 1024 px atlas
+  downsamples to 128 px) so a whole biome is one material and few draw calls
+  ([KayKit Adventurers](https://kaylousberg.itch.io/kaykit-adventurers)).
+- The soft look comes from **rounded, bevelled shapes, smooth normals and a gentle toon ramp**, not from detail:
+  `MeshToonMaterial` with a 3-4 step gradient map (NearestFilter) or the current lit material with softer light.
+  Screen-space outline passes cost a lot on phones; an inverted-hull outline per mesh is the cheap option
+  ([sbcode](https://sbcode.net/threejs/meshtoonmaterial/),
+  [three.js forum](https://discourse.threejs.org/t/outlinepass-with-effectcomposer-or-outlineeffect/19790)).
+- **glTF compression:** meshopt for geometry (fast decode, safe with animation) and KTX2 for textures, done with
+  `@gltf-transform/cli`; guides report 5-10x smaller files
+  ([guide](https://jvinhit.github.io/blog/threejs-16-gltf-compression-draco-meshopt-ktx2/)). Needs a dev-only
+  npm install (owner's yes first). Today a Kenney hero is 157 KB and the custom `female-g` 730 KB.
+
+**Clean-licence assets (all CC0, glTF, checked on the creators' pages)**
+
+| Pack | What | Fit |
+|---|---|---|
+| [Quaternius Stylized Nature MEGAKIT](https://quaternius.itch.io/stylized-nature-megakit) | ~116 trees, plants, flowers, rocks, grass; free Standard tier (99 MB) | Meadow/forest biomes; restyle to the shared palette |
+| [KayKit Forest Nature Pack](https://kaylousberg.itch.io/kaykit-forest) | stylised trees, rocks, grass | Forest; same gradient-atlas approach as KayKit characters |
+| [Amir Forest Nature Pack](https://ahmedamirdev.itch.io/amir-forest-nature-pack) | biomes: forest, desert, arctic, fantasy, farm; GLB | Desert and snow pieces (small creator, 3 ratings: check quality) |
+| [KayKit Adventurers](https://kaylousberg.itch.io/kaykit-adventurers) + [Character Animations](https://kaylousberg.itch.io/kaykit-character-animations) | 5 chibi-ish characters free, 25+ held items; 133 humanoid animations | Gear ideas and an animation library; different rig from Kenney |
+| [Quaternius Universal Base Characters](https://quaternius.com/packs/universalbasecharacters.html) + [Modular Outfits](https://quaternius.com/packs/modularcharacteroutfitsfantasy.html) | 6 bodies, 12 outfits from 62 parts, humanoid rig, ~13k tris | Proportions are regular/superhero, not cute: **off-style** |
+
+No single CC0 pack covers every biome (none has a beach), so some biome pieces are modelled in Blender with the
+existing scripts in `art/`.
+
+**Tools (all already here, free and local)**
+- **Blender 4.3** scripts in `art/`: `render_views.py`, `render_anim.py`, `comfy_rig.py` (fits a body to the 7-bone
+  hero skeleton), `comfy_paint.py` (paints a mesh from a turnaround sheet), `export_heroes.py`.
+- **TripoSR** (MIT, runs on the RX 9070 XT in ~30 s): blocks out a shape from one drawing, to be cleaned up and
+  re-modelled; good for props and outfit pieces drawn by the owner. **Hunyuan3D** (licence excludes EU/UK/KR) and
+  **Pixal3D/TRELLIS.2** (broken on ROCm) are out.
+- **Sprite-sheet export** from Blender for 2D needs: picker thumbnails, friend avatars, banner and chest icons.
+
+## 13. Pixel scenes: animating supplied art (checked 2026-11-06)
+
+Replaces section 12's 3D direction: the owner is removing the Kenney models and supplying their own pixel-art
+scenes (first: a forest railway station at dusk, 1672 x 941) and character sprites.
+
+**Drawing pixel art in a browser**
+- Keep it crisp: `image-rendering: pixelated` on the canvas, `ctx.imageSmoothingEnabled = false` (set again after
+  every resize), whole-number scale factors, and positions rounded to whole pixels
+  ([Cinevva tutorial](https://app.cinevva.com/tutorials/pixel-art-rendering)).
+- Parallax: layers drawn and animated at 1x, nearer layers moving faster, at whole-pixel rates
+  ([Pixelblog 23, Raymond Schlitter](https://www.slynyrd.com/blog/2019/11/12/pixelblog-23-parallax-scrolling)).
+- Canvas 2D handles a few layers, a sprite and a few hundred particles easily; no game library is needed. Glows use
+  the `lighter` blend; time of day is a colour grade over the scene.
+- Removing three.js and the Kenney heroes drops today's 640 KB `HeroView` chunk.
+
+**Splitting a flat image into layers**
+- [Depth Anything V2](https://github.com/DepthAnything/Depth-Anything-V2) estimates depth from one image, locally.
+  Licence split: the **Small** model is Apache-2.0; Base, Large and Giant are **CC-BY-NC-4.0 (non-commercial)**, so
+  only Small is used. A depth map gives rough bands (sky, mountains, trees, station, foreground) that are tidied by
+  hand; small parallax shifts keep the holes behind objects hidden.
+- Layers drawn by the artist are better than any cut, so the spec asks for them where possible.
+
+**Character sprites**
+- Aseprite's JSON export is the de facto format (frames, plus `meta.frameTags` with name, range and direction) but is
+  undocumented, so the loader accepts both the keyed and array `frames` shapes; plain PNG strips with a frame size
+  work too ([Aseprite forum](https://community.aseprite.org/t/sprite-sheet-data-format-improvements-frames-in-exported-json-are-not-very-convenient-to-use/10158),
+  [atlas-pack typings](https://cdn.deno.land/atlas_pack/versions/v4.0.2/raw/src/Aseprite.ts)).
+
+**The first scene**
+- 1672 x 941, 16:9, RGB. Its "pixels" are painted, not on a strict grid (typical of generated pixel art), so it is
+  shown at its own resolution and scaled by whole numbers; effects are drawn at the same resolution.
+- On a portrait phone the full height shows about a third of its width, so it holds about 3 stops; 5 stops need a
+  panorama about 3-4x as wide as it is tall.
+- Natural tap and effect spots in this image: the bell (swing and ring), the hanging lanterns and lit windows
+  (flicker, brighter at night), the chimney (smoke), fireflies across the forest, mist in the valley, the wet
+  platform (rain ripples and reflections), the tunnel lamps.
+
 ## 8. Risks
+
 
 | Risk | Impact | Handling |
 |---|---|---|

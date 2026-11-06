@@ -399,6 +399,92 @@ the workout record, which already syncs).
 
 **Usage:** all Claude: each logic change is a few lines, smaller than a Qwen brief and its tests.
 
+### M10 - Pixel scenes: an animated world that changes as you level up (approved 2026-11-06)
+
+**Goal:** replace the 3D Kenney heroes and map with the owner's own pixel-art scenes and sprites. The scene feels
+alive (ambient motion, things to tap, depth, time of day and weather); each level-up walks the character to a new
+spot in the scene, and every 5-10 levels the world changes to a new scene. Past scenes can be picked again.
+Research: `docs/RESEARCH.md` section 13. (This replaces the 2026-11-05 3D revamp plan, which is dropped.)
+
+**The owner's choices (2026-11-06)**
+- **Kenney models removed completely**; the world is the owner's pixel scenes (first one: the forest station at dusk).
+- **The owner supplies the scenes**, as **wide panoramas**: within a scene, each level-up pans the view and the
+  character walks to the next spot.
+- **The owner supplies the character's pixel sprites.**
+- Interactivity: **ambient motion, tap to react, parallax, time of day and weather**.
+- A scene lasts **5-10 levels** (set per scene); any scene already reached can be chosen again.
+
+**Architecture**
+- **Renderer:** a plain Canvas 2D scene (no new library). three.js and the Kenney files are removed, which drops the
+  640 KB 3D chunk. Pixels stay crisp: the art is shown at a whole-number scale with smoothing off.
+- **A scene is a folder** `public/scenes/<id>/` with the panorama, optional layers and a `scene.json` manifest
+  (zod-checked): size, the stops (x positions the camera and character move to), how many levels it lasts,
+  parallax layers and their depth, light spots (windows, lanterns) for night, tap spots and what they do (bell
+  swings and rings, lantern flares, fireflies scatter), particle emitters (smoke, fireflies, mist, rain) and the
+  ground line the character walks on.
+- **Layers for parallax:** best is the owner exporting 3-5 layers (sky, far mountains, trees, station, foreground).
+  For a flat image, Claude cuts layers with a depth map from Depth Anything V2 **Small** (Apache-2.0, runs locally;
+  the Base/Large models are non-commercial and not used) plus hand-tidied masks; the movement stays small so the gaps
+  behind objects don't show.
+- **Ambient and weather:** particles and overlays drawn in code (fireflies, smoke, drifting mist and clouds, rain
+  streaks and puddle sparkles, lantern flicker). **Time of day** from the phone's clock: a colour grade per time (day,
+  golden hour, dusk, night) with the light spots glowing at night; or the owner's own day/night versions if supplied.
+  Weather changes every so often (e.g. a 1-in-4 chance of rain per day, the same for everyone that day).
+- **Character:** the owner's sprite sheets (idle, walk, cheer; more later) at the scene's pixel size. Format: PNG
+  strips with a frame size, or an Aseprite JSON export.
+- **Levels to scenes** (`core/scenes.ts`, pure): from the level and the scene list, which scene and stop the player is
+  at, and which scenes are unlocked. A level-up inside a scene walks to the next stop; the level that finishes a scene
+  plays a transition into the next one.
+- **Choosing a past scene:** a Scenes picker lists the unlocked scenes with a thumbnail; the pick is saved in the
+  profile (`Profile.scene`, synced), "Follow my level" goes back to the current one.
+- **Quests no longer move the character** (today each finished quest is a step on the path); level-ups do.
+- **Friends:** their summary carries the scene and character ids; their avatars use the sprite's portrait frame.
+  Old `hero`/`heroLook` values are kept readable and ignored.
+- **Accessibility and phones:** reduced motion keeps the scene still (no particles or pans, cuts instead of walks);
+  tap spots are real buttons with names; the canvas pauses when off screen or the tab is hidden; image budgets per
+  scene (WebP, about 300-600 KB).
+
+**What the owner provides per scene** (a spec sheet goes in `docs/SCENES.md`):
+- a panorama about **3-4x as wide as it is tall** for 5 stops (e.g. 3200 x 900; this first image is 1672 x 941,
+  enough for about 3 stops in portrait, so either a wider version or 3 stops for it);
+- optional layers (same size, transparent PNG);
+- optional night/day versions;
+- the sprites, and whether the art may be shipped publicly (if a generator made it, that tool's terms apply).
+
+**Tasks** (Q = Qwen with Claude's tests; C = Claude; O = the owner)
+
+| # | Task | Owner | Done when | Needs |
+|---|---|---|---|---|
+| 10.0 | **Living-scene prototype** on the forest station: crisp scaling, layers, fireflies, smoke, mist, lantern flicker, bell tap, parallax, dusk/night grade, rain; a GIF for the owner | C | the owner approves the feel | depth model yes |
+| 10.1 | Scene manifest contract (zod) + `docs/SCENES.md` spec for the owner | C | the station's manifest validates | 10.0 |
+| 10.2 | `core/scenes.ts`: level → scene and stop, unlocked scenes, chosen scene | Q | Claude's unit tests (scene lengths 5-10, level 1, last scene, a pick of a locked scene) | 10.1 |
+| 10.3 | Character sprites: loader, idle/walk/cheer, walk between stops | C | e2e level-up walks the character | O sprites |
+| 10.4 | Quests screen: the scene replaces the 3D view; level-up pan and walk; scene-change transition | C | e2e: level 5 → 6 changes scene | 10.2, 10.3 |
+| 10.5 | Scenes picker and "Follow my level"; `Profile.scene` synced | C | e2e pick a past scene, reload, it stays | 10.4 |
+| 10.6 | Time of day and weather (`core/sky.ts` pure part) | Q + C | unit tests for the time bands and daily weather; screenshots | 10.0 |
+| 10.7 | Remove Kenney models, three.js, Customise and hero picker; friends' avatars from sprites; contract migration | C | bundle smaller; old profiles and friends' summaries still load; a11y scans pass | 10.4 |
+| 10.8 | Each new scene the owner sends: layers, manifest, tap spots | C | scene passes the manifest check and budget | O scenes |
+| 10.9 | Credits, privacy note unchanged, docs, deploy | C | all tests; live check | all |
+
+**Order:** 10.0 first and stop for the owner's verdict. Then 10.1-10.5 (one scene end to end), 10.6, 10.7.
+10.8 repeats per scene. The app needs at least two scenes before scene changes can ship.
+
+**Downloads to ask for at the start:** Depth Anything V2 Small weights (Apache-2.0, about 100 MB) for cutting
+layers, only if the owner doesn't supply layers. No npm packages.
+
+**Usage:** mostly Claude (renderer, effects, layer cutting, screens). Qwen takes the two pure modules (10.2 and the
+sky rules in 10.6). No paid services.
+
+**Risks**
+- *Generated pixel art isn't on a true pixel grid,* so it can blur or shimmer when scaled: the scene is shown at the
+  image's own resolution with whole-number scaling, and effects are drawn at that resolution too.
+- *Parallax from a flat image shows holes behind objects:* small shifts only, layers edge-filled; owner-made layers
+  are better.
+- *Portrait phones show a narrow slice of a wide scene:* the stops are chosen so the character and the scene's focal
+  point are in view at each one.
+- *Battery:* the animation pauses when hidden or off screen and runs at a lower frame rate on low-power devices.
+- *Rights to supplied art:* the owner confirms each image can be published (and credits it).
+
 ## Split and usage estimate
 
 - **Qwen:** 17 tasks, all pure `src/core/` modules or scripts with Claude's tests. 16 of them can run overnight.
