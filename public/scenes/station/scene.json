@@ -4,7 +4,7 @@
   "name": "Forest station",
   "width": 750,
   "height": 256,
-  "ground": 190,
+  "ground": 212,
   "layers": [
     { "src": "layer-0.webp", "depth": -1 },
     { "src": "layer-1.webp", "depth": 0 },

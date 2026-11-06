@@ -1,0 +1,71 @@
+{
+  "v": 1,
+  "characters": [
+    {
+      "id": "jacket",
+      "name": "Jacket",
+      "src": "jacket.webp",
+      "frameWidth": 54,
+      "frameHeight": 45,
+      "walk": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "stand": 8,
+      "emote": {
+        "frame": 9,
+        "kind": "cheer"
+      }
+    },
+    {
+      "id": "hoodie",
+      "name": "Hoodie",
+      "src": "hoodie.webp",
+      "frameWidth": 34,
+      "frameHeight": 45,
+      "walk": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "stand": 8,
+      "emote": {
+        "frame": 9,
+        "kind": "tired"
+      }
+    },
+    {
+      "id": "tee",
+      "name": "Tee",
+      "src": "tee.webp",
+      "frameWidth": 54,
+      "frameHeight": 45,
+      "walk": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "stand": 8,
+      "emote": {
+        "frame": 9,
+        "kind": "huff"
+      }
+    }
+  ]
+}

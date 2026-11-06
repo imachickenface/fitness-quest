@@ -1,4 +1,5 @@
 /** The scene lab (scene-lab.html, dev only): try a scene's stops, sky, rain, taps and parallax. */
+import { loadCharacter, loadCharacters, type CharacterEntry } from './character.ts';
 import { createScene, type SceneView, type Sky } from './engine.ts';
 import { skyAt } from './sky.ts';
 
@@ -6,6 +7,9 @@ const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as 
 const canvas = $<HTMLCanvasElement>('scene');
 const frame = $<HTMLDivElement>('frameEl');
 const base = `${import.meta.env.BASE_URL}scenes/station/`;
+const charBase = `${import.meta.env.BASE_URL}characters/`;
+let characters: CharacterEntry[] = [];
+let characterId = '';
 
 let view: SceneView | null = null;
 let stop = 0;
@@ -19,6 +23,7 @@ async function start() {
   for (const b of spots.splice(0)) b.remove();
   view = await createScene(canvas, base, reduced);
   view.setStop(stop, false);
+  await applyCharacter();
   view.setRain(rain);
   applySky();
   const stopsEl = $('stops');
@@ -66,6 +71,31 @@ function placeSpots() {
   requestAnimationFrame(placeSpots);
 }
 
+async function applyCharacter() {
+  const entry = characters.find((c) => c.id === characterId);
+  view?.setCharacter(entry ? await loadCharacter(charBase, entry) : null);
+}
+
+async function setupCharacters() {
+  characters = await loadCharacters(charBase);
+  characterId = characters[0]?.id ?? '';
+  const pick = $<HTMLSelectElement>('character');
+  pick.replaceChildren(
+    ...characters.map((c) => {
+      const o = document.createElement('option');
+      o.value = c.id;
+      o.textContent = c.name;
+      return o;
+    }),
+  );
+  pick.onchange = () => {
+    characterId = pick.value;
+    void applyCharacter();
+  };
+}
+
+$('emote').onclick = () => view?.emote();
+
 function applySky() {
   const sky: Sky = skyChoice === 'auto' ? skyAt(new Date()) : (skyChoice as Sky);
   view?.setSky(sky);
@@ -88,7 +118,7 @@ $('rain').onclick = (e) => {
 $('reduced').onclick = (e) => {
   reduced = !reduced;
   (e.currentTarget as HTMLElement).setAttribute('aria-pressed', String(reduced));
-  void start();
+  void setupCharacters().then(start);
 };
 $<HTMLSelectElement>('frame').onchange = (e) => {
   frame.style.setProperty('--frame', (e.target as HTMLSelectElement).value);
@@ -111,4 +141,4 @@ window.addEventListener('deviceorientation', (e) => {
 });
 window.addEventListener('resize', () => view?.resize());
 
-void start();
+void setupCharacters().then(start);

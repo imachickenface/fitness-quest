@@ -8,6 +8,7 @@
  * the page is hidden or the canvas is off screen. With reduced motion the scene is still: no particles, no
  * parallax, and stops are cuts instead of walks.
  */
+import type { CharacterSprite } from './character.ts';
 import { SceneManifest } from './manifest.ts';
 
 export type Sky = 'morning' | 'day' | 'dusk' | 'night';
@@ -22,6 +23,10 @@ export type SceneView = {
   setRain(on: boolean): void;
   /** Parallax lean from a drag or tilt, -1 .. 1. */
   setLean(x: number): void;
+  /** The player's character (null draws a stand-in). */
+  setCharacter(c: CharacterSprite | null): void;
+  /** Play the character's emote for a moment. */
+  emote(): void;
   /** Press a tap spot (from a button or a tap on the canvas). */
   press(id: string): void;
   /** A tap at a point on the canvas in CSS pixels: presses the spot there, or scatters fireflies. */
@@ -35,6 +40,10 @@ export type SceneView = {
 
 const FRAME = 1 / 30;
 const WALK_SPEED = 48; // scene pixels a second
+const WALK_FPS = 12; // walk-cycle frames a second at WALK_SPEED
+const EMOTE_SECONDS = 1.8;
+const BREATH_SECONDS = 3.4; // one slow breath while standing
+const HEAD_LAG = 0.3; // seconds the head follows the chest by
 const MAX_LEAN = 10; // scene pixels the whole view slides at full lean
 const FAR_LAG = 0.4; // the far layer (sky, mountains) slides this much less, for a little depth
 
@@ -271,6 +280,10 @@ export async function createScene(
   let charX = m.stops[0]!;
   let camX = 0;
   let walkingTo: number | null = null;
+  let hero: CharacterSprite | null = null;
+  let facing = 1; // 1 right, -1 left
+  let stepClock = 0; // seconds of walking, for the walk cycle
+  let emoteLeft = 0;
   let t = 0;
   const lampBoost = new Map<string, number>(); // tap id -> seconds left
   const r = rand(1234);
@@ -320,12 +333,17 @@ export async function createScene(
 
   function update(dt: number) {
     t += dt;
+    emoteLeft = Math.max(0, emoteLeft - dt);
     if (walkingTo !== null) {
       const dir = Math.sign(walkingTo - charX);
+      if (dir !== 0) facing = dir;
+      stepClock += dt;
+      emoteLeft = 0;
       charX += dir * WALK_SPEED * dt;
       if (Math.sign(walkingTo - charX) !== dir) {
         charX = walkingTo;
         walkingTo = null;
+        stepClock = 0;
       }
     }
     const want = cameraFor(charX);
@@ -492,7 +510,7 @@ export async function createScene(
       );
     }
 
-    // the character (a stand-in until the owner's sprites arrive), between the ground and the front layer
+    // the player's character, standing on the platform, with a faint reflection in the wet stone
     drawCharacter(g, Math.round(charX - cam), m.ground);
 
     // smoke and fireflies
@@ -587,6 +605,48 @@ export async function createScene(
   }
 
   function drawCharacter(g: CanvasRenderingContext2D, x: number, groundY: number) {
+    if (hero) {
+      const e = hero.entry;
+      const walking = walkingTo !== null && !reducedMotion;
+      const frame = walking
+        ? e.walk[Math.floor(stepClock * WALK_FPS) % e.walk.length]!
+        : emoteLeft > 0 && e.emote
+          ? e.emote.frame
+          : e.stand;
+      const fw = e.frameWidth;
+      const fh = e.frameHeight;
+      if (m.puddles && groundY < m.puddles.y1) {
+        g.save();
+        g.beginPath();
+        g.rect(x - fw, groundY, fw * 2, m.puddles.y1 - groundY);
+        g.clip();
+        g.globalAlpha = 0.22;
+        g.translate(x, groundY);
+        g.scale(facing < 0 ? -1 : 1, -1);
+        g.drawImage(hero.img, frame * fw, 0, fw, fh, -Math.floor(fw / 2), -fh, fw, fh);
+        g.restore();
+      }
+      g.save();
+      g.translate(x, groundY - fh);
+      if (facing < 0) g.scale(-1, 1);
+      const left = -Math.floor(fw / 2);
+      const sx = frame * fw;
+      if (frame === e.stand && !reducedMotion) {
+        // breathing: the legs stay put, the chest settles a pixel on each breath out and the head follows a
+        // moment later. Each upper band is drawn one row taller, so a band that has moved never leaves a gap.
+        const neck = Math.round(fh * 0.36);
+        const hip = Math.round(fh * 0.6);
+        const out = (time: number) =>
+          Math.round((1 - Math.cos((2 * Math.PI * time) / BREATH_SECONDS)) / 2);
+        const chest = out(t);
+        const head = out(t - HEAD_LAG);
+        g.drawImage(hero.img, sx, hip, fw, fh - hip, left, hip, fw, fh - hip);
+        g.drawImage(hero.img, sx, neck, fw, hip - neck + 1, left, neck + chest, fw, hip - neck + 1);
+        g.drawImage(hero.img, sx, 0, fw, neck + 1, left, head, fw, neck + 1);
+      } else g.drawImage(hero.img, sx, 0, fw, fh, left, 0, fw, fh);
+      g.restore();
+      return;
+    }
     const walking = walkingTo !== null && !reducedMotion;
     const step = walking ? Math.floor(t * 8) % 2 : 0;
     const bob = walking ? step : 0;
@@ -657,6 +717,12 @@ export async function createScene(
     setLean(x) {
       lean = Math.max(-1, Math.min(1, x));
     },
+    setCharacter(c) {
+      hero = c;
+    },
+    emote() {
+      if (hero?.entry.emote && walkingTo === null) emoteLeft = EMOTE_SECONDS;
+    },
     press(id) {
       const tap = m.taps?.find((tp) => tp.id === id);
       if (!tap) return;
@@ -668,6 +734,17 @@ export async function createScene(
     },
     tapAt(x, y) {
       const p = toScene(x, y);
+      if (hero) {
+        const half = hero.entry.frameWidth / 2;
+        if (
+          Math.abs(p.x - charX) <= half &&
+          p.y <= m.ground &&
+          p.y >= m.ground - hero.entry.frameHeight
+        ) {
+          view.emote();
+          return;
+        }
+      }
       const hit = m.taps?.find(
         (tp) => p.x >= tp.box[0] && p.x <= tp.box[2] && p.y >= tp.box[1] && p.y <= tp.box[3],
       );
