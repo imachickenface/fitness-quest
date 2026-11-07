@@ -4,8 +4,9 @@ import {
   Food,
   FoodEntry,
   CHARACTER_IDS,
-  HERO_IDS,
   Profile,
+  PublicProfile,
+  PublicProfileRead,
   Settings,
   Program,
   Quest,
@@ -116,17 +117,6 @@ describe('exerciseKey', () => {
   });
 });
 
-describe('Profile.hero', () => {
-  it('accepts one of the 12 characters and stays optional', () => {
-    expect(Profile.parse({ ...fx.profile, hero: 'female-c' }).hero).toBe('female-c');
-    expect(Profile.parse(fx.profile).hero).toBeUndefined();
-    expect(HERO_IDS).toHaveLength(12);
-  });
-  it('rejects an unknown character', () => {
-    expect(Profile.safeParse({ ...fx.profile, hero: 'wizard' }).success).toBe(false);
-  });
-});
-
 describe('Profile.scene and Settings.parallax', () => {
   it('keeps a picked scene id, and absent means follow my level', () => {
     expect(Profile.parse({ ...fx.profile, scene: 'station' }).scene).toBe('station');
@@ -146,8 +136,64 @@ describe('Profile.character', () => {
     expect(Profile.parse(fx.profile).character).toBeUndefined();
     expect(CHARACTER_IDS).toEqual(['jacket', 'hoodie', 'tee']);
   });
-  it('rejects an unknown character and keeps an old 3D hero choice readable', () => {
+  it('rejects an unknown character, and reads an old 3D hero choice by dropping it', () => {
     expect(Profile.safeParse({ ...fx.profile, character: 'wizard' }).success).toBe(false);
-    expect(Profile.parse({ ...fx.profile, hero: 'male-c', character: 'tee' }).hero).toBe('male-c');
+    const old = Profile.parse({
+      ...fx.profile,
+      hero: 'male-c',
+      heroLook: { head: 'male-a', colours: { '3': 12 } },
+      character: 'tee',
+    });
+    expect(old.character).toBe('tee');
+    expect('hero' in old).toBe(false);
+    expect('heroLook' in old).toBe(false);
+  });
+});
+
+describe('PublicProfile, and reading a copy written by a friend', () => {
+  const card = {
+    v: 1,
+    bio: '',
+    titles: [],
+    showcaseTitles: [],
+    level: 3,
+    xp: 180,
+    week: '2026-11-02',
+    weekXp: 40,
+    streakDays: 2,
+    workouts: 4,
+    questsDone: 1,
+    lifts: [],
+    updatedAt: '2026-11-07T10:00:00.000Z',
+  };
+
+  it('publishes the pixel character, and nothing outside the allow-list', () => {
+    expect(PublicProfile.parse({ ...card, character: 'hoodie' }).character).toBe('hoodie');
+    expect(PublicProfile.parse(card).character).toBeUndefined();
+    expect(PublicProfile.safeParse({ ...card, hero: 'male-a' }).success).toBe(false);
+    expect(PublicProfile.safeParse({ ...card, weightKg: 80 }).success).toBe(false);
+  });
+
+  it('reads a summary from an older app version, dropping the 3D hero', () => {
+    const old = PublicProfileRead.parse({
+      ...card,
+      hero: 'female-c',
+      heroLook: { head: 'male-a', colours: { '3': 12 } },
+    });
+    expect(old.level).toBe(3);
+    expect('hero' in old).toBe(false);
+    expect('heroLook' in old).toBe(false);
+  });
+
+  it('reads a summary from a newer app version: unknown keys dropped, an unknown character left out', () => {
+    const newer = PublicProfileRead.parse({ ...card, character: 'knight', pet: 'cat' });
+    expect(newer.character).toBeUndefined();
+    expect('pet' in newer).toBe(false);
+    expect(PublicProfileRead.parse({ ...card, character: 'tee' }).character).toBe('tee');
+  });
+
+  it('still rejects a summary whose known fields are wrong', () => {
+    expect(PublicProfileRead.safeParse({ ...card, level: 'ten' }).success).toBe(false);
+    expect(PublicProfileRead.safeParse({ ...card, v: 2 }).success).toBe(false);
   });
 });

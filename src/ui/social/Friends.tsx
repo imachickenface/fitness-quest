@@ -15,7 +15,7 @@ import {
 import { getClient } from '../../sync/supabase.ts';
 import { USERNAME_MAX } from '../../sync/username.ts';
 import { useAccount } from '../accountContext.ts';
-import { HeroAvatar } from '../HeroAvatar.tsx';
+import { CharacterAvatar } from '../scene/CharacterAvatar.tsx';
 import { BadgeImage } from './Badge.tsx';
 import { Challenges } from './Challenges.tsx';
 import { Feed } from './Feed.tsx';
@@ -204,7 +204,7 @@ export function Friends({ profile, me, liftChoices, records }: Props) {
             {friends.map((c) => (
               <li key={c.id} className="entry">
                 <button type="button" className="friend-row" onClick={() => setOpen(c)}>
-                  <HeroAvatar hero={c.profile?.hero} look={c.profile?.heroLook} size={44} />
+                  <CharacterAvatar character={c.profile?.character} size={44} />
                   <span className="entry-name">
                     <b>{c.username}</b>
                     <span className="muted friend-sub">

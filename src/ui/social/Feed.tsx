@@ -9,7 +9,7 @@ import {
 } from '../../sync/social.ts';
 import { getClient } from '../../sync/supabase.ts';
 import { dayTitle } from '../format.ts';
-import { HeroAvatar } from '../HeroAvatar.tsx';
+import { CharacterAvatar } from '../scene/CharacterAvatar.tsx';
 import { Icon } from '../Icon.tsx';
 
 const SHOWN = 30;
@@ -93,11 +93,7 @@ export function Feed({ me, friends, today }: Props) {
             const on = mine.has(`${item.owner}/${item.id}`);
             return (
               <li key={`${item.owner}/${item.id}`} className="entry feed-item">
-                <HeroAvatar
-                  hero={friend?.profile?.hero}
-                  look={friend?.profile?.heroLook}
-                  size={36}
-                />
+                <CharacterAvatar character={friend?.profile?.character} size={36} />
                 <span className="entry-name">
                   <b>
                     {nameOf.get(item.owner)}: {item.data.title}

@@ -3,12 +3,12 @@ import type { PublicProfile } from '../../contract.ts';
 import { TIERS } from '../../core/ranks.ts';
 import type { Contact } from '../../sync/social.ts';
 import { load, type Units } from '../format.ts';
-import { HeroAvatar } from '../HeroAvatar.tsx';
+import { CharacterAvatar } from '../scene/CharacterAvatar.tsx';
 import { Sheet } from '../Sheet.tsx';
 import { Badge } from './Badge.tsx';
 import { ProposeChallenge } from './Challenges.tsx';
 
-/** A profile's top half: hero, name, title, bio and the numbers. Used for friends and for your own preview. */
+/** A profile's top half: character, name, title, bio and the numbers. Used for friends and for your own preview. */
 export function ProfileCard({
   name,
   profile,
@@ -23,7 +23,7 @@ export function ProfileCard({
 }) {
   return (
     <div className="profile-card">
-      <HeroAvatar hero={profile.hero} look={profile.heroLook} size={96} />
+      <CharacterAvatar character={profile.character} size={96} />
       <div className="profile-who">
         <h3>
           {name}

@@ -6,7 +6,6 @@ import { claimQuest, getSettings, saveProfile, updateSettings } from '../db/db.t
 import { flyXp, reducedMotion } from './claimFx.ts';
 import { useDb } from './dbContext.ts';
 import { nowStamp } from './format.ts';
-import type { Cheer } from './hero/heroScene.ts';
 import { Icon, type IconName } from './Icon.tsx';
 import { CharacterPicker } from './scene/CharacterPicker.tsx';
 import { SceneStage } from './scene/SceneStage.tsx';
@@ -91,7 +90,8 @@ type HeroProps = {
   /** the level bar, where claimed XP flies to */
   barRef?: RefObject<HTMLDivElement | null>;
   character: CharacterId;
-  cheer?: { n: number; clip: Cheer };
+  /** bumped on each level-up made while the app is open */
+  cheer?: number;
   picked?: string;
   parallax: boolean;
   onChangeCharacter: () => void;
@@ -117,7 +117,7 @@ export function HeroCard({
       <SceneStage
         level={state.level}
         character={character}
-        cheer={cheer?.n}
+        cheer={cheer}
         picked={picked}
         parallax={parallax}
         onChangeCharacter={onChangeCharacter}
@@ -182,7 +182,7 @@ export function HeroCard({
   );
 }
 
-type Props = { game: Game; profile: Profile; cheer?: { n: number; clip: Cheer } };
+type Props = { game: Game; profile: Profile; cheer?: number };
 
 export function Quests({ game, profile, cheer }: Props) {
   const db = useDb();

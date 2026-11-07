@@ -2,7 +2,6 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useMemo } from 'react';
 import type { GameState, Profile, Program, Quest, QuestProgress } from '../contract.ts';
 import { localDate } from '../core/diary.ts';
-import { bodyShape } from '../core/body.ts';
 import { gameState } from '../core/game.ts';
 import { dailyQuests, mealsTitle, weekStart, weeklyQuest } from '../core/quests/daily.ts';
 import { addDays } from '../core/dates.ts';
@@ -30,8 +29,6 @@ export type Game = {
   state: GameState;
   /** quests whose window includes today, dailies first */
   active: QuestView[];
-  /** the hero's shape: muscle 0..4, build -2..2 */
-  body: { muscle: number; build: number };
   /** everything the summary for friends is built from */
   records: Records;
   /** every stored quest with its progress */
@@ -125,18 +122,8 @@ export function useGame(profile: Profile): Game | undefined {
         (a, b) => order[a.quest.kind] - order[b.quest.kind] || a.quest.id.localeCompare(b.quest.id),
       );
     const state = gameState(records, views, today);
-    const weightKg = records.weighIns.at(-1)?.kg;
-    const body = bodyShape({
-      records,
-      questsCompletedOn: views.flatMap((v) =>
-        v.progress.completedOn ? [v.progress.completedOn] : [],
-      ),
-      streakDays: state.streakDays,
-      targetKcal: weightKg ? calorieTarget(profile, weightKg, today).kcal : undefined,
-      today,
-    });
-    return { today, state, active, body, records, views, program: program ?? undefined };
-  }, [records, quests, today, profile, program]);
+    return { today, state, active, records, views, program: program ?? undefined };
+  }, [records, quests, today, program]);
 }
 
 /** Meals quests stored before snacks were named in the title ("Log 3 meals") read like today's. */

@@ -221,19 +221,13 @@ describe('publicSummary', () => {
     expect(ok.bio).toBe('');
   });
 
-  it('carries the hero, its look and the program name', () => {
-    const profile: Profile = {
-      ...fx.profile,
-      hero: 'female-c',
-      heroLook: { head: 'male-a', colours: { '3': 12 } },
-    };
+  it('carries the pixel character and the program name', () => {
+    const profile: Profile = { ...fx.profile, character: 'hoodie' };
     const s = publicSummary(input({ profile, programName: 'Couch to 5K' }));
-    expect(s.hero).toBe('female-c');
-    expect(s.heroLook).toEqual({ head: 'male-a', colours: { '3': 12 } });
+    expect(s.character).toBe('hoodie');
     expect(s.program).toBe('Couch to 5K');
     const bare = publicSummary(input());
-    expect('hero' in bare).toBe(false);
-    expect('heroLook' in bare).toBe(false);
+    expect('character' in bare).toBe(false);
     expect('program' in bare).toBe(false);
     expect('title' in bare).toBe(false);
   });

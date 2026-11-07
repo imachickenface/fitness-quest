@@ -18,10 +18,10 @@ const CREDITS: { name: string; url: string; what: string; licence: string }[] = 
     licence: 'public domain',
   },
   {
-    name: 'Kenney Mini Characters',
-    url: 'https://kenney.nl/assets/mini-characters',
-    what: 'the hero models',
-    licence: 'CC0',
+    name: 'Scene and character art',
+    url: 'https://github.com/imachickenface/fitness-quest/tree/main/public/scenes',
+    what: 'the pixel scenes and characters, supplied by the app’s owner',
+    licence: 'used with the owner’s permission',
   },
   {
     name: 'Badge art',
@@ -42,7 +42,7 @@ const CREDITS: { name: string; url: string; what: string; licence: string }[] = 
     licence: 'SIL Open Font License',
   },
   {
-    name: 'three.js, React, Dexie, zod, zxing-wasm, supabase-js, uqr',
+    name: 'React, Dexie, zod, zxing-wasm, supabase-js, uqr',
     url: 'https://github.com/imachickenface/fitness-quest/blob/main/package.json',
     what: 'the code libraries',
     licence: 'MIT and Apache 2.0',

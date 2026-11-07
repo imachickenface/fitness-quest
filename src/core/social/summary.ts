@@ -8,7 +8,6 @@
  */
 import {
   SHOWCASE_MAX,
-  type HeroLook,
   type Profile,
   type PublicLift,
   type PublicProfile,
@@ -122,16 +121,6 @@ function publicLift(rank: ExerciseRank): PublicLift {
   };
 }
 
-/** The chosen character's customisation, keeping only the keys the player actually set. */
-function heroLookOf(profile: Profile): HeroLook | undefined {
-  const look = profile.heroLook;
-  if (look === undefined) return undefined;
-  return {
-    ...(look.head !== undefined ? { head: look.head } : {}),
-    ...(look.colours !== undefined ? { colours: { ...look.colours } } : {}),
-  };
-}
-
 /** What friends see. */
 export function publicSummary(input: SummaryInput): PublicProfile {
   const { profile, records, quests, bodyweightKg, programName, today, now } = input;
@@ -168,13 +157,11 @@ export function publicSummary(input: SummaryInput): PublicProfile {
     ...new Set((profile.social?.showcaseTitles ?? []).filter((t) => titles.includes(t))),
   ].slice(0, SHOWCASE_MAX);
 
-  const heroLook = heroLookOf(profile);
   const lifts = showcaseRanks(ranks, profile.social?.showcaseLifts).map(publicLift);
 
   return {
     v: 1,
-    ...(profile.hero === undefined ? {} : { hero: profile.hero }),
-    ...(heroLook === undefined ? {} : { heroLook }),
+    ...(profile.character === undefined ? {} : { character: profile.character }),
     bio: profile.social?.bio?.trim() ?? '',
     ...(title === undefined ? {} : { title }),
     titles,

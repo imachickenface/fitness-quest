@@ -1,7 +1,7 @@
 # Fitness Quest
 
 A personal fitness app that plays like a small pixel-art adventure. Log food in a tap or a barcode scan, log
-workouts, complete quests, earn XP and move your hero across the map. Installs on an Android phone as a web app;
+workouts, complete quests, earn XP, and level up to walk your pixel character through the scenes. Installs on an Android phone as a web app;
 all data stays on the phone.
 
 **Live:** https://imachickenface.github.io/fitness-quest/ (open in Chrome on Android, then "Add to Home screen" /
@@ -44,7 +44,8 @@ deletes the phone's copy; restoring a backup file or signing in brings it back.
 - Food data: [Open Food Facts](https://world.openfoodfacts.org) contributors (ODbL) and
   [USDA FoodData Central](https://fdc.nal.usda.gov) (CC0).
 - Exercise library: [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (public domain).
-- Hero models: [Kenney Mini Characters](https://kenney.nl/assets/mini-characters) (CC0).
+- Scenes and characters (`public/scenes/`, `public/characters/`): supplied by the app's owner, prepared with the
+  scripts in `art/` (see `docs/SCENES.md`).
 - Badges (`public/badges/`): supplied by the app's owner, cut from one sheet with `art/slice_badges.py`.
 - Fonts: Nunito and Pixelify Sans (SIL Open Font License).
-- Libraries: three.js, React, zod, zxing-wasm, barcode-detector, supabase-js, uqr (MIT); Dexie (Apache 2.0).
+- Libraries: React, zod, zxing-wasm, barcode-detector, supabase-js, uqr (MIT); Dexie (Apache 2.0).

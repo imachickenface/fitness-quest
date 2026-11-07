@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Cheer } from './hero/heroScene.ts';
 import type { Profile } from '../contract.ts';
 import { Icon, type IconName } from './Icon.tsx';
 import { Quests } from './Quests.tsx';
@@ -55,7 +54,7 @@ export function Shell({ profile }: { profile: Profile }) {
 
   // Celebrate quests completed and levels reached while the app is open (not ones from before).
   const seen = useRef<{ open: Set<string>; level: number } | null>(null);
-  const [cheer, setCheer] = useState<{ n: number; clip: Cheer } | undefined>(undefined);
+  const [cheer, setCheer] = useState(0);
   const [finished, setFinished] = useState<Finished[]>([]);
   const nextBanner = useCallback(() => setFinished((queue) => queue.slice(1)), []);
   useEffect(() => {
@@ -65,7 +64,7 @@ export function Shell({ profile }: { profile: Profile }) {
     seen.current = { open: new Set(unfinished), level: game.state.level };
     if (!before) return;
     // each quest seen open that is now finished gets the banner in turn (one that arrives already
-    // finished, like "Step on the scale" after the first weigh-in, does not); the hero walks on and cheers
+    // finished, like "Step on the scale" after the first weigh-in, does not); the character walks on and cheers
     const fresh = game.active.filter((v) => v.progress.complete && before.open.has(v.quest.id));
     if (fresh.length > 0) {
       setFinished((queue) => [
@@ -80,7 +79,7 @@ export function Shell({ profile }: { profile: Profile }) {
     // the level only rises when XP is claimed, on the Quests tab
     if (game.state.level > before.level) {
       say(`Level up! You reached level ${game.state.level}`);
-      setCheer((c) => ({ n: (c?.n ?? 0) + 1, clip: 'jump' }));
+      setCheer((n) => n + 1);
     }
   }, [game, say]);
 

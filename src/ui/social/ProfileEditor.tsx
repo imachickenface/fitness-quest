@@ -12,7 +12,7 @@ import { TITLES } from '../../core/social/titles.ts';
 import { saveProfile } from '../../db/db.ts';
 import { useDb } from '../dbContext.ts';
 import { nowStamp } from '../format.ts';
-import { HeroAvatar } from '../HeroAvatar.tsx';
+import { CharacterAvatar } from '../scene/CharacterAvatar.tsx';
 import { Sheet } from '../Sheet.tsx';
 import { Badge, BadgeImage } from './Badge.tsx';
 
@@ -69,9 +69,11 @@ export function ProfileEditor({ profile, me, liftChoices, onClose }: Props) {
   return (
     <Sheet title="Edit profile" onClose={onClose}>
       <form className="form profile-editor" onSubmit={(e) => void submit(e)}>
-        <div className="profile-editor-hero">
-          <HeroAvatar hero={profile.hero} look={profile.heroLook} size={72} />
-          <p className="muted">Your hero is your picture. Change how it looks on the Quests tab.</p>
+        <div className="profile-editor-picture">
+          <CharacterAvatar character={profile.character} size={72} />
+          <p className="muted">
+            Your character is your picture. Change it with Change character on the Quests tab.
+          </p>
         </div>
 
         <label className="field">
@@ -178,8 +180,9 @@ export function ProfileEditor({ profile, me, liftChoices, onClose }: Props) {
             <span>My lift ranks and PRs</span>
           </label>
           <p className="muted">
-            Always shared with friends: your username, hero, bio, badges, level, XP, streak, and how
-            many workouts and quests you've done. Never shared: your weight, food and calories.
+            Always shared with friends: your username, character, bio, badges, level, XP, streak,
+            and how many workouts and quests you've done. Never shared: your weight, food and
+            calories.
           </p>
         </fieldset>
 

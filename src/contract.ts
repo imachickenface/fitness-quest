@@ -190,34 +190,10 @@ export type Goal = z.infer<typeof Goal>;
 export const ActivityLevel = z.enum(['sedentary', 'light', 'moderate', 'active', 'very_active']);
 export type ActivityLevel = z.infer<typeof ActivityLevel>;
 
-/** The 12 Kenney Mini Characters (public/hero/<id>.glb). */
-export const HERO_IDS = [
-  'male-a',
-  'male-b',
-  'male-c',
-  'male-d',
-  'male-e',
-  'male-f',
-  'female-a',
-  'female-b',
-  'female-c',
-  'female-d',
-  'female-e',
-  'female-f',
-] as const;
-export const HeroId = z.enum(HERO_IDS);
-export type HeroId = z.infer<typeof HeroId>;
-
 /** The pixel characters (public/characters/<id>.webp, cut by art/character_sheets.py). */
 export const CHARACTER_IDS = ['jacket', 'hoodie', 'tee'] as const;
 export const CharacterId = z.enum(CHARACTER_IDS);
 export type CharacterId = z.infer<typeof CharacterId>;
-
-export const HeroLook = z.object({
-  head: HeroId.optional(),
-  colours: z.record(z.string().regex(/^\d{1,2}$/), z.number().int().min(0).max(63)).optional(),
-});
-export type HeroLook = z.infer<typeof HeroLook>;
 
 // ---------- social (M8): titles and what friends see ----------
 
@@ -301,8 +277,8 @@ export type PublicLift = z.infer<typeof PublicLift>;
 export const PublicProfile = z
   .object({
     v: z.literal(1),
-    hero: HeroId.optional(),
-    heroLook: HeroLook.strict().optional(),
+    /** the pixel character (M10.7); absent = the first one */
+    character: CharacterId.optional(),
     bio: z.string().max(BIO_MAX),
     title: TitleId.optional(),
     /** every unlocked title, in TITLE_IDS order */
@@ -332,6 +308,16 @@ export const PublicProfile = z
   })
   .strict();
 export type PublicProfile = z.infer<typeof PublicProfile>;
+
+/**
+ * Reading a friend's copy, which another app version may have written: keys this version doesn't know are dropped
+ * (an older version's 3D `hero` and `heroLook`, a newer version's additions) and a character it doesn't know is
+ * left out, while every known field is still checked.
+ */
+export const PublicProfileRead = z.object({
+  ...PublicProfile.shape,
+  character: CharacterId.optional().catch(undefined),
+});
 
 /** One thing a player did lately, as their friends see it (M8.7). No notes, no food, no body weight. */
 export const PublicActivity = z
@@ -372,10 +358,6 @@ export const Profile = z.object({
     .string()
     .regex(/^[a-z0-9-]{1,40}$/)
     .optional(),
-  /** the player's chosen character; the body shape on it comes from their records */
-  hero: HeroId.optional(),
-  /** customising the chosen character: another character's head, and palette cells swapped for others (0-63) */
-  heroLook: HeroLook.optional(),
   /** how boss quests progress lifts; defaults from the goal when absent */
   style: z.enum(['powerlifting', 'bodybuilding', 'calisthenics']).optional(),
   /** what friends see (M8); absent = nothing chosen yet, sharing on */

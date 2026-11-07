@@ -4,7 +4,7 @@
  * contract before the app uses it.
  */
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { PublicActivity, PublicProfile } from '../contract.ts';
+import { PublicActivity, PublicProfileRead, type PublicProfile } from '../contract.ts';
 import { CHALLENGE_GOALS, type ChallengeGoal } from '../core/social/challenge.ts';
 
 export type RequestResult =
@@ -93,7 +93,7 @@ export async function fetchContacts(c: SupabaseClient, me: string): Promise<Cont
   );
   const profileOf = new Map<string, PublicProfile>();
   for (const p of profiles.data as { user_id: string; data: unknown }[]) {
-    const checked = PublicProfile.safeParse(p.data);
+    const checked = PublicProfileRead.safeParse(p.data);
     if (checked.success) profileOf.set(p.user_id, checked.data); // a bad one is shown as no profile
   }
   return contacts.map((x) => {

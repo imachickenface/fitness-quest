@@ -59,12 +59,6 @@ export default defineConfig({
             handler: 'StaleWhileRevalidate',
             options: { cacheName: 'scenes' },
           },
-          // hero models: only the chosen one is ever fetched, then it works offline
-          {
-            urlPattern: /\/hero\/[\w-]+\.glb$/,
-            handler: 'CacheFirst',
-            options: { cacheName: 'hero' },
-          },
         ],
       },
     }),
