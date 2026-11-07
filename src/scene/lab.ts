@@ -1,7 +1,7 @@
 /** The scene lab (scene-lab.html, dev only): try a scene's stops, sky, rain, taps and parallax. */
 import { loadCharacter, loadCharacters, type CharacterEntry } from './character.ts';
 import { createScene, type SceneView, type Sky } from './engine.ts';
-import { skyAt } from './sky.ts';
+import { skyAt } from '../core/sky.ts';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const canvas = $<HTMLCanvasElement>('scene');

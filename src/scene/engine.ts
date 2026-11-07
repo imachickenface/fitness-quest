@@ -8,10 +8,11 @@
  * the page is hidden or the canvas is off screen. With reduced motion the scene is still: no particles, no
  * parallax, and stops are cuts instead of walks.
  */
+import type { Sky } from '../core/sky.ts';
 import type { CharacterSprite } from './character.ts';
 import { SceneManifest } from './manifest.ts';
 
-export type Sky = 'morning' | 'day' | 'dusk' | 'night';
+export type { Sky };
 
 export type SceneTap = { id: string; label: string; box: [number, number, number, number] };
 

@@ -458,7 +458,7 @@ day/night versions, the scene's length (5-10 levels), and whether the art may be
 | 10.3 ✅ | Character sprites: loader, idle/walk/cheer, walk between stops (in the lab: the owner's three characters, cut by `art/character_sheets.py`; the e2e comes with 10.4) | C | e2e level-up walks the character | O sprites ✅ |
 | 10.4 ✅ | Quests screen: the scene replaces the 3D view; level-up pan and walk; scene-change transition; a character picker (`Profile.character`) replaces Change hero and Customise | C | e2e: level 5 → 6 changes scene (with a stand-in second scene served by the test) | 10.2, 10.3 |
 | 10.5 ✅ | Scenes picker and "Follow my level" ("Back to level N"); `Profile.scene` synced; a parallax switch per device (`Settings.parallax`) | C | e2e pick a past scene, reload, it stays; parallax off persists | 10.4 |
-| 10.6 | Time of day and weather (`core/sky.ts` pure part) | Q + C | unit tests for the time bands and daily weather; screenshots | 10.0 |
+| 10.6 ✅ | Time of day and weather (`core/sky.ts` pure part; a date hash, rain about one day in four) | C | unit tests for the time bands and daily weather; screenshots | 10.0 |
 | 10.7 | Remove Kenney models, three.js, Customise and hero picker; friends' avatars from sprites; contract migration | C | bundle smaller; old profiles and friends' summaries still load; a11y scans pass | 10.4 |
 | 10.8 | Each new scene the owner sends: layers, manifest, tap spots | C | scene passes the manifest check and budget | O scenes |
 | 10.9 | Credits, privacy note unchanged, docs, deploy | C | all tests; live check | all |

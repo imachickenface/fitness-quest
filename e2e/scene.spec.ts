@@ -133,3 +133,19 @@ test('parallax can be turned off, and stays off', async ({ page }) => {
     page.getByRole('checkbox', { name: /Move the scene when I tilt/ }),
   ).not.toBeChecked();
 });
+
+test('the sky follows the clock and the weather follows the date', async ({ page }) => {
+  // 6 November 2026 is a rainy day (core/sky.ts), and 9 pm is night
+  await page.clock.setFixedTime(new Date(2026, 10, 6, 21, 0));
+  await setUp(page);
+  const frame = page.locator('.scene-frame');
+  await expect(frame).toHaveAttribute('data-state', 'ready');
+  await expect(frame).toHaveAttribute('data-sky', 'night');
+  await expect(frame).toHaveAttribute('data-weather', 'rain');
+
+  // the next morning is dry
+  await page.clock.setFixedTime(new Date(2026, 10, 7, 10, 0));
+  await page.reload();
+  await expect(page.locator('.scene-frame')).toHaveAttribute('data-sky', 'day');
+  await expect(page.locator('.scene-frame')).toHaveAttribute('data-weather', 'clear');
+});

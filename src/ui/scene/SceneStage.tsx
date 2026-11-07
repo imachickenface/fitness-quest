@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import type { CharacterId } from '../../contract.ts';
+import { localDate } from '../../core/diary.ts';
 import { placeForLevel, sceneToShow, type ScenePlace } from '../../core/scenes.ts';
+import { skyAt, weatherOn, type Sky, type Weather } from '../../core/sky.ts';
 import { loadCharacter, type CharacterEntry, type CharacterSprite } from '../../scene/character.ts';
 import { createScene, type SceneView } from '../../scene/engine.ts';
 import type { SceneManifest } from '../../scene/manifest.ts';
-import { skyAt } from '../../scene/sky.ts';
 import { loadWorld, type World } from '../../scene/world.ts';
 import { reducedMotion } from '../claimFx.ts';
 import { characterList, CHARACTER_BASE } from './characters.ts';
@@ -17,6 +18,13 @@ const FADE_MS = 450;
 const CSS_HEIGHT = 300;
 
 const wait = (ms: number) => new Promise<void>((done) => setTimeout(done, ms));
+
+type Outside = { sky: Sky; weather: Weather };
+/** the sky on the phone's clock and today's weather (the same for everyone today) */
+function outsideNow(): Outside {
+  const now = new Date();
+  return { sky: skyAt(now), weather: weatherOn(localDate(now)) };
+}
 
 function readShown(): number | null {
   try {
@@ -80,6 +88,8 @@ export function SceneStage({
   const alive = useRef(true);
   const lastPicked = useRef<string | null | undefined>(undefined);
   const parallaxOn = useRef(parallax);
+  const [outside, setOutside] = useState(outsideNow);
+  const outsideRef = useRef(outside);
   const [world, setWorld] = useState<World | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'failed'>('loading');
   const [fading, setFading] = useState(true);
@@ -175,7 +185,8 @@ export function SceneStage({
         sceneId.current = target.id;
         v.setCharacter(sprite.current);
         v.setParallax(parallaxOn.current);
-        v.setSky(skyAt(new Date()));
+        v.setSky(outsideRef.current.sky);
+        v.setRain(outsideRef.current.weather === 'rain');
         // where to start: the last stop shown in this scene, the start of a scene arrived at, or right here
         const start =
           !following || switching
@@ -217,11 +228,21 @@ export function SceneStage({
     });
   }, [cheer]);
 
-  // the sky follows the clock
+  // the sky follows the clock, and the weather the date
   useEffect(() => {
-    const tick = setInterval(() => view.current?.setSky(skyAt(new Date())), 60_000);
+    const tick = setInterval(() => {
+      setOutside((was) => {
+        const next = outsideNow();
+        return next.sky === was.sky && next.weather === was.weather ? was : next;
+      });
+    }, 60_000);
     return () => clearInterval(tick);
   }, []);
+  useEffect(() => {
+    outsideRef.current = outside;
+    view.current?.setSky(outside.sky);
+    view.current?.setRain(outside.weather === 'rain');
+  }, [outside]);
 
   // resizing, tilting the phone, and tap spots that follow the scene as it pans
   useEffect(() => {
@@ -269,6 +290,8 @@ export function SceneStage({
         data-stop={shown?.stop ?? ''}
         data-level={level}
         data-character={character}
+        data-sky={outside.sky}
+        data-weather={outside.weather}
       >
         {status === 'failed' && place && (
           <img className="scene-still" src={`${SCENE_BASE}${place.id}/base.webp`} alt="" />
