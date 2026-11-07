@@ -120,3 +120,14 @@
 | 2026-11-07 | The 3D heroes are gone: three.js, the Kenney and KayKit models and their art scripts, Customise, the hero picker and the body shape (`core/body.ts`, muscle and build from recent logs) that only the 3D hero showed. They stay in git history | The pixel characters replace them (10.4); the 626 KB three.js chunk leaves the app. A body shape could come back as sprite variants if the owner draws them. |
 | 2026-11-07 | Friends see `PublicProfile.character`; `hero` and `heroLook` are no longer published or kept in the profile. A friend's copy is read with `PublicProfileRead`, which drops keys it doesn't know and leaves out an unknown character, so older and newer app versions read each other | An app version from before this one rejects a summary with `character` and shows that friend without stats until it updates, which the app does on its next open. Reading leniently from now on keeps later additions from doing that again. |
 | 2026-11-07 | A player's picture is a crop around the head of their character's standing frame, found from the sprite's pixels | A new character needs no extra numbers in `characters.json`. |
+
+## Retrospective (M10.0-10.7, pixel scenes)
+
+- **Qwen did well** on `core/scenes.ts` (10.2): Claude's tests passed on the first attempt, and the review only fixed a misleading comment. It also wrote the manifest's stop rules (10.1), which reported only the last bad stop until review caught it.
+- **Claude did the rest**: renderer, effects, sprite cutting, screens, the sky rules (smaller than a Qwen brief) and removing the 3D code (it cut across many files).
+- **Took longer than planned:** feel, not code. Parallax took three rounds before the owner asked for the whole view to shift; the breathing idle took three (stepped bands looked "like a worm", then the arms stayed glued to the legs); cutting the owner's sprite sheets needed majority-colour shrinking, speck removal and anchoring on the feet. Lesson: show the owner a moving preview (the scene lab or a GIF) after the first attempt at any animation, before polishing it.
+- **Test flake:** the friends e2e test, which uses the live test project with two accounts, failed once in a full run with four workers, then passed alone and in the next full run with two workers.
+- **Still open:** 10.8 needs the owner's next scene; until then level-ups walk the forest station and stop at its last spot.
+
+| Date | Decision | Why |
+|---|---|---|

@@ -29,6 +29,14 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await page.getByLabel('Weight (kg)').fill('80');
       await page.getByRole('button', { name: 'Start the adventure' }).click();
       await scan(page, 'Quests');
+      await page.getByRole('button', { name: 'Scenes' }).click();
+      await expect(page.getByRole('button', { name: /Forest station/ })).toBeVisible();
+      await scan(page, 'the Scenes sheet');
+      await page.getByRole('button', { name: 'Close' }).click();
+      await page.getByRole('button', { name: 'Change character' }).click();
+      await expect(page.getByRole('button', { name: 'Hoodie' })).toBeVisible();
+      await scan(page, 'the character picker');
+      await page.getByRole('button', { name: 'Close' }).click();
 
       await page.getByRole('button', { name: 'Food', exact: true }).click();
       await scan(page, 'Food');
