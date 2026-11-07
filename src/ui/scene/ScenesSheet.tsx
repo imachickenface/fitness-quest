@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { placeForLevel, unlockedScenes } from '../../core/scenes.ts';
+import { placeForLevel, reachedStops, sceneToShow, unlockedScenes } from '../../core/scenes.ts';
 import { loadWorld, type World } from '../../scene/world.ts';
 import { reducedMotion } from '../claimFx.ts';
 import { Sheet } from '../Sheet.tsx';
@@ -10,15 +10,25 @@ type Props = {
   level: number;
   /** Profile.scene: a scene picked to stay in; absent = follow the level */
   picked?: string;
+  /** Profile.sceneStop: a stop picked in that scene; absent = the last one reached */
+  pickedStop?: number;
   parallax: boolean;
-  /** a scene id to stay in, or null to follow the level */
-  onPick: (scene: string | null) => void;
+  /** a scene (and a stop in it) to stay at, or null to follow the level */
+  onPick: (pick: { scene: string; stop?: number } | null) => void;
   onParallax: (on: boolean) => void;
   onClose: () => void;
 };
 
 /** The scenes reached so far, to go back to one, and the scene's settings on this device. */
-export function ScenesSheet({ level, picked, parallax, onPick, onParallax, onClose }: Props) {
+export function ScenesSheet({
+  level,
+  picked,
+  pickedStop,
+  parallax,
+  onPick,
+  onParallax,
+  onClose,
+}: Props) {
   const [world, setWorld] = useState<World | null>(null);
   // shown at once; the setting is saved on this device behind it
   const [moving, setMoving] = useState(parallax);
@@ -42,14 +52,14 @@ export function ScenesSheet({ level, picked, parallax, onPick, onParallax, onClo
     starts.push(next);
     next += span.levels;
   }
-  const following = !picked || picked === current?.id || !unlocked.includes(picked);
+  const shown = world ? sceneToShow(world.spans, level, picked ?? null, pickedStop) : null;
   const upcoming = world?.spans[unlocked.length];
   const noMotion = reducedMotion();
 
   return (
     <Sheet title="Scenes" onClose={onClose}>
       <p className="muted">
-        Go back to a scene you've reached. Level-ups still count while you're there.
+        Go back to a scene or a stop you've reached. Level-ups still count while you're there.
       </p>
       <ul className="scene-list">
         {world?.spans.map((span, i) => {
@@ -57,23 +67,47 @@ export function ScenesSheet({ level, picked, parallax, onPick, onParallax, onClo
           const m = world.manifests.get(span.id);
           const here = span.id === current?.id;
           const first = starts[i] ?? 1;
+          const name = m?.name ?? span.id;
+          const reached = reachedStops(world.spans, level, span.id);
+          // the place the level is at means following it, rather than a pick
+          const pick = (stop?: number) =>
+            onPick(
+              here && (stop === undefined || stop === current?.stop)
+                ? null
+                : { scene: span.id, ...(stop === undefined ? {} : { stop }) },
+            );
           return (
             <li key={span.id}>
               <button
                 type="button"
                 className="scene-option"
-                aria-pressed={here ? following : picked === span.id}
-                onClick={() => onPick(here ? null : span.id)}
+                aria-pressed={shown?.id === span.id}
+                onClick={() => pick()}
               >
                 <img src={`${SCENE_BASE}${span.id}/base.webp`} alt="" />
                 <span className="scene-option-text">
-                  <strong>{m?.name ?? span.id}</strong>
+                  <strong>{name}</strong>
                   <small>
                     Levels {first}-{first + span.levels - 1}
                     {here ? ' · you are here' : ''}
                   </small>
                 </span>
               </button>
+              <div className="scene-stops" role="group" aria-label={`Stops in ${name}`}>
+                {Array.from({ length: span.stops }, (_, stop) => (
+                  <button
+                    key={stop}
+                    type="button"
+                    className="scene-stop"
+                    aria-label={`${name}, stop ${stop + 1}${stop < reached ? '' : ', not reached yet'}`}
+                    aria-pressed={shown?.id === span.id && shown.stop === stop}
+                    disabled={stop >= reached}
+                    onClick={() => pick(stop)}
+                  >
+                    {stop + 1}
+                  </button>
+                ))}
+              </div>
             </li>
           );
         })}

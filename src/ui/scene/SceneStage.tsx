@@ -53,6 +53,8 @@ type Props = {
   cheer?: number;
   /** a scene picked to stay in (Profile.scene); absent = follow the level */
   picked?: string;
+  /** a stop picked in that scene (Profile.sceneStop); absent = the last one reached */
+  pickedStop?: number;
   /** the device's parallax setting */
   parallax: boolean;
   onChangeCharacter: () => void;
@@ -73,6 +75,7 @@ export function SceneStage({
   character,
   cheer,
   picked,
+  pickedStop,
   parallax,
   onChangeCharacter,
   onOpenScenes,
@@ -98,9 +101,9 @@ export function SceneStage({
   const [characterName, setCharacterName] = useState('');
   const spots = useRef<(HTMLButtonElement | null)[]>([]);
 
-  const place = world ? sceneToShow(world.spans, level, picked ?? null) : null;
+  const place = world ? sceneToShow(world.spans, level, picked ?? null, pickedStop) : null;
   const current = world ? placeForLevel(world.spans, level) : null;
-  const following = !place || !current || place.id === current.id;
+  const following = !place || !current || (place.id === current.id && place.stop === current.stop);
   const manifest = shown && world ? world.manifests.get(shown.id) : undefined;
 
   useEffect(() => {
@@ -151,7 +154,7 @@ export function SceneStage({
     const el = canvas.current;
     if (!el) return;
     // a new pick (or following the level again) fades straight to the other scene: nobody walked there
-    const pick = picked ?? null;
+    const pick = picked === undefined ? null : `${picked}:${pickedStop ?? ''}`;
     const switching = lastPicked.current !== undefined && lastPicked.current !== pick;
     lastPicked.current = pick;
     const goTo = async () => {
@@ -201,7 +204,8 @@ export function SceneStage({
         setStatus('ready');
         setFading(false);
       }
-      v.setStop(target.stop, motion && following && !switching);
+      // within a scene the character walks: to the next stop on a level-up, or to a picked stop
+      v.setStop(target.stop, motion);
       setShown(target);
       // a picked past scene leaves the level shown alone, so following again picks up from there
       if (following) writeShown(level);
@@ -210,7 +214,7 @@ export function SceneStage({
     queue.current = queue.current.then(goTo).catch(() => {
       if (alive.current) setStatus('failed');
     });
-  }, [world, targetId, targetStop, targetScene, level, picked, following]);
+  }, [world, targetId, targetStop, targetScene, level, picked, pickedStop, following]);
 
   useEffect(() => {
     parallaxOn.current = parallax;

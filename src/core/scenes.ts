@@ -76,33 +76,40 @@ export function unlockedScenes(scenes: readonly SceneSpan[], level: number): str
 }
 
 /**
- * Which scene to show for a level, honouring an optional user pick.
+ * How many stops of a scene the player has reached at a level, counted from the first: all of them in a finished
+ * scene (or past the end of the world), up to the current stop in the current scene, and 0 in a locked or unknown
+ * scene.
+ */
+export function reachedStops(scenes: readonly SceneSpan[], level: number, id: string): number {
+  const current = placeForLevel(scenes, level);
+  const pastEnd = normaliseLevel(level) >= worldEndLevel(scenes);
+  const index = scenes.findIndex((s) => s.id === id);
+  if (index < 0 || index > current.scene) return 0;
+  if (index < current.scene || pastEnd) return scenes[index]!.stops;
+  return current.stop + 1;
+}
+
+/**
+ * Which scene and stop to show for a level, honouring an optional pick by the player.
  *
- * A pick of an unlocked scene that sits before the current one shows that scene at its last stop (the player
- * has finished it). Past the end of the world every scene is finished, so any pick shows its last stop. Every
- * other pick - none, an unknown id, a locked scene, or the current scene - just shows the current place.
+ * A picked scene shows at the picked stop, as long as the player has reached it; a stop not reached yet shows
+ * the furthest one reached instead. With no stop (or a broken one), a finished scene shows its last stop and the
+ * current scene its current stop. A pick of a locked or unknown scene is ignored, as is no pick at all: those show
+ * the current place.
  */
 export function sceneToShow(
   scenes: readonly SceneSpan[],
   level: number,
   picked: string | null | undefined,
+  stop?: number,
 ): ScenePlace {
   const current = placeForLevel(scenes, level);
   if (picked === null || picked === undefined) return current;
-
-  const safe = normaliseLevel(level);
-  const pastEnd = safe >= worldEndLevel(scenes);
-
-  let start = 1;
-  for (const [index, scene] of scenes.entries()) {
-    if (scene.id === picked) {
-      const unlocked = start <= safe;
-      if (index < current.scene || (pastEnd && unlocked)) {
-        return { scene: index, id: scene.id, stop: scene.stops - 1 };
-      }
-      return current;
-    }
-    start += scene.levels;
-  }
-  return current;
+  const reached = reachedStops(scenes, level, picked);
+  if (reached === 0) return current;
+  const index = scenes.findIndex((s) => s.id === picked);
+  const furthest = reached - 1;
+  const asked =
+    stop !== undefined && Number.isInteger(stop) && stop >= 0 ? Math.min(stop, furthest) : furthest;
+  return { scene: index, id: picked, stop: asked };
 }

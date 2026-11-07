@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { placeForLevel, sceneToShow, unlockedScenes, type SceneSpan } from './scenes.ts';
+import {
+  placeForLevel,
+  reachedStops,
+  sceneToShow,
+  unlockedScenes,
+  type SceneSpan,
+} from './scenes.ts';
 
 // the forest station (5 levels, 5 stops), a 10-level scene with 5 stops, and an 8-level scene with 3 stops
 const world: SceneSpan[] = [
@@ -108,5 +114,56 @@ describe('sceneToShow', () => {
   it('past the end of the world, the last scene picked shows its last stop', () => {
     expect(sceneToShow(world, 40, 'peak')).toEqual({ scene: 2, id: 'peak', stop: 2 });
     expect(sceneToShow(world, 40, 'station')).toEqual({ scene: 0, id: 'station', stop: 4 });
+  });
+});
+
+describe('sceneToShow with a picked stop', () => {
+  it('shows any stop of a finished scene', () => {
+    expect(sceneToShow(world, 12, 'station', 1)).toEqual({ scene: 0, id: 'station', stop: 1 });
+    expect(sceneToShow(world, 12, 'station', 0)).toEqual({ scene: 0, id: 'station', stop: 0 });
+  });
+
+  it('shows a stop already reached in the current scene', () => {
+    // level 12: harbour stop 3
+    expect(sceneToShow(world, 12, 'harbour', 1)).toEqual({ scene: 1, id: 'harbour', stop: 1 });
+    expect(sceneToShow(world, 12, 'harbour', 3)).toEqual({ scene: 1, id: 'harbour', stop: 3 });
+  });
+
+  it('never shows a stop not reached yet: it stops at the furthest one', () => {
+    expect(sceneToShow(world, 12, 'harbour', 4)).toEqual({ scene: 1, id: 'harbour', stop: 3 });
+    expect(sceneToShow(world, 12, 'station', 9)).toEqual({ scene: 0, id: 'station', stop: 4 });
+  });
+
+  it('treats a broken stop as no stop', () => {
+    expect(sceneToShow(world, 12, 'station', -1)).toEqual({ scene: 0, id: 'station', stop: 4 });
+    expect(sceneToShow(world, 12, 'station', 1.5)).toEqual({ scene: 0, id: 'station', stop: 4 });
+    expect(sceneToShow(world, 12, 'station', Number.NaN)).toEqual({
+      scene: 0,
+      id: 'station',
+      stop: 4,
+    });
+  });
+
+  it('ignores the stop of a locked or unknown scene', () => {
+    expect(sceneToShow(world, 12, 'peak', 0)).toEqual(placeForLevel(world, 12));
+    expect(sceneToShow(world, 12, 'moon', 0)).toEqual(placeForLevel(world, 12));
+  });
+
+  it('past the end of the world, any stop of any scene', () => {
+    expect(sceneToShow(world, 40, 'peak', 0)).toEqual({ scene: 2, id: 'peak', stop: 0 });
+  });
+});
+
+describe('reachedStops', () => {
+  it('counts every stop of a finished scene and the reached ones of the current scene', () => {
+    expect(reachedStops(world, 12, 'station')).toBe(5);
+    expect(reachedStops(world, 12, 'harbour')).toBe(4); // stops 0-3
+    expect(reachedStops(world, 1, 'station')).toBe(1);
+  });
+
+  it('is 0 for a locked or unknown scene, and every stop past the end of the world', () => {
+    expect(reachedStops(world, 12, 'peak')).toBe(0);
+    expect(reachedStops(world, 12, 'moon')).toBe(0);
+    expect(reachedStops(world, 40, 'peak')).toBe(3);
   });
 });

@@ -358,6 +358,8 @@ export const Profile = z.object({
     .string()
     .regex(/^[a-z0-9-]{1,40}$/)
     .optional(),
+  /** a stop picked in that scene (0-based, one already reached); absent = its last stop reached */
+  sceneStop: z.number().int().min(0).max(99).optional(),
   /** how boss quests progress lifts; defaults from the goal when absent */
   style: z.enum(['powerlifting', 'bodybuilding', 'calisthenics']).optional(),
   /** what friends see (M8); absent = nothing chosen yet, sharing on */

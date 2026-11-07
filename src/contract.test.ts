@@ -123,6 +123,12 @@ describe('Profile.scene and Settings.parallax', () => {
     expect(Profile.parse(fx.profile).scene).toBeUndefined();
     expect(Profile.safeParse({ ...fx.profile, scene: 'Station!' }).success).toBe(false);
   });
+  it('keeps a picked stop in that scene', () => {
+    expect(Profile.parse({ ...fx.profile, scene: 'station', sceneStop: 2 }).sceneStop).toBe(2);
+    expect(Profile.parse(fx.profile).sceneStop).toBeUndefined();
+    expect(Profile.safeParse({ ...fx.profile, sceneStop: -1 }).success).toBe(false);
+    expect(Profile.safeParse({ ...fx.profile, sceneStop: 1.5 }).success).toBe(false);
+  });
   it('lets parallax be turned off on this device', () => {
     expect(Settings.parse({ parallax: false }).parallax).toBe(false);
     expect(Settings.parse({}).parallax).toBeUndefined();

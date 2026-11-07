@@ -30,7 +30,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await page.getByRole('button', { name: 'Start the adventure' }).click();
       await scan(page, 'Quests');
       await page.getByRole('button', { name: 'Scenes' }).click();
-      await expect(page.getByRole('button', { name: /Forest station/ })).toBeVisible();
+      await expect(page.getByRole('button', { name: /^Forest station Levels/ })).toBeVisible();
       await scan(page, 'the Scenes sheet');
       await page.getByRole('button', { name: 'Close' }).click();
       await page.getByRole('button', { name: 'Change character' }).click();

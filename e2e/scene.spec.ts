@@ -105,11 +105,11 @@ test('a scene already reached can be picked again, and following the level comes
   await expect(frame).toHaveAttribute('data-scene', 'station-b');
 
   await page.getByRole('button', { name: 'Scenes' }).click();
-  await expect(page.getByRole('button', { name: /Station B/ })).toHaveAttribute(
+  await expect(page.getByRole('button', { name: /^Station B Levels/ })).toHaveAttribute(
     'aria-pressed',
     'true',
   );
-  await page.getByRole('button', { name: /Forest station/ }).click();
+  await page.getByRole('button', { name: /^Forest station Levels/ }).click();
   // a finished scene shows with the character at its last stop
   await expect(frame).toHaveAttribute('data-scene', 'station');
   await expect(frame).toHaveAttribute('data-stop', '4');
@@ -148,4 +148,32 @@ test('the sky follows the clock and the weather follows the date', async ({ page
   await page.reload();
   await expect(page.locator('.scene-frame')).toHaveAttribute('data-sky', 'day');
   await expect(page.locator('.scene-frame')).toHaveAttribute('data-weather', 'clear');
+});
+
+test('a stop already reached can be picked, and stays picked until following the level again', async ({
+  page,
+}) => {
+  await setUp(page);
+  // 13 workouts = 260 XP (+5 for the first weigh-in): level 3, the third stop
+  await importWorkouts(page, 13);
+  const frame = page.locator('.scene-frame');
+  await expect(frame).toHaveAttribute('data-level', '3');
+  await expect(frame).toHaveAttribute('data-stop', '2');
+
+  await page.getByRole('button', { name: 'Scenes' }).click();
+  await expect(page.getByRole('button', { name: 'Forest station, stop 3' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(
+    page.getByRole('button', { name: 'Forest station, stop 4, not reached yet' }),
+  ).toBeDisabled();
+  await page.getByRole('button', { name: 'Forest station, stop 1' }).click();
+  await expect(frame).toHaveAttribute('data-stop', '0');
+
+  await page.reload();
+  await expect(page.locator('.scene-frame')).toHaveAttribute('data-stop', '0');
+  await page.getByRole('button', { name: 'Back to level 3' }).click();
+  await expect(page.locator('.scene-frame')).toHaveAttribute('data-stop', '2');
+  await expect(page.getByRole('button', { name: 'Back to level 3' })).toHaveCount(0);
 });

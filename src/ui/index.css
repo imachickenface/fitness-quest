@@ -1700,6 +1700,41 @@ p {
   gap: 2px;
 }
 
+.scene-stops {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.scene-stop {
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0 8px;
+  border: 2px solid var(--line);
+  border-bottom-width: 4px;
+  border-radius: var(--r-sm);
+  background: var(--soft);
+  color: inherit;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.scene-stop[aria-pressed='true'] {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+}
+
+/* a stop not reached yet: a dashed outline, the number kept readable */
+.scene-stop:disabled {
+  border-style: dashed;
+  border-bottom-width: 2px;
+  background: transparent;
+  color: var(--muted);
+  cursor: default;
+}
+
 .scene-locked {
   padding: 12px;
   border: 2px dashed var(--line);

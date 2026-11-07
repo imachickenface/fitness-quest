@@ -93,6 +93,7 @@ type HeroProps = {
   /** bumped on each level-up made while the app is open */
   cheer?: number;
   picked?: string;
+  pickedStop?: number;
   parallax: boolean;
   onChangeCharacter: () => void;
   onOpenScenes: () => void;
@@ -105,6 +106,7 @@ export function HeroCard({
   character,
   cheer,
   picked,
+  pickedStop,
   parallax,
   onChangeCharacter,
   onOpenScenes,
@@ -119,6 +121,7 @@ export function HeroCard({
         character={character}
         cheer={cheer}
         picked={picked}
+        pickedStop={pickedStop}
         parallax={parallax}
         onChangeCharacter={onChangeCharacter}
         onOpenScenes={onOpenScenes}
@@ -220,10 +223,11 @@ export function Quests({ game, profile, cheer }: Props) {
         character={character}
         cheer={cheer}
         picked={profile.scene}
+        pickedStop={profile.sceneStop}
         parallax={parallax}
         onChangeCharacter={() => setPicking(true)}
         onOpenScenes={() => setScenesOpen(true)}
-        onFollow={() => save({ scene: undefined })}
+        onFollow={() => save({ scene: undefined, sceneStop: undefined })}
       />
       {list('Daily quests', daily)}
       {other.length > 0 && list('This week', other)}
@@ -249,11 +253,12 @@ export function Quests({ game, profile, cheer }: Props) {
         <ScenesSheet
           level={game.state.level}
           picked={profile.scene}
+          pickedStop={profile.sceneStop}
           parallax={parallax}
           onClose={() => setScenesOpen(false)}
-          onPick={(scene) => {
+          onPick={(pick) => {
             setScenesOpen(false);
-            save({ scene: scene ?? undefined });
+            save({ scene: pick?.scene, sceneStop: pick?.stop });
           }}
           onParallax={(on) => void updateSettings(db, { parallax: on })}
         />

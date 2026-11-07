@@ -131,3 +131,4 @@
 
 | Date | Decision | Why |
 |---|---|---|
+| 2026-11-07 | Any stop already reached can be picked in the Scenes sheet (`Profile.sceneStop`, synced, with `Profile.scene`); within a scene the character walks to a picked stop. Picking where the level is means following it again | Owner request. A stop not reached yet stays locked so the picker never gets ahead of the level; older app versions drop the new field and show the scene's last stop. |
