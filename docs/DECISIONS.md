@@ -127,7 +127,7 @@
 - **Claude did the rest**: renderer, effects, sprite cutting, screens, the sky rules (smaller than a Qwen brief) and removing the 3D code (it cut across many files).
 - **Took longer than planned:** feel, not code. Parallax took three rounds before the owner asked for the whole view to shift; the breathing idle took three (stepped bands looked "like a worm", then the arms stayed glued to the legs); cutting the owner's sprite sheets needed majority-colour shrinking, speck removal and anchoring on the feet. Lesson: show the owner a moving preview (the scene lab or a GIF) after the first attempt at any animation, before polishing it.
 - **Test flake (fixed after M10.7):** the friends e2e test, which uses the live test project with two accounts, failed once in a full run with four workers. Cause: it added a workout to A's activity on the server 6 s after A's phone opened, but A's phone publishes its whole list and deletes every other row, so on a busy machine a late publish removed the workout and B's cheer with it (reproduced every time with no wait). The test now waits until A's phone has stored its upload fingerprint and that stays the same for 4 s.
-- **Still open:** 10.8 needs the owner's next scene; until then level-ups walk the forest station and stop at its last spot.
+- **Finished 2026-11-07:** 10.8 added the harbour (night pictures, code-drawn seagulls, a swinging sign) and 10.9's live check reached level 6 in it with no errors. More scenes repeat 10.8 (`docs/SCENES.md`).
 
 | Date | Decision | Why |
 |---|---|---|

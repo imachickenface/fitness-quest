@@ -399,7 +399,7 @@ the workout record, which already syncs).
 
 **Usage:** all Claude: each logic change is a few lines, smaller than a Qwen brief and its tests.
 
-### M10 - Pixel scenes: an animated world that changes as you level up (approved 2026-11-06)
+### M10 - Pixel scenes: an animated world that changes as you level up (approved 2026-11-06; built 2026-11-07) ✅
 
 **Goal:** replace the 3D Kenney heroes and map with the owner's own pixel-art scenes and sprites. The scene feels
 alive (ambient motion, things to tap, depth, time of day and weather); each level-up walks the character to a new
@@ -460,8 +460,8 @@ day/night versions, the scene's length (5-10 levels), and whether the art may be
 | 10.5 ✅ | Scenes picker and "Follow my level" ("Back to level N"); `Profile.scene` synced; a parallax switch per device (`Settings.parallax`) | C | e2e pick a past scene, reload, it stays; parallax off persists | 10.4 |
 | 10.6 ✅ | Time of day and weather (`core/sky.ts` pure part; a date hash, rain about one day in four) | C | unit tests for the time bands and daily weather; screenshots | 10.0 |
 | 10.7 ✅ | Remove Kenney models, three.js, Customise and hero picker; friends' avatars from sprites; contract migration | C | bundle smaller; old profiles and friends' summaries still load; a11y scans pass | 10.4 |
-| 10.8 | Each new scene the owner sends: layers, manifest, tap spots (the harbour done 2026-11-07: day art with its own night pictures, seagulls drawn in code, a swinging sign) | C | scene passes the manifest check and budget | O scenes |
-| 10.9 | Credits, privacy note unchanged, docs, deploy (credits, docs, a11y scans of the new sheets and the retrospective done 2026-11-07; the final check waits for 10.8) | C | all tests; live check | all |
+| 10.8 ✅ | Each new scene the owner sends: layers, manifest, tap spots (the harbour done 2026-11-07: day art with its own night pictures, seagulls drawn in code, a swinging sign) | C | scene passes the manifest check and budget | O scenes |
+| 10.9 ✅ | Credits, privacy note unchanged, docs, deploy (done 2026-11-07: credits, docs, a11y scans of the new sheets, the retrospective; the live check reached level 6 in the harbour with no errors) | C | all tests; live check | all |
 
 **Order:** 10.0 first and stop for the owner's verdict. Then 10.1-10.5 (one scene end to end), 10.6, 10.7.
 10.8 repeats per scene. The app needs at least two scenes before scene changes can ship.
