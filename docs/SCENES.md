@@ -15,16 +15,48 @@ Make **three panels of 1536 x 1024**, each continuing the one before it to the r
 cut into three. They are stitched into one panorama of about **3000 x 1024** (overlaps are cut away), which the
 game shows at its true pixel size of about **750 x 256**: the art's pixels are 4 image pixels wide.
 
-A prompt that worked for the station (paste your example images with it):
+**Make each scene a different place.** Only the pixel size, the camera and the walkway carry over from scene to
+scene; the setting, palette, time of day and weather should change. Don't attach the station's panels as a style
+example: generators copy attached images closely, so the result comes out as another rainy forest evening.
 
-> Pixel-art game background, side view, in the exact style of the attached images. Part 1 of 3 of one long
-> continuous panorama that reads left to right: [what is in this part]. 1536 x 1024. The scene continues
-> past the right edge into the next part. Chunky pixels about 4 px wide, soft painterly lighting,
-> [time of day]. A flat walkway runs along the whole bottom fifth at the same height, with nothing standing on
-> it. No people, animals, text or logos.
+A prompt to start from (fill in the brackets; the harbour below is one worked example):
 
-For parts 2 and 3: "Part 2 of 3, continuing exactly from the right edge of the attached part 1: [what is in it]".
-Send the earlier part with it each time, so the edge matches.
+> Pixel-art game background, side view, part 1 of 3 of one long continuous panorama that reads left to right.
+> 1536 x 1024. Chunky pixels, each art pixel exactly 4 x 4 image pixels, limited palette, crisp edges, no blur or
+> gradients smoother than the pixel grid.
+> Setting: [the place, time of day and weather, with its own colours]. [The sky and the far background], with
+> the horizon about [40-50]% down the image.
+> In this part: [two or three things to stand in front of, from left to right].
+> A flat [walkway surface] runs along the whole bottom fifth of the image at the same height, its top surface at
+> row 848 of 1024, continuing past both edges, with nothing standing on it. Below it only a low strip of
+> [low wall, plants or rocks] at the very bottom.
+> Warm yellow [lanterns, windows, lamps], clearly brighter than their surroundings. The scene continues past the
+> right edge into the next part. No people, animals, birds, text, letters or logos.
+
+For parts 2 and 3: "Part 2 of 3, continuing exactly from the right edge of the attached part 1: same pixel size,
+palette, sky, horizon height and walkway row (top at row 848 of 1024), unbroken across the join. In this part:
+[...]". Send the earlier part with it each time, so the edge matches. Part 3 says where the scene ends.
+
+If part 1 comes out with pixels finer than 4 image pixels, try again with one station panel attached and the line
+"Match only the pixel size and camera height of the attached image; use none of its colours, objects or
+lighting."
+
+**Worked example, a harbour boardwalk** (bright late morning, the opposite of the station's rainy dusk):
+
+- Setting: a sunny Mediterranean fishing harbour, clear blue sky with a few white clouds, turquoise sea to a flat
+  horizon about 45% down, a hazy island far away. Walkway: a sun-bleached wooden boardwalk, a stone pier in part 3.
+- Part 1: the foot of a cobbled lane; a whitewashed café with blue shutters and a striped awning; a fish stall
+  under a canvas awning with ice crates, ropes and hanging lanterns.
+- Part 2: two small blue and yellow fishing boats at a low quay; a rusty anchor on a stone plinth; lobster pots
+  and a signpost with a hanging board (no text) that could swing; string lights on poles along the back.
+- Part 3: the harbour-master's hut with a round clock and a lit window; a red-and-white lighthouse at the far
+  right end, its lamp room glowing, open sea beyond.
+- Stops: café door, fish stall, anchor, hut, lighthouse. The signboard is the tap-to-move part. A night version
+  is worth asking for here: a bright midday scene tinted dark looks flatter than one drawn at night.
+
+Other directions that keep the world varied: a snowy mountain pass (a cable-car station, a wooden lodge, ski racks,
+a frozen waterfall, pale blue sky); a desert canyon market (red sandstone cliffs, cloth-covered stalls, a well, a
+palm oasis at golden hour).
 
 **Rules that make a scene work in the game:**
 
@@ -38,8 +70,9 @@ Send the earlier part with it each time, so the edge matches.
   flicker at night. Keep them warm yellow-orange and clearly brighter than their surroundings.
 - **Interesting things spread out.** There are up to 5 stops in a scene, spread across it (the station's are 115-185 art pixels apart). Give each stop
   something to stand in front of (the station's door, benches, the bell post, the tunnel).
-- **Same style as the station**: the same pixel size, a similar palette and lighting, and a similar horizon
-  height. Scenes then feel like one world.
+- **Same pixel size and camera, different place.** Keep the 4-pixel art pixels, the side view, the horizon at
+  about 40-50% down and the walkway row; these make scenes feel like one world. Change the setting, palette,
+  lighting and weather, so each scene feels like a new place on the journey.
 
 ### 2. Optional extras (each makes the scene better)
 
