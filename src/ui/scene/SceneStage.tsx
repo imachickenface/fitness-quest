@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { CharacterId } from '../../contract.ts';
-import { sceneToShow, type ScenePlace } from '../../core/scenes.ts';
+import { placeForLevel, sceneToShow, type ScenePlace } from '../../core/scenes.ts';
 import { loadCharacter, type CharacterEntry, type CharacterSprite } from '../../scene/character.ts';
 import { createScene, type SceneView } from '../../scene/engine.ts';
 import type { SceneManifest } from '../../scene/manifest.ts';
@@ -43,15 +43,33 @@ type Props = {
   character: CharacterId;
   /** bumped on each level-up made while the app is open; a cheering character cheers when it arrives */
   cheer?: number;
+  /** a scene picked to stay in (Profile.scene); absent = follow the level */
+  picked?: string;
+  /** the device's parallax setting */
+  parallax: boolean;
   onChangeCharacter: () => void;
+  onOpenScenes: () => void;
+  /** leave a picked scene and follow the level again */
+  onFollow: () => void;
 };
 
 /**
  * The player's place in the world on the Quests screen: the scene for their level, with their character at
  * the level's stop. A level-up walks the character to the next stop; the level that finishes a scene walks
- * them to its end, fades, and opens the next scene. Built on the Canvas 2D engine in `src/scene/engine.ts`.
+ * them to its end, fades, and opens the next scene. A scene picked from the Scenes sheet shows instead, with the
+ * character at its last stop, until the player follows their level again. Built on the Canvas 2D engine in
+ * `src/scene/engine.ts`.
  */
-export function SceneStage({ level, character, cheer, onChangeCharacter }: Props) {
+export function SceneStage({
+  level,
+  character,
+  cheer,
+  picked,
+  parallax,
+  onChangeCharacter,
+  onOpenScenes,
+  onFollow,
+}: Props) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const frame = useRef<HTMLDivElement>(null);
   const view = useRef<SceneView | null>(null);
@@ -60,6 +78,8 @@ export function SceneStage({ level, character, cheer, onChangeCharacter }: Props
   const entry = useRef<CharacterEntry | null>(null);
   const queue = useRef<Promise<void>>(Promise.resolve());
   const alive = useRef(true);
+  const lastPicked = useRef<string | null | undefined>(undefined);
+  const parallaxOn = useRef(parallax);
   const [world, setWorld] = useState<World | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'failed'>('loading');
   const [fading, setFading] = useState(true);
@@ -68,7 +88,9 @@ export function SceneStage({ level, character, cheer, onChangeCharacter }: Props
   const [characterName, setCharacterName] = useState('');
   const spots = useRef<(HTMLButtonElement | null)[]>([]);
 
-  const place = world ? sceneToShow(world.spans, level, null) : null;
+  const place = world ? sceneToShow(world.spans, level, picked ?? null) : null;
+  const current = world ? placeForLevel(world.spans, level) : null;
+  const following = !place || !current || place.id === current.id;
   const manifest = shown && world ? world.manifests.get(shown.id) : undefined;
 
   useEffect(() => {
@@ -118,6 +140,10 @@ export function SceneStage({ level, character, cheer, onChangeCharacter }: Props
     const target: ScenePlace = { id: targetId, stop: targetStop, scene: targetScene };
     const el = canvas.current;
     if (!el) return;
+    // a new pick (or following the level again) fades straight to the other scene: nobody walked there
+    const pick = picked ?? null;
+    const switching = lastPicked.current !== undefined && lastPicked.current !== pick;
+    lastPicked.current = pick;
     const goTo = async () => {
       if (!alive.current) return;
       const motion = !reducedMotion();
@@ -125,10 +151,12 @@ export function SceneStage({ level, character, cheer, onChangeCharacter }: Props
       const prev = before === null ? null : sceneToShow(world.spans, before, null);
       let v = view.current;
       if (v && sceneId.current !== target.id) {
-        // leaving a scene: walk to its end, fade out
+        // leaving a scene: walk to its end (when the level moved on), fade out
         if (motion) {
-          v.setStop(v.manifest.stops.length - 1, true);
-          await v.arrived();
+          if (following && !switching) {
+            v.setStop(v.manifest.stops.length - 1, true);
+            await v.arrived();
+          }
           setFading(true);
           await wait(FADE_MS);
         }
@@ -146,28 +174,37 @@ export function SceneStage({ level, character, cheer, onChangeCharacter }: Props
         view.current = v;
         sceneId.current = target.id;
         v.setCharacter(sprite.current);
+        v.setParallax(parallaxOn.current);
         v.setSky(skyAt(new Date()));
         // where to start: the last stop shown in this scene, the start of a scene arrived at, or right here
         const start =
-          prev && prev.id === target.id && prev.stop <= target.stop
-            ? prev.stop
-            : prev && prev.scene < target.scene
-              ? 0
-              : target.stop;
+          !following || switching
+            ? target.stop
+            : prev && prev.id === target.id && prev.stop <= target.stop
+              ? prev.stop
+              : prev && prev.scene < target.scene
+                ? 0
+                : target.stop;
         v.setStop(start, false);
         setTaps(v.manifest.taps ?? []);
         setStatus('ready');
         setFading(false);
       }
-      v.setStop(target.stop, motion);
+      v.setStop(target.stop, motion && following && !switching);
       setShown(target);
-      writeShown(level);
+      // a picked past scene leaves the level shown alone, so following again picks up from there
+      if (following) writeShown(level);
       await v.arrived();
     };
     queue.current = queue.current.then(goTo).catch(() => {
       if (alive.current) setStatus('failed');
     });
-  }, [world, targetId, targetStop, targetScene, level]);
+  }, [world, targetId, targetStop, targetScene, level, picked, following]);
+
+  useEffect(() => {
+    parallaxOn.current = parallax;
+    view.current?.setParallax(parallax);
+  }, [parallax]);
 
   // a level-up made while the app is open: a cheering character cheers once it gets there
   useEffect(() => {
@@ -269,6 +306,14 @@ export function SceneStage({ level, character, cheer, onChangeCharacter }: Props
       <p className="visually-hidden" role="status">
         {where}
       </p>
+      {!following && (
+        <button type="button" className="link-btn scene-follow" onClick={onFollow}>
+          Back to level {level}
+        </button>
+      )}
+      <button type="button" className="link-btn scene-scenes" onClick={onOpenScenes}>
+        Scenes
+      </button>
       <button type="button" className="link-btn scene-change" onClick={onChangeCharacter}>
         Change character
       </button>

@@ -367,6 +367,11 @@ export const Profile = z.object({
     .optional(),
   /** the pixel character walking through the scenes (M10); absent = the first one */
   character: CharacterId.optional(),
+  /** a scene picked to stay in (M10, an id from public/scenes/world.json); absent = follow my level */
+  scene: z
+    .string()
+    .regex(/^[a-z0-9-]{1,40}$/)
+    .optional(),
   /** the player's chosen character; the body shape on it comes from their records */
   hero: HeroId.optional(),
   /** customising the chosen character: another character's head, and palette cells swapped for others (0-63) */
@@ -556,6 +561,8 @@ export const Settings = z.object({
   lastBackupAt: Timestamp.optional(),
   /** asked navigator.storage.persist() and got this answer */
   storagePersisted: z.boolean().optional(),
+  /** false: the scene stays put when the phone tilts or a finger drags across it; absent = on */
+  parallax: z.boolean().optional(),
 });
 export type Settings = z.infer<typeof Settings>;
 

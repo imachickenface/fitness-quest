@@ -6,6 +6,7 @@ import {
   CHARACTER_IDS,
   HERO_IDS,
   Profile,
+  Settings,
   Program,
   Quest,
   QuestCondition,
@@ -123,6 +124,19 @@ describe('Profile.hero', () => {
   });
   it('rejects an unknown character', () => {
     expect(Profile.safeParse({ ...fx.profile, hero: 'wizard' }).success).toBe(false);
+  });
+});
+
+describe('Profile.scene and Settings.parallax', () => {
+  it('keeps a picked scene id, and absent means follow my level', () => {
+    expect(Profile.parse({ ...fx.profile, scene: 'station' }).scene).toBe('station');
+    expect(Profile.parse(fx.profile).scene).toBeUndefined();
+    expect(Profile.safeParse({ ...fx.profile, scene: 'Station!' }).success).toBe(false);
+  });
+  it('lets parallax be turned off on this device', () => {
+    expect(Settings.parse({ parallax: false }).parallax).toBe(false);
+    expect(Settings.parse({}).parallax).toBeUndefined();
+    expect(Settings.safeParse({ parallax: 'off' }).success).toBe(false);
   });
 });
 

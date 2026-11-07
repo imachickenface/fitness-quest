@@ -25,6 +25,8 @@ export type SceneView = {
   setLean(x: number): void;
   /** The player's character (null draws a stand-in). */
   setCharacter(c: CharacterSprite | null): void;
+  /** Parallax on or off (a setting); off, the view stays put on a tilt, a drag or a walk. */
+  setParallax(on: boolean): void;
   /** Play the character's emote for a moment. */
   emote(): void;
   /** Resolves once the character stands still (at once if it is not walking). */
@@ -285,6 +287,7 @@ export async function createScene(
   let sky: Sky = 'dusk';
   let rain = false;
   let lean = 0;
+  let parallax = true;
   let stop = 0;
   let charX = m.stops[0]!;
   let camX = 0;
@@ -450,7 +453,7 @@ export async function createScene(
 
   /** How far the whole view slides: a lean from the user, plus a little drift while walking. */
   function shift() {
-    if (reducedMotion) return 0;
+    if (reducedMotion || !parallax) return 0;
     const drift =
       walkingTo === null ? 0 : Math.max(-1, Math.min(1, (charX - (m.stops[stop] ?? charX)) / 60));
     return Math.round(MAX_LEAN * Math.max(-1, Math.min(1, lean + drift)));
@@ -741,6 +744,9 @@ export async function createScene(
     },
     setLean(x) {
       lean = Math.max(-1, Math.min(1, x));
+    },
+    setParallax(on) {
+      parallax = on;
     },
     setCharacter(c) {
       hero = c;

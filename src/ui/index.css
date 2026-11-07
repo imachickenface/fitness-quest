@@ -1636,6 +1636,78 @@ p {
   color: #0a68c4;
 }
 
+.scene-scenes,
+.scene-follow {
+  position: absolute;
+  left: 10px;
+  z-index: 2;
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 88%);
+  color: #0a68c4;
+}
+
+.scene-scenes {
+  bottom: 10px;
+}
+
+.scene-follow {
+  top: 10px;
+}
+
+.scene-list {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.scene-option {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 8px;
+  border: 2px solid var(--line);
+  border-bottom-width: 4px;
+  border-radius: var(--r);
+  background: var(--soft);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.scene-option[aria-pressed='true'] {
+  border-color: var(--blue);
+  background: var(--blue-soft);
+}
+
+.scene-option img {
+  width: 96px;
+  height: 56px;
+  border-radius: 8px;
+  object-fit: cover;
+  object-position: 15% 60%;
+  image-rendering: pixelated;
+}
+
+.scene-option-text {
+  display: grid;
+  gap: 2px;
+}
+
+.scene-locked {
+  padding: 12px;
+  border: 2px dashed var(--line);
+  border-radius: var(--r);
+  color: var(--muted);
+  text-align: center;
+}
+
 .character-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

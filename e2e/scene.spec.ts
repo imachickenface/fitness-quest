@@ -32,6 +32,20 @@ async function importWorkouts(page: Page, n: number) {
   await page.getByRole('button', { name: /^Quests/ }).click();
 }
 
+/** A second scene: the station again under another id, until the owner's next scene arrives. */
+async function standInWorld(page: Page) {
+  await page.route('**/scenes/world.json', (route) =>
+    route.fulfill({ json: { v: 1, scenes: ['station', 'station-b'] } }),
+  );
+  await page.route('**/scenes/station-b/**', async (route) => {
+    const url = route.request().url().replace('/scenes/station-b/', '/scenes/station/');
+    const response = await route.fetch({ url });
+    if (!url.endsWith('scene.json')) return route.fulfill({ response });
+    const json = await response.json();
+    return route.fulfill({ response, json: { ...json, id: 'station-b', name: 'Station B' } });
+  });
+}
+
 test('the scene shows the character on the Quests screen, and a new choice persists', async ({
   page,
 }) => {
@@ -69,17 +83,7 @@ test('a level-up walks the character to the next stop', async ({ page }) => {
 });
 
 test('the level after a scene ends opens the next scene', async ({ page }) => {
-  // a second scene: the station again under another id, until the owner's next scene arrives
-  await page.route('**/scenes/world.json', (route) =>
-    route.fulfill({ json: { v: 1, scenes: ['station', 'station-b'] } }),
-  );
-  await page.route('**/scenes/station-b/**', async (route) => {
-    const url = route.request().url().replace('/scenes/station-b/', '/scenes/station/');
-    const response = await route.fetch({ url });
-    if (!url.endsWith('scene.json')) return route.fulfill({ response });
-    const json = await response.json();
-    return route.fulfill({ response, json: { ...json, id: 'station-b', name: 'Station B' } });
-  });
+  await standInWorld(page);
   await setUp(page);
   const frame = page.locator('.scene-frame');
   await expect(frame).toHaveAttribute('data-scene', 'station');
@@ -89,4 +93,43 @@ test('the level after a scene ends opens the next scene', async ({ page }) => {
   await expect(frame).toHaveAttribute('data-scene', 'station-b');
   await expect(frame).toHaveAttribute('data-stop', '0');
   await expect(page.getByText('Station B, stop 1 of 5')).toBeAttached();
+});
+
+test('a scene already reached can be picked again, and following the level comes back', async ({
+  page,
+}) => {
+  await standInWorld(page);
+  await setUp(page);
+  await importWorkouts(page, 50); // level 6: the second scene
+  const frame = page.locator('.scene-frame');
+  await expect(frame).toHaveAttribute('data-scene', 'station-b');
+
+  await page.getByRole('button', { name: 'Scenes' }).click();
+  await expect(page.getByRole('button', { name: /Station B/ })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await page.getByRole('button', { name: /Forest station/ }).click();
+  // a finished scene shows with the character at its last stop
+  await expect(frame).toHaveAttribute('data-scene', 'station');
+  await expect(frame).toHaveAttribute('data-stop', '4');
+
+  await page.reload();
+  await expect(page.locator('.scene-frame')).toHaveAttribute('data-scene', 'station');
+  await page.getByRole('button', { name: 'Back to level 6' }).click();
+  await expect(page.locator('.scene-frame')).toHaveAttribute('data-scene', 'station-b');
+  await expect(page.getByRole('button', { name: 'Back to level 6' })).toHaveCount(0);
+});
+
+test('parallax can be turned off, and stays off', async ({ page }) => {
+  await setUp(page);
+  await page.getByRole('button', { name: 'Scenes' }).click();
+  const box = page.getByRole('checkbox', { name: /Move the scene when I tilt/ });
+  await expect(box).toBeChecked();
+  await box.uncheck();
+  await page.reload();
+  await page.getByRole('button', { name: 'Scenes' }).click();
+  await expect(
+    page.getByRole('checkbox', { name: /Move the scene when I tilt/ }),
+  ).not.toBeChecked();
 });

@@ -1,7 +1,8 @@
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import type { CharacterId, GameState, Profile, QuestCondition } from '../contract.ts';
 import { isClaimed, levelTier } from '../core/game.ts';
-import { claimQuest, saveProfile } from '../db/db.ts';
+import { claimQuest, getSettings, saveProfile, updateSettings } from '../db/db.ts';
 import { flyXp, reducedMotion } from './claimFx.ts';
 import { useDb } from './dbContext.ts';
 import { nowStamp } from './format.ts';
@@ -9,6 +10,7 @@ import type { Cheer } from './hero/heroScene.ts';
 import { Icon, type IconName } from './Icon.tsx';
 import { CharacterPicker } from './scene/CharacterPicker.tsx';
 import { SceneStage } from './scene/SceneStage.tsx';
+import { ScenesSheet } from './scene/ScenesSheet.tsx';
 import type { Game, QuestView } from './useGame.ts';
 
 const QUEST_ICON: Record<QuestCondition['type'], IconName> = {
@@ -90,10 +92,24 @@ type HeroProps = {
   barRef?: RefObject<HTMLDivElement | null>;
   character: CharacterId;
   cheer?: { n: number; clip: Cheer };
+  picked?: string;
+  parallax: boolean;
   onChangeCharacter: () => void;
+  onOpenScenes: () => void;
+  onFollow: () => void;
 };
 
-export function HeroCard({ state, barRef, character, cheer, onChangeCharacter }: HeroProps) {
+export function HeroCard({
+  state,
+  barRef,
+  character,
+  cheer,
+  picked,
+  parallax,
+  onChangeCharacter,
+  onOpenScenes,
+  onFollow,
+}: HeroProps) {
   const { shown, filling, levelUps } = useXpBar(state);
   const pct = Math.min(100, (shown.into / shown.of) * 100);
   return (
@@ -102,7 +118,11 @@ export function HeroCard({ state, barRef, character, cheer, onChangeCharacter }:
         level={state.level}
         character={character}
         cheer={cheer?.n}
+        picked={picked}
+        parallax={parallax}
         onChangeCharacter={onChangeCharacter}
+        onOpenScenes={onOpenScenes}
+        onFollow={onFollow}
       />
       {/* the badge and the bar change colour every 10 levels (index.css, data-tier) */}
       <section className="panel hero-card" aria-label="Level" data-tier={levelTier(shown.level)}>
@@ -167,6 +187,9 @@ type Props = { game: Game; profile: Profile; cheer?: { n: number; clip: Cheer } 
 export function Quests({ game, profile, cheer }: Props) {
   const db = useDb();
   const [picking, setPicking] = useState(false);
+  const [scenesOpen, setScenesOpen] = useState(false);
+  const settings = useLiveQuery(() => getSettings(db), [db]);
+  const parallax = settings?.parallax ?? true;
   const bar = useRef<HTMLDivElement>(null);
   // quests mid-claim: their button is spent while the XP flies
   const [claiming, setClaiming] = useState<ReadonlySet<string>>(new Set());
@@ -196,7 +219,11 @@ export function Quests({ game, profile, cheer }: Props) {
         barRef={bar}
         character={character}
         cheer={cheer}
+        picked={profile.scene}
+        parallax={parallax}
         onChangeCharacter={() => setPicking(true)}
+        onOpenScenes={() => setScenesOpen(true)}
+        onFollow={() => save({ scene: undefined })}
       />
       {list('Daily quests', daily)}
       {other.length > 0 && list('This week', other)}
@@ -216,6 +243,19 @@ export function Quests({ game, profile, cheer }: Props) {
             setPicking(false);
             save({ character: id });
           }}
+        />
+      )}
+      {scenesOpen && (
+        <ScenesSheet
+          level={game.state.level}
+          picked={profile.scene}
+          parallax={parallax}
+          onClose={() => setScenesOpen(false)}
+          onPick={(scene) => {
+            setScenesOpen(false);
+            save({ scene: scene ?? undefined });
+          }}
+          onParallax={(on) => void updateSettings(db, { parallax: on })}
         />
       )}
     </div>
