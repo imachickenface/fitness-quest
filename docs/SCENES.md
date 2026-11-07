@@ -99,23 +99,31 @@ All scripts are in `art/`; the scene's working files are in `art/scenes/<id>/`. 
 depth, previews) are rebuilt by the scripts and not committed.
 
 1. **Stitch:** `python art/stitch_panorama.py art/scenes/<id>/panorama.png <panel1> <panel2> <panel3>`. Check the
-   seams (the station's: one wire ends in mid-air).
+   seams (the station's: one wire ends in mid-air). A scene sent as one wide picture needs no stitching: save it as
+   `panorama.png` (the harbour's `day.webp`). A night version lined up with it goes in `panorama-night.png`.
 2. **Depth** (when there are no layers): Depth Anything V2 Small (Apache-2.0; never the Base or Large models, which
    are non-commercial), run on ComfyUI's Python:
    `<ComfyUI python> -s art/scene_depth.py art/scenes/<id>/panorama.png art/scenes/<id>/depth.png`.
 3. **Layers and moving parts:** write `art/scenes/<id>/layers.json`, then run `python art/scene_layers.py
-   art/scenes/<id>`. That writes `public/scenes/<id>/` (base, layers, sprites) at the true pixel size.
-   - `ground` and `front`: panorama rows where the walkway starts and the front strip starts.
+   art/scenes/<id> [factor]`. That writes `public/scenes/<id>/` (base, layers, sprites, and their night copies
+   when there is a night panorama) at the true pixel size. `factor` is how many image pixels make one art pixel:
+   4 for the station's panels, 2.6667 for the harbour (2000 px wide, shown 750 wide).
+   - `ground` and `front`: panorama rows where the walkway starts and the front strip starts (a `front` past the
+     bottom, as on the harbour, keeps the wall and water with the walkway).
+   - `horizon` (optional): below this row everything goes with the props, so only the sky trails behind on a
+     lean (the harbour's sea would otherwise tear around the boats).
    - `depth`: three depth-band edges (forest, props, near).
    - `force`: `[x0, y0, x1, y1, layer]` boxes that pin areas to a layer.
    - `sprites`: moving parts, each with a `box` holding the part and some background, a `threshold`, and
-     `exclude` boxes for scene bits touching it (the beam tip touching the bell).
+     `exclude` boxes for scene bits touching it (the beam tip touching the bell). `"warm": false` takes cool
+     parts too (the harbour sign's chains); otherwise only warm pixels count, as the station's forest is cool.
 4. **Manifest:** write `public/scenes/<id>/scene.json` (fields below), then add the id to
    `public/scenes/world.json` in the order the player meets the scenes.
 5. **Check:** `npx vitest run src/scene/manifest.test.ts` validates every scene. Then open the scene lab
    (`npm run dev`, then `/fitness-quest/scene-lab.html`) and check, at phone width: each stop, a lean left and
    right (nothing doubles), every tap, dusk, night and rain.
-6. **Budget:** about 300-600 KB per scene in WebP (the station is about 550 KB).
+6. **Budget:** about 300-600 KB per scene in WebP (the station is about 550 KB; the harbour about 570 KB by day,
+   plus about 200 KB of night pictures fetched the first time it is dusk, night or raining).
 
 ### `scene.json`
 
@@ -127,15 +135,17 @@ its rules are in `src/scene/manifest.ts`.
 | `v`, `id`, `name` | Format version (1), folder name, name shown in the Scenes picker | `"station"`, `"Forest station"` |
 | `width`, `height` | Size in scene pixels | 750 x 256 |
 | `ground` | The row the character's feet stand on | 212 |
-| `layers` | Back to front: `src` and `depth` (-1 far, which trails behind when the view tilts; 0 moves with the view) | 5 layers, the first at -1 |
+| `art` | The time of day the art is drawn at: `dusk` (default) is tinted for every other time; `day` is shown as it is by day and uses its night pictures at night, half laid over the day at dusk | the harbour: `day` |
+| `layers` | Back to front: `src` and `depth` (-1 far, which trails behind when the view tilts; 0 moves with the view); `night`: the same layer at night (every layer or none) | 5 layers, the first at -1 |
 | `stops` | x of each stop, left to right, inside the scene | 70, 215, 330, 455, 640 |
 | `levels` | Levels the scene lasts, 5-10, at least as many as stops | 5 |
 | `lights` | Rows holding the lamps and windows that glow | 110-186 |
 | `smoke` | Chimney tops | one, at 68, 109 |
 | `fireflies` | Area and number | 36 over the forest |
+| `gulls` | Area and number of seagulls (drawn in code; all fly by day, half at dusk, none at night or in rain; a tap startles one) | the harbour: 7 over the sea |
 | `mist` | Drifting bands: row, height, speed, opacity | two |
 | `puddles` | Rows of the wet surface (shimmer, rain ripples, reflections) | 196-220 |
-| `taps` | Tap spots: `id`, spoken `label`, `kind` (`bell` or `lamp`), `box`; a bell also has its `pivot` and cut-out `sprite` | bell and three lamp groups |
+| `taps` | Tap spots: `id`, spoken `label`, `kind` (`bell` rings, `sign` knocks, `lamp` brightens), `box`; a bell or sign also has its `pivot` and cut-out `sprite` (with a `night` copy when the layers have one) | bell and three lamp groups; the harbour's sign and four lamp groups |
 
 The rules checked on top of the field types: the ground row is inside the scene, stops go left to right inside it,
 5-10 levels with no more stops than levels, each layer file is listed once, bands and tap boxes are the right way

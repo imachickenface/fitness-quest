@@ -1,0 +1,15 @@
+{
+  "ground": 488,
+  "front": 100000,
+  "horizon": 282,
+  "depth": [0.35, 0.45, 2.0],
+  "sprites": [
+    {
+      "id": "sign",
+      "box": [1374, 270, 1474, 348],
+      "threshold": 60,
+      "warm": false,
+      "exclude": [[1450, 270, 1474, 293]]
+    }
+  ]
+}

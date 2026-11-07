@@ -3,6 +3,7 @@ import { CHARACTER_IDS } from '../contract.ts';
 import { CharacterList } from './character.ts';
 import { SceneManifest, SceneWorld, sceneSpan } from './manifest.ts';
 import stationRaw from '../../public/scenes/station/scene.json?raw';
+import harbourRaw from '../../public/scenes/harbour/scene.json?raw';
 import worldRaw from '../../public/scenes/world.json?raw';
 import charactersRaw from '../../public/characters/characters.json?raw';
 
@@ -13,6 +14,7 @@ const manifests = import.meta.glob<string>('../../public/scenes/*/scene.json', {
 });
 
 const station = (): Record<string, unknown> & SceneManifest => JSON.parse(stationRaw);
+const harbour = (): Record<string, unknown> & SceneManifest => JSON.parse(harbourRaw);
 
 /** The paths of the issues a manifest fails with, as dotted strings ("stops.2", "taps.0.box"). */
 function problems(m: unknown): string[] {
@@ -23,6 +25,14 @@ function problems(m: unknown): string[] {
 describe('the shipped scenes', () => {
   it('the forest station validates', () => {
     expect(problems(station())).toEqual([]);
+  });
+
+  it('the harbour validates: day art with night pictures, gulls and a swinging sign', () => {
+    expect(problems(harbour())).toEqual([]);
+    const m = SceneManifest.parse(harbour());
+    expect(m.art).toBe('day');
+    expect(m.layers.every((l) => l.night)).toBe(true);
+    expect(m.taps?.find((t) => t.kind === 'sign')?.sprite?.night).toBe('sprite-sign-night.webp');
   });
 
   it('the world lists each scene once, and every listed scene has a valid manifest with that id', () => {
@@ -132,6 +142,36 @@ describe('SceneManifest field rules', () => {
     expect(problems(lampWithSprite)).toEqual(['taps.1.sprite']);
   });
 
+  it('wants the gull area the right way round', () => {
+    const gulls = { x0: 0, x1: 750, y0: 10, y1: 72, count: 7 };
+    expect(problems({ ...harbour(), gulls: { ...gulls, x0: 750, x1: 0 } })).toEqual(['gulls']);
+    expect(problems({ ...harbour(), gulls: { ...gulls, y0: 72, y1: 10 } })).toEqual(['gulls']);
+    expect(problems({ ...harbour(), gulls: { ...gulls, count: 41 } })).toEqual(['gulls.count']);
+  });
+
+  it('wants a night picture for every layer or for none', () => {
+    const m = harbour();
+    delete m.layers[2]!.night;
+    expect(problems(m)).toEqual(['layers']);
+    const none = harbour();
+    for (const l of none.layers) delete l.night;
+    // without night layers, the sign's night sprite has nothing to go with
+    expect(problems(none)).toEqual(['taps.0.sprite.night']);
+    delete none.taps![0]!.sprite!.night;
+    expect(problems(none)).toEqual([]);
+  });
+
+  it('wants a sign to come with its sprite too', () => {
+    const m = harbour();
+    delete m.taps![0]!.sprite;
+    expect(problems(m)).toEqual(['taps.0.sprite']);
+  });
+
+  it('knows only dusk and day art', () => {
+    expect(problems({ ...harbour(), art: 'noon' })).toEqual(['art']);
+    expect(problems({ ...station(), art: 'dusk' })).toEqual([]);
+  });
+
   it('reports every broken rule at once', () => {
     expect(
       problems({ ...station(), ground: 999, levels: 12, stops: [5, 4, 300, 400, 500] }),
@@ -155,6 +195,11 @@ describe('sceneSpan', () => {
       id: 'station',
       levels: 5,
       stops: 5,
+    });
+    expect(sceneSpan(SceneManifest.parse(harbour()))).toEqual({
+      id: 'harbour',
+      levels: 6,
+      stops: 6,
     });
   });
 });

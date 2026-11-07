@@ -1,7 +1,8 @@
 /**
  * A living pixel-art scene on a Canvas 2D: parallax layers, a camera that pans between stops, and code-drawn
- * life (fireflies, chimney smoke, drifting mist, flickering lamps, puddle shimmer, rain), a time-of-day grade and
- * tap reactions (a swinging bell, brighter lamps, fireflies that scatter).
+ * life (fireflies, seagulls, chimney smoke, drifting mist, flickering lamps, puddle shimmer, rain), a time-of-day
+ * grade (or the scene's own night pictures) and tap reactions (a swinging bell or sign, brighter lamps, fireflies
+ * that scatter, gulls that climb).
  *
  * Everything is drawn into a buffer at the scene's own pixel size and copied to the screen at a whole-number scale
  * with smoothing off, so pixels stay square and crisp. The loop runs at about 30 frames a second and stops while
@@ -10,6 +11,18 @@
  */
 import type { Sky } from '../core/sky.ts';
 import type { CharacterSprite } from './character.ts';
+import {
+  GULL_COLOURS,
+  GULL_FRAMES,
+  gullFrame,
+  gullsFlying,
+  gullY,
+  makeGulls,
+  startleGulls,
+  stepGull,
+  type Gull,
+  type GullFrame,
+} from './gulls.ts';
 import { SceneManifest } from './manifest.ts';
 
 export type { Sky };
@@ -139,7 +152,7 @@ function blur(
 }
 
 /** The lamps and windows: bright warm pixels in the light rows, as a sharp layer and a soft glow. */
-function makeLights(base: HTMLImageElement, m: SceneManifest) {
+function makeLights(base: CanvasImageSource, m: SceneManifest) {
   const w = m.width;
   const h = m.height;
   const c = canvas(w, h);
@@ -234,6 +247,51 @@ function ringBell() {
   }
 }
 
+/** A sign swinging on its chains: two soft wooden knocks. */
+function knock() {
+  try {
+    const Ctx =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!Ctx) return;
+    audio ??= new Ctx();
+    const now = audio.currentTime;
+    for (const [at, freq] of [
+      [0, 210],
+      [0.16, 180],
+    ] as const) {
+      const osc = audio.createOscillator();
+      const g = audio.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now + at);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.6, now + at + 0.12);
+      g.gain.setValueAtTime(0, now + at);
+      g.gain.linearRampToValueAtTime(0.22, now + at + 0.004);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + at + 0.14);
+      osc.connect(g).connect(audio.destination);
+      osc.start(now + at);
+      osc.stop(now + at + 0.16);
+    }
+  } catch {
+    // no sound is fine
+  }
+}
+
+/** A gull frame as a tiny canvas. */
+function gullSprite(rows: readonly string[]): HTMLCanvasElement {
+  const c = canvas(rows[0]!.length, rows.length);
+  const g = ctx2d(c);
+  rows.forEach((row, y) =>
+    [...row].forEach((ch, x) => {
+      const colour = GULL_COLOURS[ch];
+      if (!colour) return;
+      g.fillStyle = colour;
+      g.fillRect(x, y, 1, 1);
+    }),
+  );
+  return c;
+}
+
 export async function createScene(
   target: HTMLCanvasElement,
   baseUrl: string,
@@ -262,17 +320,54 @@ export async function createScene(
   // moving parts come as their own sprites, already cut out of the layers (art/scene_layers.py)
   const bells = await Promise.all(
     (m.taps ?? [])
-      .filter((t) => t.kind === 'bell' && t.sprite)
+      .filter((t) => (t.kind === 'bell' || t.kind === 'sign') && t.sprite)
       .map(async (t) => ({
         id: t.id,
         x0: t.sprite!.x,
         y0: t.sprite!.y,
         sprite: await loadImage(baseUrl + t.sprite!.src),
+        nightSprite: null as HTMLImageElement | null,
         pivot: t.pivot ?? [(t.box[0] + t.box[2]) / 2, t.box[1]],
         swing: -1,
       })),
   );
-  const lights = makeLights(base!, m);
+  // art drawn by day is shown as it is by day; its night pictures (if any) are fetched the first time they're
+  // needed, and its lamps are found in them, where they are lit
+  const dayArt = m.art === 'day';
+  const hasNight = m.layers.every((l) => l.night !== undefined);
+  let lights: ReturnType<typeof makeLights> | null =
+    dayArt && hasNight ? null : makeLights(base!, m);
+  let nightLayers: HTMLCanvasElement[] | null = null;
+  let nightLoading = false;
+  function wantNight() {
+    if (!hasNight || nightLayers || nightLoading) return;
+    nightLoading = true;
+    void (async () => {
+      try {
+        const imgs = await Promise.all(m.layers.map((l) => loadImage(baseUrl + l.night!)));
+        const sprites = await Promise.all(
+          bells.map(async (b) => {
+            const src = m.taps?.find((tp) => tp.id === b.id)?.sprite?.night;
+            return src ? loadImage(baseUrl + src) : null;
+          }),
+        );
+        const flat = canvas(W, H);
+        const fctx = ctx2d(flat);
+        nightLayers = imgs.map((img) => {
+          const c = canvas(W, H);
+          ctx2d(c).drawImage(img, 0, 0);
+          fctx.drawImage(c, 0, 0);
+          return c;
+        });
+        bells.forEach((b, i) => (b.nightSprite = sprites[i] ?? null));
+        lights = makeLights(flat, m);
+      } catch {
+        // without them the scene is tinted for the night instead
+      } finally {
+        nightLoading = false;
+      }
+    })();
+  }
   const mists = (m.mist ?? []).map((band, i) => ({
     band,
     img: makeMist(W, Math.max(2, Math.round(band.height)), 7 + i),
@@ -281,6 +376,9 @@ export async function createScene(
   const ctx = ctx2d(target);
   let buffer = canvas(1, H);
   let bctx = ctx2d(buffer);
+  // dusk over day art: the night pictures are painted here, then laid over the day at half strength
+  let nightBuffer = canvas(1, H);
+  let nctx = ctx2d(nightBuffer);
   let scale = 1;
   let viewW = 1;
   let cssPerPx = 1;
@@ -319,6 +417,16 @@ export async function createScene(
       });
     }
   }
+  const gullArea = m.gulls;
+  const gulls: Gull[] = gullArea && !reducedMotion ? makeGulls(gullArea) : [];
+  const gullFrames = {
+    near: Object.fromEntries(
+      Object.entries(GULL_FRAMES.near).map(([k, rows]) => [k, gullSprite(rows)]),
+    ) as Record<GullFrame, HTMLCanvasElement>,
+    far: Object.fromEntries(
+      Object.entries(GULL_FRAMES.far).map(([k, rows]) => [k, gullSprite(rows)]),
+    ) as Record<GullFrame, HTMLCanvasElement>,
+  };
   const smoke: Particle[] = [];
   const drops: Particle[] = [];
   const ripples: Particle[] = [];
@@ -338,6 +446,8 @@ export async function createScene(
     viewW = Math.min(W - 2 * MAX_LEAN, Math.ceil(devW / scale));
     buffer = canvas(viewW, H);
     bctx = ctx2d(buffer);
+    nightBuffer = canvas(viewW, H);
+    nctx = ctx2d(nightBuffer);
     ctx.imageSmoothingEnabled = false;
     cssPerPx = scale / dpr;
   }
@@ -373,6 +483,10 @@ export async function createScene(
     }
     for (const b of bells) if (b.swing >= 0) b.swing = b.swing + dt > 4 ? -1 : b.swing + dt;
     if (reducedMotion) return;
+
+    if (gullArea)
+      for (const gl of gulls.slice(0, gullsFlying(sky, rain, gulls.length)))
+        stepGull(gl, dt, gullArea);
 
     for (const f of fireflies) {
       f.age += dt;
@@ -465,10 +579,28 @@ export async function createScene(
     return depth < 0 ? Math.round(-depth * FAR_LAG * shift()) : 0;
   }
 
-  function draw() {
-    const cam = Math.max(0, Math.min(W - viewW, Math.round(camX) + shift()));
-    viewX = cam;
-    const g = bctx;
+  /** The flying gulls, the far ones (drawn behind the scene's buildings) or the near ones. */
+  function drawGulls(g: CanvasRenderingContext2D, cam: number, far: boolean) {
+    const flying = gulls.slice(0, gullsFlying(sky, rain, gulls.length));
+    const off = lean_(far ? -1 : -0.5);
+    for (const gl of flying) {
+      if (gl.far !== far) continue;
+      const img = (far ? gullFrames.far : gullFrames.near)[gullFrame(gl)];
+      g.drawImage(
+        img,
+        Math.round(gl.x - cam + off - img.width / 2),
+        Math.round(gullY(gl, t) - img.height / 2),
+      );
+    }
+  }
+
+  /** The scene's layers, mist, gulls and moving parts, from the day pictures or the night ones. */
+  function paint(
+    g: CanvasRenderingContext2D,
+    cam: number,
+    set: HTMLCanvasElement[],
+    night: boolean,
+  ) {
     g.globalCompositeOperation = 'source-over';
     g.globalAlpha = 1;
     g.clearRect(0, 0, viewW, H);
@@ -476,7 +608,8 @@ export async function createScene(
       const off = lean_(l.depth);
       // never read past the art's edges (that would leave an empty strip): at the ends the layer stops leaning
       const sx = Math.max(0, Math.min(W - viewW, cam - off));
-      g.drawImage(layers[i]!, sx, 0, viewW, H, 0, 0, viewW, H);
+      g.drawImage(set[i]!, sx, 0, viewW, H, 0, 0, viewW, H);
+      if (i === 0 && gulls.length > 0) drawGulls(g, cam, true);
       if (i === 1 && !reducedMotion) {
         for (const { band, img } of mists) {
           const shift = (((t * band.speed) % W) + W) % W;
@@ -501,9 +634,30 @@ export async function createScene(
         g.save();
         g.translate(Math.round(b.pivot[0] - cam + off), Math.round(b.pivot[1]));
         g.rotate(angle);
-        g.drawImage(b.sprite, Math.round(b.x0 - b.pivot[0]), Math.round(b.y0 - b.pivot[1]));
+        g.drawImage(
+          (night && b.nightSprite) || b.sprite,
+          Math.round(b.x0 - b.pivot[0]),
+          Math.round(b.y0 - b.pivot[1]),
+        );
         g.restore();
       }
+    }
+    if (gulls.length > 0) drawGulls(g, cam, false);
+  }
+
+  function draw() {
+    const cam = Math.max(0, Math.min(W - viewW, Math.round(camX) + shift()));
+    viewX = cam;
+    const g = bctx;
+    // day art at night shows its night pictures; at dusk the night is laid over the day at half strength
+    const nightSet = dayArt && nightLayers && sky === 'night' ? nightLayers : null;
+    const active = nightSet ?? layers;
+    paint(g, cam, active, nightSet !== null);
+    if (dayArt && nightLayers && sky === 'dusk') {
+      paint(nctx, cam, nightLayers, true);
+      g.globalAlpha = 0.5;
+      g.drawImage(nightBuffer, 0, 0);
+      g.globalAlpha = 1;
     }
 
     // puddle shimmer: each row of the wet surface sways a pixel
@@ -513,11 +667,11 @@ export async function createScene(
       for (let y = m.puddles.y0; y < m.puddles.y1; y++) {
         const dx = Math.round(Math.sin(t * 2.2 + y * 0.9) * (rain ? 1.4 : 0.7));
         const sx = Math.max(0, Math.min(W - viewW, cam - off - dx));
-        if (dx !== 0) g.drawImage(layers[groundIdx]!, sx, y, viewW, 1, 0, y, viewW, 1);
+        if (dx !== 0) g.drawImage(active[groundIdx]!, sx, y, viewW, 1, 0, y, viewW, 1);
       }
       const front = m.layers.length - 1;
       g.drawImage(
-        layers[front]!,
+        active[front]!,
         cam - lean_(m.layers[front]!.depth),
         m.puddles.y0,
         viewW,
@@ -544,7 +698,19 @@ export async function createScene(
 
     // time of day
     const night = sky === 'night';
-    if (sky === 'night') {
+    if (dayArt) {
+      // art drawn by day: as it is by day, a touch warmer in the morning and at dusk; at night its own night
+      // pictures, or a tint while they load (or if there are none)
+      let tint: string | null = null;
+      if (sky === 'night' && !nightSet) tint = 'rgb(92,104,170)';
+      else if (sky === 'dusk') tint = nightLayers ? 'rgb(255,226,204)' : 'rgb(236,196,170)';
+      else if (sky === 'morning') tint = 'rgb(250,238,230)';
+      if (tint) {
+        g.globalCompositeOperation = 'multiply';
+        g.fillStyle = tint;
+        g.fillRect(0, 0, viewW, H);
+      }
+    } else if (sky === 'night') {
       g.globalCompositeOperation = 'multiply';
       g.fillStyle = 'rgb(92,104,170)';
       g.fillRect(0, 0, viewW, H);
@@ -557,20 +723,28 @@ export async function createScene(
       g.fillStyle = 'rgba(150,170,190,0.42)';
       g.fillRect(0, 0, viewW, H);
     }
+    if (rain && dayArt) {
+      // a sunny picture under rain: most of its colour goes grey first, so the blue sky doesn't stay bright
+      g.globalCompositeOperation = 'saturation';
+      g.fillStyle = 'rgba(128,128,128,0.6)';
+      g.fillRect(0, 0, viewW, H);
+    }
     if (rain) {
       g.globalCompositeOperation = 'multiply';
-      g.fillStyle = 'rgb(176,184,206)';
+      g.fillStyle = dayArt ? 'rgb(160,168,188)' : 'rgb(176,184,206)';
       g.fillRect(0, 0, viewW, H);
     }
     g.globalCompositeOperation = 'source-over';
 
     // lamps: the lit pixels stay bright through the grade, with a flickering glow on top
     const propsOff = lean_(m.layers[propsIndex]!.depth);
-    if (night || rain) g.drawImage(lights.sharp, cam - propsOff, 0, viewW, H, 0, 0, viewW, H);
+    if (lights && (night || rain))
+      g.drawImage(lights.sharp, cam - propsOff, 0, viewW, H, 0, 0, viewW, H);
     g.globalCompositeOperation = 'lighter';
-    const baseGlow = night ? 0.85 : sky === 'dusk' ? 0.35 : 0.12;
+    // day art needs no glow in daylight; the station's dusk art keeps a faint one by day
+    const baseGlow = night ? 0.85 : sky === 'dusk' ? 0.35 : dayArt ? (rain ? 0.25 : 0) : 0.12;
     const strip = 24;
-    for (let x0 = 0; x0 < viewW; x0 += strip) {
+    for (let x0 = 0; lights && baseGlow > 0 && x0 < viewW; x0 += strip) {
       const sx = cam - propsOff + x0;
       const flicker = reducedMotion
         ? 1
@@ -634,7 +808,8 @@ export async function createScene(
           : e.stand;
       const fw = e.frameWidth;
       const fh = e.frameHeight;
-      if (m.puddles && groundY < m.puddles.y1) {
+      // a reflection only where the character stands on the wet surface (not on a boardwalk above the water)
+      if (m.puddles && groundY >= m.puddles.y0 && groundY < m.puddles.y1) {
         g.save();
         g.beginPath();
         g.rect(x - fw, groundY, fw * 2, m.puddles.y1 - groundY);
@@ -739,9 +914,11 @@ export async function createScene(
     },
     setSky(s) {
       sky = s;
+      if (dayArt && (s === 'dusk' || s === 'night')) wantNight();
     },
     setRain(on) {
       rain = on;
+      if (dayArt && on) wantNight();
     },
     setLean(x) {
       lean = Math.max(-1, Math.min(1, x));
@@ -761,10 +938,11 @@ export async function createScene(
     press(id) {
       const tap = m.taps?.find((tp) => tp.id === id);
       if (!tap) return;
-      if (tap.kind === 'bell') {
+      if (tap.kind === 'bell' || tap.kind === 'sign') {
         const b = bells.find((bb) => bb.id === id);
         if (b) b.swing = 0;
-        ringBell();
+        if (tap.kind === 'bell') ringBell();
+        else knock();
       } else lampBoost.set(id, 1.4);
     },
     tapAt(x, y) {
@@ -787,6 +965,7 @@ export async function createScene(
         view.press(hit.id);
         return;
       }
+      if (startleGulls(gulls, p.x, p.y, gullsFlying(sky, rain, gulls.length))) return;
       for (const f of fireflies) {
         const dx = f.x - p.x;
         const dy = f.y - p.y;

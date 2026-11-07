@@ -78,6 +78,10 @@
       <div class="controls">
         <button type="button" id="levelup">Level up (next stop)</button>
         <label
+          >Scene
+          <select id="sceneId"></select
+        ></label>
+        <label
           >Character
           <select id="character"></select
         ></label>
@@ -106,11 +110,11 @@
         >
       </div>
       <div class="frame" id="frameEl">
-        <canvas id="scene" aria-label="Forest station at dusk"></canvas>
+        <canvas id="scene" aria-label="Scene"></canvas>
       </div>
       <p>
-        Drag across the scene (or tilt a phone) for parallax. Tap the bell or the lamps; tap the
-        character to emote; tap the forest to scatter fireflies.
+        Drag across the scene (or tilt a phone) for parallax. Tap the bell, the sign or the lamps;
+        tap the character to emote; tap the forest to scatter fireflies, or a gull to startle it.
       </p>
     </main>
     <script type="module" src="/src/scene/lab.ts"></script>

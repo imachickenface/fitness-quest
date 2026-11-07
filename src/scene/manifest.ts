@@ -78,6 +78,17 @@ function checkManifest(m: SceneManifest, ctx: z.core.$RefinementCtx): void {
       say(ctx, ['fireflies'], 'fireflies need x0 left of x1 and y0 above y1');
     }
   }
+  if (m.gulls !== undefined) {
+    if (m.gulls.x0 >= m.gulls.x1 || m.gulls.y0 >= m.gulls.y1) {
+      say(ctx, ['gulls'], 'gulls need x0 left of x1 and y0 above y1');
+    }
+  }
+
+  // A night picture is all or nothing: a scene drawn at night layer by layer has a night copy of every layer.
+  const withNight = m.layers.filter((l) => l.night !== undefined).length;
+  if (withNight > 0 && withNight < m.layers.length) {
+    say(ctx, ['layers'], 'either every layer has a night picture or none does');
+  }
 
   // Taps: their spots, their ids, and the bell's cut-out sprite.
   const tapIds = new Set<string>();
@@ -106,11 +117,23 @@ function checkManifest(m: SceneManifest, ctx: z.core.$RefinementCtx): void {
     if (tapIds.has(tap.id))
       say(ctx, ['taps', i, 'id'], `tap id ${tap.id} is already used by another tap`);
     else tapIds.add(tap.id);
-    if (tap.kind === 'bell' && tap.sprite === undefined) {
-      say(ctx, ['taps', i, 'sprite'], `bell tap ${i} needs the sprite of the bell it rings`);
+    const swings = tap.kind === 'bell' || tap.kind === 'sign';
+    if (swings && tap.sprite === undefined) {
+      say(
+        ctx,
+        ['taps', i, 'sprite'],
+        `${tap.kind} tap ${i} needs the sprite of the part it swings`,
+      );
     }
-    if (tap.kind !== 'bell' && tap.sprite !== undefined) {
-      say(ctx, ['taps', i, 'sprite'], `only a bell tap has a sprite; tap ${i} is a ${tap.kind}`);
+    if (!swings && tap.sprite !== undefined) {
+      say(
+        ctx,
+        ['taps', i, 'sprite'],
+        `only a bell or sign tap has a sprite; tap ${i} is a ${tap.kind}`,
+      );
+    }
+    if (tap.sprite?.night !== undefined && withNight === 0) {
+      say(ctx, ['taps', i, 'sprite', 'night'], 'a night sprite needs night pictures of the layers');
     }
   }
 }
@@ -124,11 +147,23 @@ export const SceneManifest = z
     height: z.number().int().min(64).max(1024),
     /** the row the character's feet stand on */
     ground: px,
-    /** back to front; depth -1 (far) .. 1 (near), how far a layer moves for parallax */
+    /**
+     * The time of day the art is drawn at: `dusk` (the default; the station) is tinted for every other time,
+     * `day` is shown as it is by day and, with night pictures, swaps to them at night.
+     */
+    art: z.enum(['dusk', 'day']).optional(),
+    /**
+     * back to front; depth -1 (far) .. 1 (near), how far a layer moves for parallax; `night` is the same layer
+     * drawn at night, lined up with it (art/scene_layers.py)
+     */
     layers: z
       .array(
         z.object({
           src: z.string().regex(/^[\w.-]+\.(webp|png)$/),
+          night: z
+            .string()
+            .regex(/^[\w.-]+\.(webp|png)$/)
+            .optional(),
           depth: z.number().min(-1).max(1),
         }),
       )
@@ -147,6 +182,10 @@ export const SceneManifest = z
     mist: z
       .array(z.object({ y: px, height: px, speed: z.number(), alpha: z.number().min(0).max(1) }))
       .optional(),
+    /** seagulls drawn in code, flying across this area by day */
+    gulls: z
+      .object({ x0: px, x1: px, y0: px, y1: px, count: z.number().int().min(0).max(40) })
+      .optional(),
     /** a wet surface that catches rain ripples and light sparkles */
     puddles: z.object({ y0: px, y1: px }).optional(),
     taps: z
@@ -154,12 +193,21 @@ export const SceneManifest = z
         z.object({
           id: sceneId,
           label: z.string().min(1).max(60),
-          kind: z.enum(['bell', 'lamp']),
+          /** a bell swings and rings, a sign swings and knocks, a lamp brightens */
+          kind: z.enum(['bell', 'sign', 'lamp']),
           box,
           pivot: z.tuple([px, px]).optional(),
           /** a moving part cut out of the scene (art/scene_layers.py), drawn at x, y */
           sprite: z
-            .object({ src: z.string().regex(/^[\w.-]+\.(webp|png)$/), x: px, y: px })
+            .object({
+              src: z.string().regex(/^[\w.-]+\.(webp|png)$/),
+              night: z
+                .string()
+                .regex(/^[\w.-]+\.(webp|png)$/)
+                .optional(),
+              x: px,
+              y: px,
+            })
             .optional(),
         }),
       )

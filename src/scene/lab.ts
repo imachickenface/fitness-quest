@@ -6,7 +6,8 @@ import { skyAt } from '../core/sky.ts';
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const canvas = $<HTMLCanvasElement>('scene');
 const frame = $<HTMLDivElement>('frameEl');
-const base = `${import.meta.env.BASE_URL}scenes/station/`;
+const scenesBase = `${import.meta.env.BASE_URL}scenes/`;
+let sceneId = new URLSearchParams(location.search).get('scene') ?? 'station';
 const charBase = `${import.meta.env.BASE_URL}characters/`;
 let characters: CharacterEntry[] = [];
 let characterId = '';
@@ -21,7 +22,8 @@ const spots: HTMLButtonElement[] = [];
 async function start() {
   view?.dispose();
   for (const b of spots.splice(0)) b.remove();
-  view = await createScene(canvas, base, reduced);
+  view = await createScene(canvas, `${scenesBase}${sceneId}/`, reduced);
+  canvas.setAttribute('aria-label', view.manifest.name);
   view.setStop(stop, false);
   await applyCharacter();
   view.setRain(rain);
@@ -96,6 +98,27 @@ async function setupCharacters() {
 
 $('emote').onclick = () => view?.emote();
 
+/** The scene picker, from the world list. */
+async function setupScenes() {
+  const world = (await (await fetch(`${scenesBase}world.json`)).json()) as { scenes: string[] };
+  const pick = $<HTMLSelectElement>('sceneId');
+  pick.replaceChildren(
+    ...world.scenes.map((id) => {
+      const o = document.createElement('option');
+      o.value = id;
+      o.textContent = id;
+      o.selected = id === sceneId;
+      return o;
+    }),
+  );
+  pick.onchange = () => {
+    sceneId = pick.value;
+    stop = 0;
+    history.replaceState(null, '', `?scene=${sceneId}`);
+    void start();
+  };
+}
+
 function applySky() {
   const sky: Sky = skyChoice === 'auto' ? skyAt(new Date()) : (skyChoice as Sky);
   view?.setSky(sky);
@@ -141,4 +164,4 @@ window.addEventListener('deviceorientation', (e) => {
 });
 window.addEventListener('resize', () => view?.resize());
 
-void setupCharacters().then(start);
+void Promise.all([setupScenes(), setupCharacters()]).then(start);

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-// the stand-in second scene below is served through page.route, which a service worker would bypass
+// each test starts from fresh files, not ones a service worker cached in an earlier test
 test.use({ serviceWorkers: 'block' });
 
 async function setUp(page: Page) {
@@ -30,20 +30,6 @@ async function importWorkouts(page: Page, n: number) {
   // (a level-up announcement can take the place of the "Imported" note, so wait for the sheet to close)
   await expect(page.getByLabel('Workout notes')).toBeHidden();
   await page.getByRole('button', { name: /^Quests/ }).click();
-}
-
-/** A second scene: the station again under another id, until the owner's next scene arrives. */
-async function standInWorld(page: Page) {
-  await page.route('**/scenes/world.json', (route) =>
-    route.fulfill({ json: { v: 1, scenes: ['station', 'station-b'] } }),
-  );
-  await page.route('**/scenes/station-b/**', async (route) => {
-    const url = route.request().url().replace('/scenes/station-b/', '/scenes/station/');
-    const response = await route.fetch({ url });
-    if (!url.endsWith('scene.json')) return route.fulfill({ response });
-    const json = await response.json();
-    return route.fulfill({ response, json: { ...json, id: 'station-b', name: 'Station B' } });
-  });
 }
 
 test('the scene shows the character on the Quests screen, and a new choice persists', async ({
@@ -83,29 +69,27 @@ test('a level-up walks the character to the next stop', async ({ page }) => {
 });
 
 test('the level after a scene ends opens the next scene', async ({ page }) => {
-  await standInWorld(page);
   await setUp(page);
   const frame = page.locator('.scene-frame');
   await expect(frame).toHaveAttribute('data-scene', 'station');
   // 50 workouts = 1000 XP: levels 1-5 cost 100 + 150 + 200 + 250 + 300, so this is level 6
   await importWorkouts(page, 50);
   await expect(frame).toHaveAttribute('data-level', '6');
-  await expect(frame).toHaveAttribute('data-scene', 'station-b');
+  await expect(frame).toHaveAttribute('data-scene', 'harbour');
   await expect(frame).toHaveAttribute('data-stop', '0');
-  await expect(page.getByText('Station B, stop 1 of 5')).toBeAttached();
+  await expect(page.getByText('Harbour, stop 1 of 6')).toBeAttached();
 });
 
 test('a scene already reached can be picked again, and following the level comes back', async ({
   page,
 }) => {
-  await standInWorld(page);
   await setUp(page);
   await importWorkouts(page, 50); // level 6: the second scene
   const frame = page.locator('.scene-frame');
-  await expect(frame).toHaveAttribute('data-scene', 'station-b');
+  await expect(frame).toHaveAttribute('data-scene', 'harbour');
 
   await page.getByRole('button', { name: 'Scenes' }).click();
-  await expect(page.getByRole('button', { name: /^Station B Levels/ })).toHaveAttribute(
+  await expect(page.getByRole('button', { name: /^Harbour Levels/ })).toHaveAttribute(
     'aria-pressed',
     'true',
   );
@@ -117,7 +101,7 @@ test('a scene already reached can be picked again, and following the level comes
   await page.reload();
   await expect(page.locator('.scene-frame')).toHaveAttribute('data-scene', 'station');
   await page.getByRole('button', { name: 'Back to level 6' }).click();
-  await expect(page.locator('.scene-frame')).toHaveAttribute('data-scene', 'station-b');
+  await expect(page.locator('.scene-frame')).toHaveAttribute('data-scene', 'harbour');
   await expect(page.getByRole('button', { name: 'Back to level 6' })).toHaveCount(0);
 });
 

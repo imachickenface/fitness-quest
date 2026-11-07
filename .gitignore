@@ -24,5 +24,6 @@ dist-test
 
 # regenerable scene build files (art/stitch_panorama.py, art/scene_depth.py, art/scene_layers.py)
 art/scenes/*/panorama.png
+art/scenes/*/panorama-night.png
 art/scenes/*/depth.png
 art/scenes/*/layers-preview.png
