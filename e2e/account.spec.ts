@@ -148,6 +148,43 @@ async function friendPhone(browser: Browser, who: 'A' | 'B'): Promise<Page> {
   return page;
 }
 
+/**
+ * Wait until a phone has published its activity for friends and nothing more is on the way: the
+ * fingerprint of its last upload (useMySummary.ts) is stored and stays the same for longer than the
+ * 3 s the app waits after a change. A phone publishes its whole list and removes every other row, so a
+ * row added on the server before then is deleted, and the cheers on it with it.
+ */
+async function activityPublished(page: Page) {
+  const read = () =>
+    page.evaluate(
+      () =>
+        new Promise<string | null>((resolve, reject) => {
+          const open = indexedDB.open('fitness-quest');
+          open.onerror = () => reject(open.error);
+          open.onsuccess = () => {
+            const get = open.result.transaction('kv').objectStore('kv').get('publishedActivity');
+            get.onerror = () => reject(get.error);
+            get.onsuccess = () => {
+              resolve(get.result ? JSON.stringify(get.result.value) : null);
+              open.result.close();
+            };
+          };
+        }),
+    );
+  let seen: string | null = null;
+  let since = Date.now();
+  await expect
+    .poll(
+      async () => {
+        const now = await read();
+        if (now !== seen) [seen, since] = [now, Date.now()];
+        return now !== null && Date.now() - since > 4_000;
+      },
+      { message: 'the phone published its activity', timeout: 60_000, intervals: [500] },
+    )
+    .toBe(true);
+}
+
 test("two friends: a request by username, an accept, and each other's profile", async ({
   browser,
 }) => {
@@ -325,9 +362,9 @@ test('friends: the feed, a cheer, and a shared quest from proposal to running', 
   }
   await b.c.rpc('send_friend_request', { target_username: a.name });
   await a.c.rpc('answer_friend_request', { other: b.id, accept: true });
-  // A's phone publishes its own (empty) activity first; the test item is added after that settles
+  // A's phone publishes its own activity and removes the rest, so the test item goes in only after that
   const pa = await friendPhone(browser, 'A');
-  await pa.waitForTimeout(6_000);
+  await activityPublished(pa);
   const today = new Date().toISOString().slice(0, 10);
   const title = `Leg day ${Date.now().toString(36)}`;
   await a.c.from('activity').upsert(
