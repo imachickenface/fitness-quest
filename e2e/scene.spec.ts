@@ -127,7 +127,10 @@ test('parallax can be turned off, and stays off', async ({ page }) => {
   const box = page.getByRole('checkbox', { name: /Move the scene when I tilt/ });
   await expect(box).toBeChecked();
   await box.uncheck();
+  // the scene reads the stored setting back: wait for the save before reloading
+  await expect(page.locator('.scene-frame')).toHaveAttribute('data-parallax', 'false');
   await page.reload();
+  await expect(page.locator('.scene-frame')).toHaveAttribute('data-parallax', 'false');
   await page.getByRole('button', { name: 'Scenes' }).click();
   await expect(
     page.getByRole('checkbox', { name: /Move the scene when I tilt/ }),

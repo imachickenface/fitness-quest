@@ -294,6 +294,7 @@ export function SceneStage({
         data-stop={shown?.stop ?? ''}
         data-level={level}
         data-character={character}
+        data-parallax={parallax}
         data-sky={outside.sky}
         data-weather={outside.weather}
       >
